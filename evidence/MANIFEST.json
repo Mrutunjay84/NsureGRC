@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-20T19:51:17+00:00",
+  "generated_at": "2026-10-20T19:53:21+00:00",
   "host": "Windows-11-10.0.26200-SP0",
   "python": "3.12.13",
   "files": {
@@ -20,8 +20,8 @@
       "bytes": 5773
     },
     "gate_run.log": {
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "bytes": 0
+      "sha256": "36b28ade881d4ef31d5b5ebcf9fa01afd20efd56120ec1a3123af3faf662d209",
+      "bytes": 2063
     },
     "gate_summary.json": {
       "sha256": "f21b28119361f9a47905e3627049db0ea1b0cda1160efcc41f407b56f81ca6fd",
@@ -32,7 +32,7 @@
       "bytes": 3
     },
     "gitleaks_meta.json": {
-      "sha256": "676863417a9d627d3305ffe91d056131f8f53e31adf0e195866f7dee19663412",
+      "sha256": "19bc0e45e69cd8468eb48ae78553a45e0dbb9fa7461398d3aac6266cdd0f1d43",
       "bytes": 87
     },
     "gitleaks_worktree.json": {
