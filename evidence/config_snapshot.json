@@ -1,0 +1,114 @@
+{
+  "ALLOWED_HOSTS": [
+    "testserver",
+    "localhost",
+    "testserver"
+  ],
+  "AUDIT_SIGNER_BACKEND": "dev_file",
+  "AUTH_THROTTLE": {
+    "account_base_delay_s": 60,
+    "account_free_failures": 5,
+    "account_max_delay_s": 900,
+    "account_recovery_required_at": 20,
+    "ip_max_attempts": 20,
+    "ip_window_s": 60,
+    "operator_account_free_failures": 3,
+    "operator_recovery_required_at": 10
+  },
+  "BREAK_GLASS_MAX_MINUTES": 120,
+  "CSRF_COOKIE_HTTPONLY": true,
+  "CSRF_COOKIE_NAME": "__Host-ngrc-csrf",
+  "CSRF_COOKIE_SAMESITE": "Lax",
+  "CSRF_COOKIE_SECURE": true,
+  "CUSTOMER_COOKIE_NAME": "__Host-ngrc-sid",
+  "DATABASE_ROLES": {
+    "audit_reader": "ngrc_audit_reader_platform",
+    "audit_sealer": "ngrc_audit_sealer",
+    "audit_verifier": "ngrc_audit_verifier",
+    "auth": "ngrc_auth",
+    "autonomous": "ngrc_app",
+    "default": "ngrc_app",
+    "ops": "ngrc_ops",
+    "owner": "ngrc_owner"
+  },
+  "DATA_UPLOAD_MAX_MEMORY_SIZE": 1048576,
+  "DEBUG": false,
+  "DEV_ONLY_COMPONENTS": [
+    "KEY_PROVIDER=local",
+    "AUDIT_SIGNER_BACKEND=dev_file"
+  ],
+  "INSTALLED_APPS": [
+    "rest_framework",
+    "ngrc.core",
+    "ngrc.control_plane",
+    "ngrc.iam",
+    "ngrc.tenancy",
+    "ngrc.authz",
+    "ngrc.audit"
+  ],
+  "KEY_PROVIDER": "local",
+  "MIDDLEWARE": [
+    "django.middleware.security.SecurityMiddleware",
+    "ngrc.core.middleware.RequestIdMiddleware",
+    "ngrc.core.middleware.SecurityHeadersMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "ngrc.authn.middleware.SessionAuthMiddleware"
+  ],
+  "NGRC_ENV": "test",
+  "NGRC_PLANE": "all",
+  "OPERATOR_COOKIE_NAME": "__Host-ngrc-ops-sid",
+  "PASSWORD_HASHING_PRODUCTION_TARGET_NOTE": "test settings use the OWASP floor for speed; production target is in config/settings/base.py",
+  "PASSWORD_POLICY": {
+    "max_length": 128,
+    "min_length": 12
+  },
+  "REST_FRAMEWORK": {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+      "ngrc.authz.drf_defaults.NgrcSessionAuthentication"
+    ],
+    "DEFAULT_PARSER_CLASSES": [
+      "ngrc.core.parsers.StrictJSONParser"
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+      "ngrc.authz.drf_defaults.DenyAll"
+    ],
+    "DEFAULT_RENDERER_CLASSES": [
+      "rest_framework.renderers.JSONRenderer"
+    ],
+    "DEFAULT_THROTTLE_CLASSES": [],
+    "EXCEPTION_HANDLER": "ngrc.authz.drf_defaults.exception_handler",
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
+    "UNAUTHENTICATED_TOKEN": null,
+    "UNAUTHENTICATED_USER": null,
+    "URL_FORMAT_OVERRIDE": null
+  },
+  "SECURE_CONTENT_TYPE_NOSNIFF": true,
+  "SECURE_HSTS_SECONDS": 31536000,
+  "SECURE_SSL_REDIRECT": false,
+  "SESSION_POLICY": {
+    "operator": [
+      900,
+      28800
+    ],
+    "pending_mfa": [
+      600,
+      600
+    ],
+    "privileged": [
+      900,
+      28800
+    ],
+    "standard": [
+      1800,
+      43200
+    ]
+  },
+  "STEP_UP_T1_WINDOW_S": 600,
+  "SUPPORT_GRANT_DEFAULT_MINUTES": 240,
+  "SUPPORT_GRANT_MAX_MINUTES": 480,
+  "X_FRAME_OPTIONS": "DENY",
+  "database": "ngrc_test",
+  "generated_at": "2026-10-20T19:28:04+00:00",
+  "generator": "tests/test_evidence_artifacts.py::config_snapshot.json"
+}

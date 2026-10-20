@@ -1,0 +1,29 @@
+{
+  "checkpoints_issued": [
+    {
+      "algorithm": "ed25519",
+      "head_hash": "c2f62c4b2b817b8d7d2574505833a2d2464e949dae52c45339b152a0efb93ce6",
+      "issued_at": "2026-10-20T19:28:04.189031Z",
+      "key_id": "dev-522ef06958ba032f",
+      "seq": 4,
+      "signature": "88f4a72bf3b69acaf340887fc24ee2029e08d373f774e77489c6ed9a6545a922c1f8498a517e0f62397d0b697bf06b8b67f5c8bdc721212751ead3413f57e40f",
+      "sink": "dev-local-file (NOT WORM)",
+      "stream_key": "84ebf370-3d7e-4d44-91ab-bf085a89e41f"
+    }
+  ],
+  "database": "ngrc_test",
+  "export_sink": "local directory (NOT WORM storage)",
+  "generated_at": "2026-10-20T19:28:04+00:00",
+  "generator": "tests/test_evidence_artifacts.py::audit_chain_verification.json",
+  "ok": true,
+  "scope": "fresh tenant created by this test (the shared test database also holds deliberately tampered streams)",
+  "signer": {
+    "algorithm": "ed25519",
+    "dev_only": true,
+    "key_id": "dev-522ef06958ba032f",
+    "note": "DEV-ONLY Ed25519 key on the same host as the DB; NOT the production control (open item O-4)"
+  },
+  "stream": "84ebf370-3d7e-4d44-91ab-bf085a89e41f",
+  "verified_through_seq": 4,
+  "violations": []
+}

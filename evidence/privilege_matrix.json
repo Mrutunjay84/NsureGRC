@@ -1,0 +1,248 @@
+{
+  "database": "ngrc_test",
+  "generated_at": "2026-10-20T19:28:03+00:00",
+  "generator": "tests/test_evidence_artifacts.py::privilege_matrix.json",
+  "role_attributes": [
+    {
+      "bypassrls": false,
+      "can_login": true,
+      "createdb": false,
+      "createrole": false,
+      "replication": false,
+      "role": "ngrc_app",
+      "superuser": false
+    },
+    {
+      "bypassrls": false,
+      "can_login": false,
+      "createdb": false,
+      "createrole": false,
+      "replication": false,
+      "role": "ngrc_audit_owner",
+      "superuser": false
+    },
+    {
+      "bypassrls": false,
+      "can_login": true,
+      "createdb": false,
+      "createrole": false,
+      "replication": false,
+      "role": "ngrc_audit_reader_platform",
+      "superuser": false
+    },
+    {
+      "bypassrls": false,
+      "can_login": true,
+      "createdb": false,
+      "createrole": false,
+      "replication": false,
+      "role": "ngrc_audit_sealer",
+      "superuser": false
+    },
+    {
+      "bypassrls": false,
+      "can_login": true,
+      "createdb": false,
+      "createrole": false,
+      "replication": false,
+      "role": "ngrc_audit_verifier",
+      "superuser": false
+    },
+    {
+      "bypassrls": false,
+      "can_login": true,
+      "createdb": false,
+      "createrole": false,
+      "replication": false,
+      "role": "ngrc_auth",
+      "superuser": false
+    },
+    {
+      "bypassrls": false,
+      "can_login": true,
+      "createdb": false,
+      "createrole": false,
+      "replication": false,
+      "role": "ngrc_ops",
+      "superuser": false
+    },
+    {
+      "bypassrls": false,
+      "can_login": true,
+      "createdb": false,
+      "createrole": false,
+      "replication": false,
+      "role": "ngrc_owner",
+      "superuser": false
+    },
+    {
+      "bypassrls": false,
+      "can_login": true,
+      "createdb": true,
+      "createrole": false,
+      "replication": false,
+      "role": "ngrc_test_admin",
+      "superuser": false
+    }
+  ],
+  "table_privileges_by_role": {
+    "ngrc_app": {
+      "audit.checkpoint": [
+        "SELECT"
+      ],
+      "audit.tenant_event": [
+        "SELECT"
+      ],
+      "plt_tenant": [
+        "SELECT"
+      ],
+      "ten_membership": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_role": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ]
+    },
+    "ngrc_audit_reader_platform": {
+      "audit.platform_event": [
+        "SELECT"
+      ]
+    },
+    "ngrc_audit_sealer": {
+      "audit.chain_head": [
+        "SELECT"
+      ],
+      "audit.checkpoint": [
+        "INSERT",
+        "SELECT"
+      ]
+    },
+    "ngrc_audit_verifier": {
+      "audit.action_registry": [
+        "SELECT"
+      ],
+      "audit.chain_head": [
+        "SELECT"
+      ],
+      "audit.checkpoint": [
+        "SELECT"
+      ],
+      "audit.platform_event": [
+        "SELECT"
+      ],
+      "audit.tenant_event": [
+        "SELECT"
+      ],
+      "audit.verification_run": [
+        "INSERT",
+        "SELECT"
+      ]
+    },
+    "ngrc_auth": {
+      "idn_account": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "idn_auth_token": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "idn_invitation": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "idn_recovery_code": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "idn_session": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "idn_throttle": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "idn_totp_factor": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "idn_webauthn_credential": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "plt_tenant": [
+        "SELECT"
+      ],
+      "ten_membership": [
+        "SELECT"
+      ],
+      "ten_role": [
+        "SELECT"
+      ]
+    },
+    "ngrc_ops": {
+      "plt_operator_account": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "plt_operator_role": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "plt_operator_session": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "plt_operator_throttle": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "plt_operator_webauthn_credential": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "plt_support_access_grant": [
+        "INSERT",
+        "SELECT"
+      ],
+      "plt_tenant": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ]
+    }
+  }
+}

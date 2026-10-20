@@ -1,0 +1,46 @@
+# P2-2 Independent security review - RECORD.
+#
+# STATUS: BLOCKED. No independent reviewer has been engaged or has reviewed anything. This file intentionally contains no reviewer,
+# no findings and no disposition, because none exist. Do not fill it in on a reviewer's behalf. scripts/check_review_record.py decides what
+# the record may mean (no self-approval, report digest and reviewed-package digest required, stale reviews rejected).
+#
+# To record a review, the project owner adds ONE entry per reviewer under `reviews:` copied from the template at the bottom, using the
+# reviewer's own signed report as the source, and stores that report (or its location) with the project. Findings, severity, remediation
+# and disposition are the REVIEWER'S words/ratings, not the implementers'.
+version: 1
+status: BLOCKED
+status_reason: "No external reviewer is available yet (P2-2). The gate is BLOCKED, not passed."
+
+# Who built the mechanisms under review. A reviewer matching any of these (or an AI tool) is rejected by the checker.
+implementers:
+  - "Claude Code (AI assistant) - authored all Phase 1 source code, tests, scripts and documentation"
+# Project owner: add the names of the human engineers who directed, edited or accepted the implementation, so independence can be checked.
+implementer_humans: []
+
+required_scopes: [audit_hash, audit_integrity_checkpoint, aead_helper, authn_session_mfa]   # see review_scope.yaml
+
+reviews: []
+
+# ------------------------------------------------------------------------------------------------------------------ template (do not use as-is)
+# reviews:
+#   - scopes: [audit_hash, audit_integrity_checkpoint]            # which scope ids this reviewer covered
+#     reviewer:
+#       name: "<reviewer's full name>"
+#       organisation: "<employer / firm>"
+#       qualifications: "<relevant expertise, e.g. applied cryptography / application security>"
+#       independent_of_implementers: true                          # only the reviewer may make this statement true
+#       independence_statement: "<how they are independent: no involvement in design, implementation or testing>"
+#     engaged_by: "<who commissioned the review>"
+#     report_date: "<YYYY-MM-DD>"
+#     report_sha256: "<sha256 of the reviewer's signed report file>"
+#     reviewed_manifest_sha256: "<package_sha256 from evidence/review_package/review_package_manifest.json that they were given>"
+#     disposition: approved | approved_with_conditions | rejected  # reviewer's overall conclusion for the listed scopes
+#     no_findings_confirmed: false                                   # true ONLY if the reviewer explicitly reports zero findings
+#     findings:
+#       - id: "R1-001"
+#         title: "<short title>"
+#         severity: critical | high | medium | low | info          # reviewer's rating
+#         status: open | remediated | accepted_risk | not_applicable
+#         remediation: "<what must change / what was changed>"
+#         retest_evidence: "<commit + test names, or reviewer's retest note>"     # required when remediated
+#         risk_acceptance_ref: "<approver + record reference>"                    # required when accepted_risk

@@ -1,0 +1,17 @@
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[tester]	WARNING	nosec encountered (B105), but no failed test on file config\settings\base.py:213
+[tester]	WARNING	nosec encountered (B105), but no failed test on file config\settings\base.py:214
+[tester]	WARNING	nosec encountered (B105), but no failed test on file config\settings\base.py:215
+[tester]	WARNING	nosec encountered (B105), but no failed test on file config\settings\base.py:216
+[tester]	WARNING	nosec encountered (B105), but no failed test on file config\settings\base.py:217
+[tester]	WARNING	nosec encountered (B105), but no failed test on file config\settings\base.py:219
+[tester]	WARNING	nosec encountered (B105), but no failed test on file config\settings\base.py:220
+[tester]	WARNING	nosec encountered (B105), but no failed test on file config\settings\base.py:221
+[tester]	WARNING	nosec encountered (B105), but no failed test on file config\settings\base.py:222
+[tester]	WARNING	nosec encountered (B105), but no failed test on file config\settings\base.py:219
+[tester]	WARNING	nosec encountered (B105), but no failed test on file config\settings\base.py:221
+Working... ---------------------------------------- 100% 0:00:00
+[json]	INFO	JSON output written to file: evidence/ci_rehearsal/bandit.json

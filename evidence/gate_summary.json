@@ -1,0 +1,91 @@
+{
+  "generated_at": "2026-10-20T16:53:29+00:00",
+  "python": "3.12.13",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "gates": [
+    {
+      "gate": "lint (ruff E,F,W,B,S,UP,I)",
+      "status": "PASS",
+      "detail": "no findings",
+      "artifacts": [
+        "evidence/ruff.txt"
+      ]
+    },
+    {
+      "gate": "SAST bandit",
+      "status": "PASS",
+      "detail": "0 findings {'HIGH': 0, 'MEDIUM': 0, 'LOW': 0}, 3968 LOC",
+      "artifacts": [
+        "evidence/bandit.json"
+      ]
+    },
+    {
+      "gate": "SAST semgrep",
+      "status": "PASS",
+      "detail": "0 findings; 168 files scanned",
+      "artifacts": [
+        "evidence/semgrep.json"
+      ]
+    },
+    {
+      "gate": "SCA pip-audit (runtime)",
+      "status": "PASS",
+      "detail": "20 packages, 0 known vulnerabilities, 0 accepted",
+      "artifacts": [
+        "evidence/pip_audit_runtime.json"
+      ]
+    },
+    {
+      "gate": "SCA pip-audit (dev-tooling)",
+      "status": "PASS",
+      "detail": "109 packages, 1 known vulnerabilities, 1 accepted (mcp CVE-2026-59951 - see docs/accepted_risks.yaml)",
+      "artifacts": [
+        "evidence/pip_audit.json"
+      ]
+    },
+    {
+      "gate": "secret scan (detect-secrets)",
+      "status": "PASS",
+      "detail": "11 candidate(s), 11 triaged as false positives in .secrets.baseline, 0 unreviewed",
+      "artifacts": [
+        "evidence/detect_secrets_scan.json"
+      ]
+    },
+    {
+      "gate": "trivy filesystem (lockfile vulns, secrets, misconfig)",
+      "status": "PASS",
+      "detail": "0 finding(s) at the configured severities",
+      "artifacts": [
+        "evidence/trivy_fs.json"
+      ]
+    },
+    {
+      "gate": "trivy Dockerfile misconfiguration",
+      "status": "PASS",
+      "detail": "0 finding(s) at the configured severities",
+      "artifacts": [
+        "evidence/trivy_config.json"
+      ]
+    },
+    {
+      "gate": "container image build + scan",
+      "status": "BLOCKED",
+      "detail": "no container runtime (docker/podman) on this machine; the CI workflow performs this gate",
+      "artifacts": []
+    },
+    {
+      "gate": "security regression suite (pytest)",
+      "status": "PASS",
+      "detail": "370 passed in 64.63s (0:01:04)",
+      "artifacts": [
+        "evidence/junit.xml",
+        "evidence/pytest_output.txt"
+      ]
+    }
+  ],
+  "totals": {
+    "PASS": 9,
+    "FAIL": 0,
+    "BLOCKED": 1
+  }
+}

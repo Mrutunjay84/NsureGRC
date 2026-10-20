@@ -1,0 +1,30 @@
+ruff (lint + security-lint rules)
+  -> exit 0 in 0.1s
+[PASS   ] lint (ruff E,F,W,B,S,UP,I): no findings
+bandit (SAST)
+  -> exit 0 in 0.8s
+[PASS   ] SAST bandit: 0 findings {'HIGH': 0, 'MEDIUM': 0, 'LOW': 0}, 3968 LOC
+semgrep (SAST, registry rules p/python p/django p/security-audit)
+  -> exit 0 in 6.0s
+[PASS   ] SAST semgrep: 0 findings; 168 files scanned
+pip-audit (SCA)
+  -> exit 0 in 0.0s
+  -> exit 0 in 0.0s
+  -> exit 0 in 1.0s
+[PASS   ] SCA pip-audit (runtime): 20 packages, 0 known vulnerabilities, 0 accepted
+  -> exit 1 in 1.1s
+[PASS   ] SCA pip-audit (dev-tooling): 109 packages, 1 known vulnerabilities, 1 accepted (mcp CVE-2026-59951 - see docs/accepted_risks.yaml)
+detect-secrets
+  -> exit 0 in 1.8s
+[PASS   ] secret scan (detect-secrets): 11 candidate(s), 11 triaged as false positives in .secrets.baseline, 0 unreviewed
+trivy fs + config
+  -> exit 0 in 1.2s
+  -> exit 0 in 0.9s
+[PASS   ] trivy filesystem (lockfile vulns, secrets, misconfig): 0 finding(s) at the configured severities
+[PASS   ] trivy Dockerfile misconfiguration: 0 finding(s) at the configured severities
+[BLOCKED] container image build + scan: no container runtime (docker/podman) on this machine; the CI workflow performs this gate
+pytest security regression suite
+  -> exit 0 in 65.9s
+[PASS   ] security regression suite (pytest): 370 passed in 64.63s (0:01:04)
+
+{"PASS": 9, "FAIL": 0, "BLOCKED": 1}

@@ -1,0 +1,511 @@
+"""Customer-realm authentication API (D-P0-008). Every view declares an explicit Policy; CSRF is enforced on all unsafe methods."""
+from __future__ import annotations
+
+import logging
+
+from django.db import transaction
+from django.middleware.csrf import get_token
+from rest_framework import serializers
+from rest_framework.response import Response
+
+from ngrc.audit import service as audit
+from ngrc.authn import flow, passwords, recovery, sessions, throttle, totp, webauthn_
+from ngrc.authn.realms import CUSTOMER
+from ngrc.authz.drf import NgrcAPIView, Policy
+from ngrc.core import clock
+from ngrc.core.crypto import keyed_identifier_hash
+
+from . import services
+from .models import Session
+
+log = logging.getLogger("ngrc.iam")
+ANY_STAGE = ("password_ok", "enroll_mfa", "active")
+
+
+def _ip(request):
+    return request.META.get("REMOTE_ADDR")
+
+
+def _ua(request):
+    return request.META.get("HTTP_USER_AGENT", "")[:256]
+
+
+def _session_account(request):
+    s = Session.objects.using("auth").select_related("account").get(pk=request.user.session_id)
+    return s, s.account
+
+
+def _uv(account) -> bool:
+    """D-P0-008 s7.2: userVerification is REQUIRED for tenant privileged roles (preferred otherwise)."""
+    from ngrc.authz.permissions import is_privileged
+
+    return any(is_privileged(m["permissions"]) for m in services.list_memberships(account.id))
+
+
+def _with_cookie(response: Response, raw: str) -> Response:
+    sessions.set_cookie(response, CUSTOMER, raw)
+    return response
+
+
+def _throttled(wait: int) -> Response:
+    r = Response({"error": "throttled", "retry_after": wait}, status=429)
+    r["Retry-After"] = str(wait)
+    return r
+
+
+def _audit_both(account, action: str, session=None, **kw):
+    """Identity-level event: always the platform stream; also the tenant stream when a tenant is selected."""
+    audit.emit_platform("auth", action, actor_id=account.id, **kw)
+    if session is not None and getattr(session, "active_tenant_id", None):
+        audit.emit_tenant("auth", action, session.active_tenant_id, actor_id=account.id, **kw)
+
+
+# --------------------------------------------------------------------------------------------- public
+class CsrfView(NgrcAPIView):
+    ngrc_policy = Policy("public", reason="issues a CSRF token; no data access")
+
+    def get(self, request):
+        return Response({"csrfToken": get_token(request._request)})
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.CharField(max_length=254)
+    password = serializers.CharField(max_length=1024, trim_whitespace=False)
+
+
+class LoginView(NgrcAPIView):
+    ngrc_policy = Policy("public", reason="credential submission endpoint; throttled, uniform responses")
+
+    def post(self, request):
+        data = LoginSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        res = flow.password_login(CUSTOMER, data.validated_data["email"], data.validated_data["password"],
+                                  ip=_ip(request), user_agent=_ua(request))
+        if res.status == "throttled":
+            return _throttled(res.retry_after)
+        if res.status != "ok":
+            return Response({"error": "invalid_credentials"}, status=401)
+        return _with_cookie(Response({"stage": res.stage, "methods": ["totp", "webauthn", "recovery"] if res.stage == "password_ok"
+                                      else ["totp", "webauthn"]}), res.raw_token)
+
+
+class ResetRequestView(NgrcAPIView):
+    ngrc_policy = Policy("public", reason="password reset request; generic response, rate limited")
+
+    def post(self, request):
+        s = serializers.Serializer(data=request.data)
+        email = flow.normalize_email(str(request.data.get("email", "")) if isinstance(request.data, dict) else "")
+        _ = s
+        wait = throttle.retry_after(CUSTOMER, email, _ip(request), scope="reset")
+        if not wait:
+            throttle.record_failure(CUSTOMER, email, _ip(request), scope="reset")  # counts requests (not failures)
+            audit.emit_platform("auth", "auth.password.reset_requested", actor_type="anonymous",
+                                details={"identifier_hash": keyed_identifier_hash(email)})
+            account = services.Account.objects.using("auth").filter(email=email).exclude(status="disabled").first() if email else None
+            if account is not None:
+                services.send_reset_email(account)
+        return Response({"status": "accepted"}, status=202)  # identical for known / unknown / throttled
+
+
+class ResetConfirmSerializer(serializers.Serializer):
+    token = serializers.CharField(max_length=128)
+    new_password = serializers.CharField(max_length=1024, trim_whitespace=False)
+
+
+class ResetConfirmView(NgrcAPIView):
+    ngrc_policy = Policy("public", reason="completes password reset with a single-use token")
+
+    def post(self, request):
+        d = ResetConfirmSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        raw, new_pw = d.validated_data["token"], d.validated_data["new_password"]
+        acct = services.peek_token(raw, "password_reset")
+        if acct is None:
+            return Response({"error": "invalid_token"}, status=400)
+        try:  # validate BEFORE consuming so a weak password does not burn the token
+            passwords.check_policy(new_pw, context_terms=services.context_terms(acct.email, acct.display_name))
+        except passwords.PolicyViolation as exc:
+            return Response({"error": "invalid_password", "reason": exc.code}, status=400)
+        acct = services.consume_token(raw, "password_reset")
+        if acct is None:
+            return Response({"error": "invalid_token"}, status=400)  # replay / race lost
+        with transaction.atomic(using="auth"):
+            services.set_password(acct, new_pw)
+            now = clock.now()
+            fields = {"status": "active"}
+            if acct.email_verified_at is None:
+                fields["email_verified_at"] = now  # mailbox control proven by the reset link
+            if acct.status != "disabled":
+                services.Account.objects.using("auth").filter(pk=acct.pk).update(**fields)
+            sessions.revoke_all(CUSTOMER, acct.id, reason="password_reset")
+            services.AuthToken.objects.using("auth").filter(account=acct, purpose="password_reset", used_at__isnull=True).update(used_at=now)
+        audit.emit_platform("auth", "auth.password.reset_completed", actor_id=acct.id)
+        services.send_notice(acct, "Your NsureGRC password was reset",
+                             "Your password was just reset. MFA is still required at sign-in. If this was not you, contact your administrator.")
+        return Response({"status": "ok"})
+
+
+class VerifyEmailSerializer(serializers.Serializer):
+    token = serializers.CharField(max_length=128)
+
+
+class VerifyEmailView(NgrcAPIView):
+    ngrc_policy = Policy("public", reason="email verification with a single-use token")
+
+    def post(self, request):
+        d = VerifyEmailSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        acct = services.consume_token(d.validated_data["token"], "verify_email")
+        if acct is None:
+            return Response({"error": "invalid_token"}, status=400)
+        services.Account.objects.using("auth").filter(pk=acct.pk, status="pending").update(status="active", email_verified_at=clock.now())
+        services.Account.objects.using("auth").filter(pk=acct.pk, email_verified_at__isnull=True).update(email_verified_at=clock.now())
+        audit.emit_platform("auth", "auth.email.verified", actor_id=acct.id)
+        return Response({"status": "ok"})
+
+
+class AcceptInvitationSerializer(serializers.Serializer):
+    token = serializers.CharField(max_length=128)
+    password = serializers.CharField(max_length=1024, trim_whitespace=False, required=False, allow_blank=True)
+    display_name = serializers.CharField(max_length=200, required=False, allow_blank=True)
+
+
+class AcceptInvitationView(NgrcAPIView):
+    ngrc_policy = Policy("public", reason="invitation acceptance; token proves mailbox control; existing users must be signed in")
+
+    def post(self, request):
+        d = AcceptInvitationSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        inv = services.get_usable_invitation(d.validated_data["token"])
+        if inv is None:
+            return Response({"error": "invalid_token"}, status=400)
+        existing = services.Account.objects.using("auth").filter(email=inv.email).first()
+        if existing is not None:
+            p = getattr(request._request, "ngrc_principal", None)
+            if p is None or p.stage != "active" or p.account_id != existing.id:
+                return Response({"error": "sign_in_required"}, status=401)
+            account = existing
+        else:
+            try:
+                account = services.create_account(inv.email, d.validated_data.get("password") or "",
+                                                  d.validated_data.get("display_name", ""), verified=True)
+            except services.ServiceError as exc:
+                return Response({"error": "invalid_password", "reason": exc.code}, status=400)
+        try:
+            services.accept_invitation(inv, account)
+        except Exception:  # noqa: BLE001 - e.g. already a member / lost race; generic response
+            return Response({"error": "invalid_token"}, status=400)
+        from ngrc.tenancy.roles import role_key_for
+
+        key = role_key_for(inv.subject_tenant_id, inv.role_id, account.id)
+        audit.emit_platform("auth", "auth.invitation.accepted", actor_id=account.id, tenant_id=inv.subject_tenant_id,
+                            details={"role_key": key})
+        audit.emit_tenant("auth", "auth.invitation.accepted", inv.subject_tenant_id, actor_id=account.id,
+                          details={"role_key": key})
+        return Response({"status": "ok", "tenant_id": str(inv.subject_tenant_id)}, status=201)
+
+
+# --------------------------------------------------------------------------------------------- session-scoped
+class SessionView(NgrcAPIView):
+    ngrc_policy = Policy("session", stages=ANY_STAGE)
+
+    def get(self, request):
+        s, a = _session_account(request)
+        return Response({"stage": s.stage, "account": {"id": str(a.id), "email": a.email, "display_name": a.display_name},
+                         "tenant_id": str(s.active_tenant_id) if s.active_tenant_id else None,
+                         "expires_at": s.expires_at.isoformat(), "auth_methods": s.auth_methods})
+
+
+class LogoutView(NgrcAPIView):
+    ngrc_policy = Policy("session", stages=ANY_STAGE)
+
+    def post(self, request):
+        s, a = _session_account(request)
+        sessions.revoke(CUSTOMER, s, "logout")
+        audit.emit_platform("auth", "auth.logout", actor_id=a.id)
+        r = Response({"status": "ok"})
+        sessions.clear_cookie(r, CUSTOMER)
+        return r
+
+
+class CodeSerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=64)
+
+
+def _finish_mfa(request, s, a, method: str) -> Response:
+    raw = flow.mfa_succeeded(CUSTOMER, s, a, method)
+    return _with_cookie(Response({"stage": "active"}), raw)
+
+
+class TotpVerifyView(NgrcAPIView):
+    ngrc_policy = Policy("session", stages=("password_ok",))
+
+    def post(self, request):
+        d = CodeSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        s, a = _session_account(request)
+        wait = flow.mfa_retry_after(CUSTOMER, a, _ip(request))
+        if wait:
+            return _throttled(wait)
+        result = totp.verify(a, d.validated_data["code"])
+        if result == "ok":
+            return _finish_mfa(request, s, a, "totp")
+        if result == "replay":
+            audit.emit_platform("auth", "auth.totp.replay_rejected", actor_id=a.id, result="denied")
+        flow.mfa_failed(CUSTOMER, a, _ip(request), "totp")
+        return Response({"error": "invalid_code"}, status=401)
+
+
+class RecoveryVerifyView(NgrcAPIView):
+    ngrc_policy = Policy("session", stages=("password_ok",))
+
+    def post(self, request):
+        d = CodeSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        s, a = _session_account(request)
+        wait = flow.mfa_retry_after(CUSTOMER, a, _ip(request))
+        if wait:
+            return _throttled(wait)
+        if recovery.consume(a, d.validated_data["code"]):
+            audit.emit_platform("auth", "auth.recovery_codes.used", actor_id=a.id)
+            r = _finish_mfa(request, s, a, "recovery")
+            r.data["recovery_codes_remaining"] = recovery.remaining(a)
+            services.send_notice(a, "A NsureGRC recovery code was used", "A recovery code was used to sign in to your account.")
+            return r
+        audit.emit_platform("auth", "auth.recovery_codes.failed", actor_id=a.id, result="denied")
+        flow.mfa_failed(CUSTOMER, a, _ip(request), "recovery")
+        return Response({"error": "invalid_code"}, status=401)
+
+
+class WebAuthnAuthBeginView(NgrcAPIView):
+    ngrc_policy = Policy("session", stages=("password_ok",))
+
+    def post(self, request):
+        s, a = _session_account(request)
+        try:
+            return Response(webauthn_.authentication_options(CUSTOMER, s, a, require_uv=_uv(a)))
+        except webauthn_.WebAuthnError:
+            return Response({"error": "no_credentials"}, status=400)
+
+
+class WebAuthnCredentialSerializer(serializers.Serializer):
+    credential = serializers.DictField()
+    nickname = serializers.CharField(max_length=100, required=False, allow_blank=True)
+
+
+class WebAuthnAuthCompleteView(NgrcAPIView):
+    ngrc_policy = Policy("session", stages=("password_ok",))
+
+    def post(self, request):
+        d = WebAuthnCredentialSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        s, a = _session_account(request)
+        wait = flow.mfa_retry_after(CUSTOMER, a, _ip(request))
+        if wait:
+            return _throttled(wait)
+        try:
+            webauthn_.complete_authentication(CUSTOMER, s, a, d.validated_data["credential"], require_uv=_uv(a))
+        except webauthn_.WebAuthnError as exc:
+            if exc.code == "counter_regression":
+                audit.emit_platform("auth", "auth.webauthn.counter_regression", actor_id=a.id, result="failure")
+            flow.mfa_failed(CUSTOMER, a, _ip(request), "webauthn")
+            return Response({"error": "invalid_assertion"}, status=401)
+        return _finish_mfa(request, s, a, "webauthn")
+
+
+# ------------------------------------------------------------ enrolment (allowed while enrolling or when fully signed in)
+class TotpEnrollBeginView(NgrcAPIView):
+    ngrc_policy = Policy("session", stages=("enroll_mfa", "active"), step_up=None)
+
+    def post(self, request):
+        s, a = _session_account(request)
+        if s.stage == "active":
+            from ngrc.authz.policy import Denied, require_recent_step_up
+            try:
+                require_recent_step_up(request.user, "T1")
+            except Denied:
+                return Response({"error": "forbidden"}, status=403)
+        secret, uri = totp.begin_enrollment(a)
+        return Response({"secret": secret, "otpauth_uri": uri})  # shown once; stored sealed
+
+
+class TotpEnrollConfirmView(NgrcAPIView):
+    ngrc_policy = Policy("session", stages=("enroll_mfa", "active"))
+
+    def post(self, request):
+        d = CodeSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        s, a = _session_account(request)
+        wait = flow.mfa_retry_after(CUSTOMER, a, _ip(request))
+        if wait:
+            return _throttled(wait)
+        if not totp.confirm_enrollment(a, d.validated_data["code"]):
+            flow.mfa_failed(CUSTOMER, a, _ip(request), "totp")
+            return Response({"error": "invalid_code"}, status=400)
+        _audit_both(a, "auth.mfa.enrolled", session=s, details={"method": "totp"})
+        codes = None
+        if recovery.remaining(a) == 0:
+            codes = recovery.generate(a)
+            _audit_both(a, "auth.recovery_codes.generated", session=s)
+        if s.stage == "enroll_mfa":
+            resp = _finish_mfa(request, s, a, "totp")
+        else:
+            resp = Response({"stage": "active"})
+        if codes:
+            resp.data["recovery_codes"] = codes  # shown exactly once
+        return resp
+
+
+class WebAuthnRegisterBeginView(NgrcAPIView):
+    ngrc_policy = Policy("session", stages=("enroll_mfa", "active"))
+
+    def post(self, request):
+        s, a = _session_account(request)
+        if s.stage == "active":
+            from ngrc.authz.policy import Denied, require_recent_step_up
+            try:
+                require_recent_step_up(request.user, "T1")
+            except Denied:
+                return Response({"error": "forbidden"}, status=403)
+        return Response(webauthn_.registration_options(CUSTOMER, s, a, require_uv=_uv(a)))
+
+
+class WebAuthnRegisterCompleteView(NgrcAPIView):
+    ngrc_policy = Policy("session", stages=("enroll_mfa", "active"))
+
+    def post(self, request):
+        d = WebAuthnCredentialSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        s, a = _session_account(request)
+        try:
+            webauthn_.complete_registration(CUSTOMER, s, a, d.validated_data["credential"], require_uv=_uv(a),
+                                            nickname=d.validated_data.get("nickname", ""))
+        except webauthn_.WebAuthnError:
+            return Response({"error": "registration_failed"}, status=400)
+        _audit_both(a, "auth.webauthn.registered", session=s)
+        _audit_both(a, "auth.mfa.enrolled", session=s, details={"method": "webauthn"})
+        codes = None
+        if recovery.remaining(a) == 0:
+            codes = recovery.generate(a)
+            _audit_both(a, "auth.recovery_codes.generated", session=s)
+        resp = _finish_mfa(request, s, a, "webauthn") if s.stage == "enroll_mfa" else Response({"stage": "active"})
+        if codes:
+            resp.data["recovery_codes"] = codes
+        return resp
+
+
+# ------------------------------------------------------------------------------------------- fully authenticated
+class TenantsView(NgrcAPIView):
+    ngrc_policy = Policy("session")
+
+    def get(self, request):
+        return Response({"tenants": [{"tenant_id": str(m["tenant_id"]), "slug": m["slug"], "name": m["name"], "role": m["role"]}
+                                     for m in services.list_memberships(request.user.account_id)]})
+
+
+class SelectTenantSerializer(serializers.Serializer):
+    tenant_id = serializers.UUIDField()
+
+
+class SelectTenantView(NgrcAPIView):
+    ngrc_policy = Policy("session")
+
+    def post(self, request):
+        d = SelectTenantSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        s, a = _session_account(request)
+        m = services.find_membership(a.id, d.validated_data["tenant_id"])
+        if m is None:
+            audit.emit_denied(permission="session.select_tenant", route=request.path, reason="not_a_member",
+                              actor_id=a.id, using="autonomous")
+            return Response({"error": "forbidden"}, status=403)
+        from ngrc.authz.permissions import is_privileged
+
+        raw = sessions.set_tenant(CUSTOMER, s, m["tenant_id"], privileged=is_privileged(m["permissions"]))
+        audit.emit_tenant("auth", "auth.session.tenant_selected", m["tenant_id"], actor_id=a.id)
+        return _with_cookie(Response({"tenant_id": str(m["tenant_id"]), "role": m["role"]}), raw)
+
+
+class StepUpSerializer(serializers.Serializer):
+    method = serializers.ChoiceField(choices=["totp", "recovery"])
+    code = serializers.CharField(max_length=64)
+
+
+class StepUpView(NgrcAPIView):
+    ngrc_policy = Policy("session")
+
+    def post(self, request):
+        d = StepUpSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        s, a = _session_account(request)
+        wait = flow.mfa_retry_after(CUSTOMER, a, _ip(request))
+        if wait:
+            return _throttled(wait)
+        method, code = d.validated_data["method"], d.validated_data["code"]
+        ok = (totp.verify(a, code) == "ok") if method == "totp" else recovery.consume(a, code)
+        if not ok:
+            flow.mfa_failed(CUSTOMER, a, _ip(request), method)
+            audit.emit_platform("auth", "auth.stepup.failure", actor_id=a.id, result="denied",
+                                details={"tier": "T1", "method": method})
+            return Response({"error": "invalid_code"}, status=401)
+        sessions.mark_step_up(CUSTOMER, s, method)
+        _audit_both(a, "auth.stepup.success", session=s, details={"tier": "T1", "method": method})
+        return Response({"status": "ok", "valid_for_seconds": 600})
+
+
+class StepUpWebAuthnBeginView(NgrcAPIView):
+    ngrc_policy = Policy("session")
+
+    def post(self, request):
+        s, a = _session_account(request)
+        try:
+            return Response(webauthn_.authentication_options(CUSTOMER, s, a, require_uv=_uv(a), purpose="stepup", binding="T1"))
+        except webauthn_.WebAuthnError:
+            return Response({"error": "no_credentials"}, status=400)
+
+
+class StepUpWebAuthnCompleteView(NgrcAPIView):
+    ngrc_policy = Policy("session")
+
+    def post(self, request):
+        d = WebAuthnCredentialSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        s, a = _session_account(request)
+        try:
+            webauthn_.complete_authentication(CUSTOMER, s, a, d.validated_data["credential"], require_uv=_uv(a),
+                                              purpose="stepup", binding="T1")
+        except webauthn_.WebAuthnError:
+            audit.emit_platform("auth", "auth.stepup.failure", actor_id=a.id, result="denied",
+                                details={"tier": "T1", "method": "webauthn"})
+            return Response({"error": "invalid_assertion"}, status=401)
+        sessions.mark_step_up(CUSTOMER, s, "webauthn")
+        _audit_both(a, "auth.stepup.success", session=s, details={"tier": "T1", "method": "webauthn"})
+        return Response({"status": "ok", "valid_for_seconds": 600})
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    current_password = serializers.CharField(max_length=1024, trim_whitespace=False)
+    new_password = serializers.CharField(max_length=1024, trim_whitespace=False)
+
+
+class PasswordChangeView(NgrcAPIView):
+    ngrc_policy = Policy("session", step_up="T1")
+
+    def post(self, request):
+        d = PasswordChangeSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        s, a = _session_account(request)
+        wait = throttle.retry_after(CUSTOMER, a.email, _ip(request), scope="pwchange")
+        if wait:
+            return _throttled(wait)
+        if not passwords.verify_password(a.password_hash, d.validated_data["current_password"]):
+            throttle.record_failure(CUSTOMER, a.email, _ip(request), scope="pwchange")
+            return Response({"error": "invalid_credentials"}, status=401)
+        try:
+            services.set_password(a, d.validated_data["new_password"])
+        except passwords.PolicyViolation as exc:
+            return Response({"error": "invalid_password", "reason": exc.code}, status=400)
+        sessions.revoke_all(CUSTOMER, a.id, except_id=s.id, reason="password_changed")
+        _audit_both(a, "auth.password.changed", session=s)
+        services.send_notice(a, "Your NsureGRC password was changed", "Your password was changed. If this was not you, contact your administrator.")
+        return Response({"status": "ok"})

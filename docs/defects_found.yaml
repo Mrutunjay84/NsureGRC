@@ -1,0 +1,126 @@
+# Defects found while verifying the Phase 1 implementation (by the test suite, scanners or review) and what was done about them.
+# Severity is the engineer's assessment, not a CVSS score. Every fixed item names the regression test that now guards it.
+# `status: fixed` means a fix exists AND the named tests pass in the recorded run; it is not a claim that no similar defect remains.
+version: 1
+defects:
+  - id: DEF-01
+    title: Application could not start - circular import between DRF settings and ngrc.authz.drf
+    severity: high (availability; blocked every other control)
+    found_by: django system check (first run)
+    detail: REST_FRAMEWORK referenced classes inside the module that imports rest_framework.views, which resolves those paths while it is still being imported.
+    fix: classes moved to ngrc/authz/drf_defaults.py (no rest_framework.views import); drf.py re-exports them.
+    tests: [tests/test_authorization_api.py::test_drf_defaults_fail_closed, tests/test_smoke_flows.py]
+    status: fixed
+  - id: DEF-02
+    title: Tenant provisioning always failed - plt_provision_tenant omitted the NOT NULL column idn_invitation.kind
+    severity: high (functional; no tenant could be created)
+    found_by: tests/test_rls_tenant_isolation.py fixtures
+    fix: migration control_plane/0003_provision_invitation_kind.py (CREATE OR REPLACE FUNCTION)
+    tests: [tests/test_support_access.py::test_only_platform_admin_can_provision_and_it_needs_step_up, tests/test_rls_tenant_isolation.py]
+    status: fixed
+  - id: DEF-03
+    title: The migration identity (ngrc_owner) inherited the audit owner's privileges and could forge audit rows
+    severity: high (audit integrity; contradicts D-P0-006 duty separation)
+    found_by: manual probe while writing the audit tamper tests
+    detail: GRANT ngrc_audit_owner TO ngrc_owner defaulted to INHERIT TRUE, so ngrc_owner could INSERT into audit.chain_head and call the hash helper without SET ROLE.
+    fix: GRANT ... WITH INHERIT FALSE, SET TRUE in db/bootstrap/00_roles.sql; audit migration 0001 now executes SET LOCAL ROLE before touching audit-owned objects.
+    tests: [tests/test_audit_integrity.py::test_migration_identity_cannot_write_audit_without_set_role, tests/test_table_classification.py::test_migration_identity_has_no_privileges_on_audit]
+    status: fixed
+    note: Existing clusters must re-run the GRANT (documented in docs/OPERATIONS_NOTES.md). A database SUPERUSER remains outside this control (see F-AUD-001 gaps).
+  - id: DEF-04
+    title: Non-ASCII digits in the TOTP code caused HTTP 500 (and "$" tolerated a trailing newline)
+    severity: medium (remotely triggerable server error on an authentication endpoint)
+    found_by: tests/test_authentication.py::test_totp_code_format_is_enforced
+    detail: regex \d matched Unicode digits; hmac.compare_digest then raised TypeError.
+    fix: ASCII-only fullmatch regex and an isinstance check in ngrc/authn/totp.py.
+    tests: [tests/test_authentication.py::test_totp_code_format_is_enforced]
+    status: fixed
+  - id: DEF-05
+    title: Policy step-up was not enforced for session-scope routes (password change skipped its declared T1 step-up)
+    severity: high (authorization; documented control silently inactive)
+    found_by: tests/test_authentication.py::test_password_change_requires_current_password_and_step_up
+    fix: PolicyPermission now calls require_recent_step_up when a policy declares step_up without a catalogue permission.
+    tests: [tests/test_authentication.py::test_password_change_requires_current_password_and_step_up]
+    status: fixed
+  - id: DEF-06
+    title: MFA downgrade - a credential flagged as cloned made the account look factor-less, so a password-only login could enrol a new factor
+    severity: high (authentication bypass path)
+    found_by: tests/test_authentication.py::test_webauthn_counter_regression_flags_the_credential
+    fix: flagged credentials still count as an enrolled factor (ngrc/authn/flow.py::_has_factor); the user must recover instead of re-enrolling with only a password.
+    tests: [tests/test_authentication.py::test_webauthn_counter_regression_flags_the_credential, tests/test_support_access.py::test_operator_counter_regression_blocks_the_credential]
+    status: fixed
+    note: The recovery workflow itself (factor removal, cooling-off) is NOT IMPLEMENTED - see F-ATH-007.
+  - id: DEF-07
+    title: Break-glass could not be completed - permissions were assigned to the wrong platform roles and the approval route excluded the second approver
+    severity: medium (functional/design conformance with D-P0-005 s2/s4)
+    found_by: tests/test_support_access.py (break-glass flow)
+    fix: platform_support requests break-glass (requester is never an approver); platform_admin no longer holds support.request/breakglass.request; approval routes admit both approver roles and each step requires its own permission.
+    tests: [tests/test_support_access.py::test_break_glass_needs_two_distinct_approvers_and_skips_consent, tests/test_support_access.py::test_approvers_cannot_request_break_glass, tests/test_support_access.py::test_break_glass_second_approver_must_be_a_different_platform_admin]
+    status: fixed
+    note: The DB guard trigger still allows platform_admin as a requester role (superset of the application rule). Tightening it is tracked in docs/OPEN_ITEMS.md (H-01).
+  - id: DEF-08
+    title: userVerification was not required for privileged customer accounts
+    severity: medium (ADR conformance)
+    found_by: review against D-P0-008 s7.2
+    fix: ngrc/iam/views.py::_uv() requires UV when the account holds any privileged tenant role; operator realm always requires UV.
+    tests: [tests/test_authentication.py::test_privileged_roles_require_user_verification, tests/test_support_access.py::test_operator_requires_webauthn_with_user_verification]
+    status: fixed
+  - id: DEF-09
+    title: NUL characters, lone surrogates and deeply nested JSON produced HTTP 500
+    severity: medium (robustness / DoS-adjacent; remotely triggerable)
+    found_by: tests/test_input_and_exposure.py
+    fix: ngrc/core/parsers.py::StrictJSONParser (rejects NUL / unencodable strings, depth limit 32, RecursionError -> 400) set as the only parser.
+    tests: [tests/test_input_and_exposure.py::test_nul_and_invalid_unicode_never_cause_a_server_error, tests/test_input_and_exposure.py::test_malformed_and_oversized_bodies_are_rejected_cleanly]
+    status: fixed
+  - id: DEF-10
+    title: X-Frame-Options header was never sent (setting present, middleware absent)
+    severity: low (CSP frame-ancestors already denied framing in modern browsers)
+    found_by: tests/test_input_and_exposure.py::test_all_responses_are_json_with_hardening_headers
+    fix: XFrameOptionsMiddleware added.
+    tests: [tests/test_input_and_exposure.py::test_all_responses_are_json_with_hardening_headers]
+    status: fixed
+  - id: DEF-11
+    title: Role-key validation regex used "$" (tolerates a trailing newline)
+    severity: low (defence in depth; DRF already trims whitespace)
+    found_by: review after DEF-04
+    fix: fullmatch in ngrc/tenancy/roles.py / views.py.
+    tests: [tests/test_authorization_api.py::test_role_creation_validation_and_mass_assignment]
+    status: fixed
+  - id: DEF-12
+    title: idn_session carried a column literally named tenant_id, contradicting D-P0-009 s2.2 (IDN tables carry no plain tenant_id)
+    severity: low (classification rule; made the automated shape check unable to be exact)
+    found_by: writing tests/test_table_classification.py
+    fix: renamed to active_tenant_id (migration iam/0004_session_active_tenant.py); the SQL function that referenced it was redefined.
+    tests: [tests/test_table_classification.py::test_non_tenant_classes_have_no_plain_tenant_id]
+    status: fixed
+  - id: DEF-13
+    title: Import-time validation used assert (removed under python -O)
+    severity: low
+    found_by: bandit B101
+    fix: explicit RuntimeError in ngrc/audit/actions.py.
+    tests: [tests/test_audit_integrity.py::test_action_registry_matches_code]
+    status: fixed
+  - id: GAP-01
+    title: Phase 1 steps with no implementation at the start of this verification (operator-plane API, classification manifest, CI workflow, Dockerfile, test suite, evidence generation, reports)
+    severity: process
+    found_by: gap analysis against the Phase 1 brief
+    fix: built in this session; see docs/PHASE1_SECURITY_GATE.md for the resulting status of each step.
+    tests: [tests/test_support_access.py, tests/test_table_classification.py, tests/test_evidence_artifacts.py]
+    status: fixed
+  - id: DEF-14
+    title: Support-grant guard trigger weaknesses - platform_admin accepted as requester (H-01); decision/time columns editable without a state change (an ACTIVE grant's expiry could be extended, approvers planted, activation/approval times rewritten); consent columns writable on any transition by the owner role; pre-set decision fields accepted on insert; role-only (not account-status) checks
+    severity: high (the audit stream accepts operator `support.action` events while a grant is active and `expires_at > now()`, so an extended expiry widened the window in which operator actions were accepted; also weakened separation of duties at the database layer)
+    found_by: P2-4 re-review of plt_support_grant_guard (H-01 plus the same-state branch)
+    detail: Only reachable by a holder of the ngrc_ops credential (or SQL injection into the operator plane); the application layer did not expose it. The Phase 1 tests exercised illegal STATE TRANSITIONS, not same-state column edits.
+    fix: migration control_plane/0004_harden_support_grant_guard.py - requester must hold platform_support and be active; decision/time columns are write-once and set only with the matching transition; expiry can only be SHORTENED while active; the single remaining same-state write is the fully validated first break-glass approval; consent columns change only on approved -> tenant_consented; insert rejects pre-set fields and inconsistent scope; approvers/requester must be active accounts and the requester must still hold platform_support at activation.
+    tests: [tests/test_support_grant_db_guard.py::test_only_platform_support_can_be_the_requester_even_by_direct_insert, tests/test_support_grant_db_guard.py::test_an_active_grant_cannot_be_widened_or_rewritten_without_a_state_transition, tests/test_support_grant_db_guard.py::test_expiry_may_be_cut_short_but_never_extended_and_audit_follows_the_real_expiry, tests/test_support_grant_db_guard.py::test_break_glass_first_approval_is_validated_in_full, tests/test_support_grant_db_guard.py::test_activation_requires_the_requester_to_still_hold_platform_support]
+    status: fixed
+    note: 25 of the 26 new tests fail against the Phase 1 trigger (evidence/p2_4_mutation_check_phase1_trigger.txt); the 26th guards a rule that already existed.
+  - id: DEF-15
+    title: Account lock-out without an exit path - 20 failed logins for an e-mail address (10 for operators; 10 MFA failures for customers) set the account to recovery_required, but the ADR's "verified-email unlock + MFA, owner/admin notified, never a silent permanent lock" is not implemented
+    severity: high (availability / lock-out denial of service by anyone who knows an e-mail address; contradicts D-P0-008 s4)
+    found_by: preparing the P2-2 review package (reading throttle.py against the ADR)
+    detail: The progressive back-off alone would not lock an account permanently; the hard stop does, and there is no unlock flow or notification. Existing test test_account_recovery_required_after_many_failures asserts the lock (the intended ADR behaviour) but nothing asserts the exit.
+    fix: NOT FIXED. Decision needed from the project owner (keep the hard stop and accept the availability risk until F-ATH-008 exists, or remove the hard stop - back-off only - as an interim). Not changed unilaterally because either choice alters a security control. Tracked by the pending spec below and by plan section 5.
+    tests: [tests/test_pending_controls.py::test_an_account_locked_by_failed_logins_has_an_email_unlock_path_and_the_owner_is_notified]
+    status: open

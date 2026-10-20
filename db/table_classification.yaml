@@ -1,0 +1,53 @@
+# NsureGRC table classification manifest (D-P0-009 s5). One entry per table, version-controlled.
+# CI (tests/test_table_classification.py) compares this file with pg_catalog: every table must be listed and vice-versa,
+# and the table's physical shape must match its class. An unclassified table fails the build.
+#
+# class: CAT | PLT | IDN | TEN | AUD | SYS      data_class: P | I | C | R (D-P0-007)
+# rls: required | none      tenant_column: the ONLY permitted column that refers to a tenant (TEN: tenant_id)
+version: 1
+tables:
+  # ------------------------------------------------------------------ SYS (framework bookkeeping, no business data)
+  - {table: django_migrations, class: SYS, data_class: I, domain: platform, owner_module: django, rls: none,
+     notes: "Schema migration history; owner-only (no runtime role has any privilege)."}
+
+  # ------------------------------------------------------------------ PLT (platform control plane; ngrc_ops)
+  - {table: plt_tenant, class: PLT, data_class: I, domain: tenancy, owner_module: ngrc.control_plane, rls: required,
+     notes: "Tenant registry. Tenant plane sees only its own row (policy id = ngrc_current_tenant())."}
+  - {table: plt_operator_account, class: PLT, data_class: R, domain: iam, owner_module: ngrc.control_plane, rls: none,
+     notes: "Staff accounts + credential hashes. Reachable by ngrc_ops only."}
+  - {table: plt_operator_role, class: PLT, data_class: I, domain: iam, owner_module: ngrc.control_plane, rls: none}
+  - {table: plt_operator_session, class: PLT, data_class: R, domain: iam, owner_module: ngrc.control_plane, rls: none,
+     notes: "Session token hashes."}
+  - {table: plt_operator_throttle, class: PLT, data_class: R, domain: iam, owner_module: ngrc.control_plane, rls: none}
+  - {table: plt_operator_webauthn_credential, class: PLT, data_class: R, domain: iam, owner_module: ngrc.control_plane, rls: none}
+  - {table: plt_support_access_grant, class: PLT, data_class: C, domain: support, owner_module: ngrc.control_plane, rls: none,
+     tenant_column: subject_tenant_id,
+     notes: "State machine + separation of duties enforced by trigger; no DELETE/TRUNCATE; consent only via SECURITY DEFINER fns."}
+
+  # ------------------------------------------------------------------ IDN (customer identity; ngrc_auth)
+  - {table: idn_account, class: IDN, data_class: R, domain: iam, owner_module: ngrc.iam, rls: required,
+     notes: "Credentials. ngrc_app has a column-level SELECT on (id,email,display_name,status) filtered by RLS (profile projection)."}
+  - {table: idn_session, class: IDN, data_class: R, domain: iam, owner_module: ngrc.iam, rls: none,
+     tenant_column: active_tenant_id}
+  - {table: idn_totp_factor, class: IDN, data_class: R, domain: iam, owner_module: ngrc.iam, rls: none}
+  - {table: idn_webauthn_credential, class: IDN, data_class: R, domain: iam, owner_module: ngrc.iam, rls: none}
+  - {table: idn_recovery_code, class: IDN, data_class: R, domain: iam, owner_module: ngrc.iam, rls: none}
+  - {table: idn_auth_token, class: IDN, data_class: R, domain: iam, owner_module: ngrc.iam, rls: none}
+  - {table: idn_throttle, class: IDN, data_class: R, domain: iam, owner_module: ngrc.iam, rls: none}
+  - {table: idn_invitation, class: IDN, data_class: R, domain: iam, owner_module: ngrc.iam, rls: none,
+     tenant_column: subject_tenant_id,
+     notes: "Deviation A10 from D-P0-009 s6: IDN-class (token hash is Restricted). Tenant admins use SECURITY DEFINER fns only."}
+
+  # ------------------------------------------------------------------ TEN (tenant-owned; ngrc_app under RLS)
+  - {table: ten_role, class: TEN, data_class: C, domain: iam, owner_module: ngrc.tenancy, rls: required, tenant_column: tenant_id}
+  - {table: ten_membership, class: TEN, data_class: C, domain: iam, owner_module: ngrc.tenancy, rls: required, tenant_column: tenant_id}
+
+  # ------------------------------------------------------------------ AUD (audit schema; append functions only)
+  - {table: audit.action_registry, class: AUD, data_class: I, domain: audit, owner_module: ngrc.audit, rls: none}
+  - {table: audit.chain_head, class: AUD, data_class: R, domain: audit, owner_module: ngrc.audit, rls: none}
+  - {table: audit.checkpoint, class: AUD, data_class: R, domain: audit, owner_module: ngrc.audit, rls: required}
+  - {table: audit.verification_run, class: AUD, data_class: R, domain: audit, owner_module: ngrc.audit, rls: none}
+  - {table: audit.platform_event, class: AUD, data_class: R, domain: audit, owner_module: ngrc.audit, rls: required,
+     tenant_column: related_tenant_id, notes: "related_tenant_id is nullable BY DOCUMENTED DESIGN (platform stream)."}
+  - {table: audit.tenant_event, class: AUD, data_class: C, domain: audit, owner_module: ngrc.audit, rls: required,
+     tenant_column: tenant_id}

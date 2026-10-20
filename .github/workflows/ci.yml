@@ -1,0 +1,142 @@
+# NsureGRC CI - security gates.
+# STATUS: DEFINED, NOT YET EXECUTED on a CI runner (no repository or runner existed during Phase 1). The same gates were run locally
+# by scripts/security_gate.py; see evidence/gate_summary.json and docs/PHASE1_SECURITY_GATE.md for what actually ran.
+# Actions are pinned by version tag; pinning by commit SHA and the base image by digest is tracked in docs/DEPENDENCIES.md.
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read            # least privilege: no write tokens for any job
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  UV_VERSION: "0.11.6"
+
+jobs:
+  tests:
+    name: lint + migration check + security regression suite
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.CI_PG_SUPERUSER_PASSWORD }}   # ephemeral service container; value held in repository secrets
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: ${{ secrets.CI_PG_SUPERUSER_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: astral-sh/setup-uv@v5
+        with: {version: "${{ env.UV_VERSION }}", enable-cache: true}
+      - run: uv sync --frozen
+      - name: Bootstrap least-privilege database roles (random passwords, never stored)
+        run: bash scripts/ci_bootstrap.sh
+      - name: Lint (includes security-lint rules)
+        run: uv run ruff check ngrc config tests scripts --output-format github
+      - name: Migration drift check (models == migrations)
+        run: |
+          set -a; source "$NGRC_ENV_FILE"; set +a
+          DJANGO_SETTINGS_MODULE=config.settings.test uv run python manage.py makemigrations --check --dry-run
+      - name: Security regression suite (RLS, audit, authn/authz, injection, configuration)
+        run: |
+          set -a; source "$NGRC_ENV_FILE"; set +a
+          mkdir -p evidence
+          uv run pytest tests -q --junitxml=evidence/junit.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: test-evidence, path: evidence/, retention-days: 90}
+
+  sast:
+    name: SAST (bandit + semgrep)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: astral-sh/setup-uv@v5
+        with: {version: "${{ env.UV_VERSION }}", enable-cache: true}
+      - run: uv sync --frozen
+      - run: mkdir -p evidence
+      - name: bandit (fails on any finding; migrations excluded with documented justification)
+        run: >-
+          uv run bandit -r ngrc config -c pyproject.toml
+          -x ngrc/audit/migrations,ngrc/control_plane/migrations,ngrc/iam/migrations,ngrc/tenancy/migrations,ngrc/core/migrations,tests
+          -f json -o evidence/bandit.json
+      - name: semgrep (registry rules; fails on any finding)
+        run: uv run semgrep scan --config p/python --config p/django --config p/security-audit --metrics=off --error --json -o evidence/semgrep.json ngrc config
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: sast-evidence, path: evidence/, retention-days: 90}
+
+  sca:
+    name: dependency vulnerabilities (pip-audit)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: astral-sh/setup-uv@v5
+        with: {version: "${{ env.UV_VERSION }}", enable-cache: true}
+      - run: mkdir -p evidence
+      - name: Export the PRODUCTION dependency set from the lock file
+        run: uv export --no-dev --no-hashes --no-emit-project -o evidence/requirements-runtime.txt
+      - name: pip-audit runtime dependencies (blocking; no allow-list path)
+        run: uvx pip-audit -r evidence/requirements-runtime.txt --no-deps --disable-pip -f json -o evidence/pip_audit_runtime.json
+      - name: Dev tooling (reported; only entries in docs/accepted_risks.yaml may remain)
+        run: |
+          uv export --no-hashes --no-emit-project -o evidence/requirements-all.txt
+          uvx pip-audit -r evidence/requirements-all.txt --no-deps --disable-pip -f json -o evidence/pip_audit.json || true
+          uv run --with pyyaml python scripts/check_accepted_risks.py evidence/pip_audit.json docs/accepted_risks.yaml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: sca-evidence, path: evidence/, retention-days: 90}
+
+  secrets:
+    name: secret scanning
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}   # full history: a secret removed from HEAD can still live in history
+      - uses: astral-sh/setup-uv@v5
+        with: {version: "${{ env.UV_VERSION }}", enable-cache: true}
+      - run: uv sync --frozen
+      - name: detect-secrets against the audited baseline (fails on any unreviewed candidate)
+        run: mkdir -p evidence && uv run python scripts/security_gate.py --only secrets
+      - uses: gitleaks/gitleaks-action@v2
+        env: {GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"}
+
+  container:
+    name: container build + image scan + Dockerfile lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: hadolint/hadolint-action@v3.1.0
+        with: {dockerfile: Dockerfile, failure-threshold: warning}
+      - name: Build
+        run: docker build -t nsuregrc:${{ github.sha }} .
+      - name: Trivy image scan (HIGH/CRITICAL with an available fix fail the build)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: nsuregrc:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: sarif
+          output: trivy-image.sarif
+      - name: Trivy Dockerfile / configuration scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with: {scan-type: config, scan-ref: ., severity: "MEDIUM,HIGH,CRITICAL", exit-code: "1"}
+      - name: Image runs as the unprivileged uid
+        run: test "$(docker run --rm --entrypoint id nsuregrc:${{ github.sha }} -u)" = "10001"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: container-evidence, path: trivy-image.sarif, retention-days: 90}

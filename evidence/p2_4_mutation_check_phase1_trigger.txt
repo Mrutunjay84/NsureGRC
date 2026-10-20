@@ -1,0 +1,40 @@
+
+role = 'ngrc_ops'
+sql = "UPDATE plt_support_access_grant SET state = 'active', activated_at = now(), expires_at = now() + interval '30 minutes' WHERE id = %s"
+params = ['0a03041d-60e4-4681-97b1-99e3051c1bb6']
+fragment = 'requester no longer holds Platform Support'
+
+    def refused(role, sql, params, fragment):
+        """The statement must fail with OUR trigger's message (guards against passing on an unrelated privilege error)."""
+>       with role_connect(role) as c, pytest.raises(psycopg.errors.Error) as exc:
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE Error
+
+tests\test_support_grant_db_guard.py:34: Failed
+=========================== short test summary info ===========================
+FAILED tests/test_support_grant_db_guard.py::test_only_platform_support_can_be_the_requester_even_by_direct_insert[roles0]
+FAILED tests/test_support_grant_db_guard.py::test_only_platform_support_can_be_the_requester_even_by_direct_insert[roles1]
+FAILED tests/test_support_grant_db_guard.py::test_only_platform_support_can_be_the_requester_even_by_direct_insert[roles2]
+FAILED tests/test_support_grant_db_guard.py::test_only_platform_support_can_be_the_requester_even_by_direct_insert[roles3]
+FAILED tests/test_support_grant_db_guard.py::test_a_disabled_support_operator_cannot_open_a_request_and_the_positive_control_works
+FAILED tests/test_support_grant_db_guard.py::test_insert_cannot_preload_decision_fields_or_an_inconsistent_scope[over0-must be empty on insert]
+FAILED tests/test_support_grant_db_guard.py::test_insert_cannot_preload_decision_fields_or_an_inconsistent_scope[over1-must be empty on insert]
+FAILED tests/test_support_grant_db_guard.py::test_insert_cannot_preload_decision_fields_or_an_inconsistent_scope[over2-must be empty on insert]
+FAILED tests/test_support_grant_db_guard.py::test_insert_cannot_preload_decision_fields_or_an_inconsistent_scope[over3-must be empty on insert]
+FAILED tests/test_support_grant_db_guard.py::test_insert_cannot_preload_decision_fields_or_an_inconsistent_scope[over4-scope must be a list]
+FAILED tests/test_support_grant_db_guard.py::test_insert_cannot_preload_decision_fields_or_an_inconsistent_scope[over5-scope must be a list]
+FAILED tests/test_support_grant_db_guard.py::test_an_active_grant_cannot_be_widened_or_rewritten_without_a_state_transition[UPDATE plt_support_access_grant SET expires_at = expires_at + interval '1 day' WHERE id = %s-expiry can only be shortened]
+FAILED tests/test_support_grant_db_guard.py::test_an_active_grant_cannot_be_widened_or_rewritten_without_a_state_transition[UPDATE plt_support_access_grant SET expires_at = NULL WHERE id = %s-expiry can only be shortened]
+FAILED tests/test_support_grant_db_guard.py::test_an_active_grant_cannot_be_widened_or_rewritten_without_a_state_transition[UPDATE plt_support_access_grant SET activated_at = activated_at + interval '1 hour' WHERE id = %s-activation time cannot be changed]
+FAILED tests/test_support_grant_db_guard.py::test_an_active_grant_cannot_be_widened_or_rewritten_without_a_state_transition[UPDATE plt_support_access_grant SET approved_at = now() WHERE id = %s-approval time cannot be changed]
+FAILED tests/test_support_grant_db_guard.py::test_an_active_grant_cannot_be_widened_or_rewritten_without_a_state_transition[UPDATE plt_support_access_grant SET ended_at = now() WHERE id = %s-end fields change only when the grant ends]
+FAILED tests/test_support_grant_db_guard.py::test_an_active_grant_cannot_be_widened_or_rewritten_without_a_state_transition[UPDATE plt_support_access_grant SET ended_by_type = 'tenant' WHERE id = %s-end fields change only when the grant ends]
+FAILED tests/test_support_grant_db_guard.py::test_an_active_grant_cannot_be_widened_or_rewritten_without_a_state_transition[UPDATE plt_support_access_grant SET second_approver_id = requester_id WHERE id = %s-second approver is recorded only]
+FAILED tests/test_support_grant_db_guard.py::test_expiry_may_be_cut_short_but_never_extended_and_audit_follows_the_real_expiry
+FAILED tests/test_support_grant_db_guard.py::test_state_transitions_cannot_smuggle_changes_to_other_columns
+FAILED tests/test_support_grant_db_guard.py::test_an_approver_cannot_be_planted_without_the_approval_transition
+FAILED tests/test_support_grant_db_guard.py::test_break_glass_first_approval_is_validated_in_full
+FAILED tests/test_support_grant_db_guard.py::test_a_requester_who_is_also_security_cannot_be_recorded_as_their_own_approver
+FAILED tests/test_support_grant_db_guard.py::test_consent_columns_cannot_be_written_outside_the_consent_transition_even_by_the_owner_role
+FAILED tests/test_support_grant_db_guard.py::test_activation_requires_the_requester_to_still_hold_platform_support
+25 failed, 1 passed in 12.64s

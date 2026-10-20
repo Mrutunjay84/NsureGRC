@@ -1,0 +1,24 @@
+# P2-1 CI run record.
+#
+# STATUS: NOT_RUN. The CI workflow (.github/workflows/ci.yml) has never executed on a CI runner: this workstation has no remote repository,
+# no CI service credentials and no `gh` CLI, and nothing was pushed anywhere. Local rehearsals (docs/ci/LOCAL_REHEARSAL.md) are NOT CI runs.
+# scripts/check_ci_record.py decides what this file may mean. Do not edit `run:` by hand from memory - copy it from the CI service's run page.
+version: 1
+status: NOT_RUN
+status_reason: "No repository/runner exists for this project yet (needs the project owner to create one and push; see docs/ci/CI_RUNBOOK.md)."
+run: null
+
+# ------------------------------------------------------------------------------------------------------------------ template (do not use as-is)
+# run:
+#   service: "GitHub Actions"
+#   url: "https://github.com/<owner>/<repo>/actions/runs/<id>"
+#   commit_sha: "<40-hex commit that the run built>"
+#   workflow_sha256: "<sha256 of .github/workflows/ci.yml at that commit>"
+#   completed_at: "<ISO-8601 time from the run page>"
+#   runner_image: "<e.g. ubuntu-24.04 + image version shown in the run log>"
+#   jobs:
+#     tests:     {conclusion: success, evidence: "artifact test-evidence (junit.xml sha256 ...)"}
+#     sast:      {conclusion: success, evidence: "artifact sast-evidence"}
+#     sca:       {conclusion: success, evidence: "artifact sca-evidence"}
+#     secrets:   {conclusion: success, evidence: "run log: detect-secrets + gitleaks full-history scan"}
+#     container: {conclusion: success, docker_available: true, evidence: "artifact container-evidence (trivy-image.sarif) + hadolint output"}

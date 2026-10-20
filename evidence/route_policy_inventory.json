@@ -1,0 +1,811 @@
+{
+  "database": "ngrc_test",
+  "generated_at": "2026-10-20T19:28:03+00:00",
+  "generator": "tests/test_evidence_artifacts.py::route_policy_inventory.json",
+  "route_count": 56,
+  "routes": [
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": null,
+      "public_reason": "issues a CSRF token; no data access",
+      "route": "/api/v1/auth/csrf/",
+      "scope": "public",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.CsrfView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": "email verification with a single-use token",
+      "route": "/api/v1/auth/email/verify/",
+      "scope": "public",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.VerifyEmailView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": "invitation acceptance; token proves mailbox control; existing users must be signed in",
+      "route": "/api/v1/auth/invitations/accept/",
+      "scope": "public",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.AcceptInvitationView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": "credential submission endpoint; throttled, uniform responses",
+      "route": "/api/v1/auth/login/",
+      "scope": "public",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.LoginView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/logout/",
+      "scope": "session",
+      "stages": [
+        "password_ok",
+        "enroll_mfa",
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.LogoutView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/mfa/recovery/verify/",
+      "scope": "session",
+      "stages": [
+        "password_ok"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.RecoveryVerifyView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/mfa/totp/enroll/begin/",
+      "scope": "session",
+      "stages": [
+        "enroll_mfa",
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.TotpEnrollBeginView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/mfa/totp/enroll/confirm/",
+      "scope": "session",
+      "stages": [
+        "enroll_mfa",
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.TotpEnrollConfirmView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/mfa/totp/verify/",
+      "scope": "session",
+      "stages": [
+        "password_ok"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.TotpVerifyView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/mfa/webauthn/authenticate/begin/",
+      "scope": "session",
+      "stages": [
+        "password_ok"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.WebAuthnAuthBeginView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/mfa/webauthn/authenticate/complete/",
+      "scope": "session",
+      "stages": [
+        "password_ok"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.WebAuthnAuthCompleteView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/mfa/webauthn/register/begin/",
+      "scope": "session",
+      "stages": [
+        "enroll_mfa",
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.WebAuthnRegisterBeginView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/mfa/webauthn/register/complete/",
+      "scope": "session",
+      "stages": [
+        "enroll_mfa",
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.WebAuthnRegisterCompleteView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/password/change/",
+      "scope": "session",
+      "stages": [
+        "active"
+      ],
+      "step_up": "T1",
+      "view": "ngrc.iam.views.PasswordChangeView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": "completes password reset with a single-use token",
+      "route": "/api/v1/auth/password/reset/confirm/",
+      "scope": "public",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.ResetConfirmView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": "password reset request; generic response, rate limited",
+      "route": "/api/v1/auth/password/reset/request/",
+      "scope": "public",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.ResetRequestView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/session/",
+      "scope": "session",
+      "stages": [
+        "password_ok",
+        "enroll_mfa",
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.SessionView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/stepup/",
+      "scope": "session",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.StepUpView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/stepup/webauthn/begin/",
+      "scope": "session",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.StepUpWebAuthnBeginView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/stepup/webauthn/complete/",
+      "scope": "session",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.StepUpWebAuthnCompleteView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/tenants/",
+      "scope": "session",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.TenantsView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/tenants/select/",
+      "scope": "session",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.SelectTenantView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "audit.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/audit/events/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.tenancy.views.AuditEventsView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "audit.export",
+      "public_reason": null,
+      "route": "/api/v1/tenant/audit/export/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": "T1",
+      "view": "ngrc.tenancy.views.AuditExportView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "tenant.invitations.manage",
+      "public_reason": null,
+      "route": "/api/v1/tenant/invitations/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.tenancy.views.InvitationListView"
+    },
+    {
+      "methods": [
+        "DELETE"
+      ],
+      "permission": "tenant.invitations.manage",
+      "public_reason": null,
+      "route": "/api/v1/tenant/invitations/<uuid:pk>/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.tenancy.views.InvitationDetailView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "tenant.view",
+      "public_reason": null,
+      "route": "/api/v1/tenant/me/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.tenancy.views.MeView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "tenant.members.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/members/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.tenancy.views.MemberListView"
+    },
+    {
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "permission": "tenant.members.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/members/<uuid:pk>/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.tenancy.views.MemberDetailView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "tenant.roles.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/roles/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.tenancy.views.RoleListView"
+    },
+    {
+      "methods": [
+        "DELETE",
+        "GET",
+        "PATCH"
+      ],
+      "permission": "tenant.roles.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/roles/<uuid:pk>/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.tenancy.views.RoleDetailView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "tenant.support.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/support/grants/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.tenancy.views.SupportGrantListView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "tenant.support.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/support/grants/<uuid:pk>/consent/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.tenancy.views.SupportConsentView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "tenant.support.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/support/grants/<uuid:pk>/deny/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.tenancy.views.SupportDenyView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "tenant.support.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/support/grants/<uuid:pk>/revoke/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.tenancy.views.SupportRevokeView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/healthz",
+      "scope": "public (healthz)",
+      "stages": null,
+      "step_up": null,
+      "view": "ngrc.core.views.HealthView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "platform.audit.read",
+      "public_reason": null,
+      "route": "/ops/api/v1/audit/platform/",
+      "scope": "operator",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.PlatformAuditView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": null,
+      "public_reason": "issues a CSRF token; no data access",
+      "route": "/ops/api/v1/auth/csrf/",
+      "scope": "public",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.CsrfView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": "operator credential submission; throttled, uniform responses",
+      "route": "/ops/api/v1/auth/login/",
+      "scope": "public",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.LoginView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/ops/api/v1/auth/logout/",
+      "scope": "operator_session",
+      "stages": [
+        "password_ok",
+        "enroll_mfa",
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.LogoutView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/ops/api/v1/auth/mfa/webauthn/authenticate/begin/",
+      "scope": "operator_session",
+      "stages": [
+        "password_ok"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.WebAuthnAuthBeginView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/ops/api/v1/auth/mfa/webauthn/authenticate/complete/",
+      "scope": "operator_session",
+      "stages": [
+        "password_ok"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.WebAuthnAuthCompleteView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/ops/api/v1/auth/mfa/webauthn/register/begin/",
+      "scope": "operator_session",
+      "stages": [
+        "enroll_mfa",
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.WebAuthnRegisterBeginView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/ops/api/v1/auth/mfa/webauthn/register/complete/",
+      "scope": "operator_session",
+      "stages": [
+        "enroll_mfa",
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.WebAuthnRegisterCompleteView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/ops/api/v1/auth/session/",
+      "scope": "operator_session",
+      "stages": [
+        "password_ok",
+        "enroll_mfa",
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.SessionView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/ops/api/v1/auth/stepup/webauthn/begin/",
+      "scope": "operator_session",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.StepUpBeginView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/ops/api/v1/auth/stepup/webauthn/complete/",
+      "scope": "operator_session",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.StepUpCompleteView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "platform.support.read",
+      "public_reason": null,
+      "route": "/ops/api/v1/support/grants/",
+      "scope": "operator",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.GrantListView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "platform.support.use",
+      "public_reason": null,
+      "route": "/ops/api/v1/support/grants/<uuid:pk>/activate/",
+      "scope": "operator",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.GrantActivateView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "platform.breakglass.approve",
+      "public_reason": null,
+      "route": "/ops/api/v1/support/grants/<uuid:pk>/approve/",
+      "scope": "operator",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.GrantApproveView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "platform.breakglass.approve",
+      "public_reason": null,
+      "route": "/ops/api/v1/support/grants/<uuid:pk>/approve/begin/",
+      "scope": "operator",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.GrantApproveBeginView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "platform.support.use",
+      "public_reason": null,
+      "route": "/ops/api/v1/support/grants/<uuid:pk>/start/",
+      "scope": "operator",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.SupportSessionStartView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "support.diagnostics.read",
+      "public_reason": null,
+      "route": "/ops/api/v1/support/session/end/",
+      "scope": "operator_support",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.SupportSessionEndView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "support.diagnostics.read",
+      "public_reason": null,
+      "route": "/ops/api/v1/support/tenant/diagnostics/",
+      "scope": "operator_support",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.TenantDiagnosticsView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "tenant.roles.read",
+      "public_reason": null,
+      "route": "/ops/api/v1/support/tenant/roles/",
+      "scope": "operator_support",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.TenantRolesView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "platform.support.read",
+      "public_reason": null,
+      "route": "/ops/api/v1/tenants/",
+      "scope": "operator",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.TenantListView"
+    }
+  ]
+}

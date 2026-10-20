@@ -1,0 +1,320 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.76.0"
+  },
+  "ReportID": "01a15a3a-7362-786a-a1e6-b3e6fc7cd06d",
+  "CreatedAt": "2026-10-20T22:22:22.4985515+05:30",
+  "ArtifactName": ".",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "uv.lock",
+      "Class": "lang-pkgs",
+      "Type": "uv",
+      "Packages": [
+        {
+          "ID": "nsuregrc@1.3.0a1",
+          "Name": "nsuregrc",
+          "Identifier": {
+            "PURL": "pkg:pypi/nsuregrc@1.3.0a1",
+            "UID": "b32ffe0aafe2a28e"
+          },
+          "Version": "1.3.0a1",
+          "Relationship": "root",
+          "DependsOn": [
+            "argon2-cffi@25.1.0",
+            "cbor2@5.9.0",
+            "cryptography@50.0.2",
+            "django@5.2.18",
+            "djangorestframework@3.18.3",
+            "gunicorn@26.2.0",
+            "psycopg@3.3.6",
+            "pyotp@2.10.0",
+            "webauthn@2.8.0"
+          ],
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "argon2-cffi@25.1.0",
+          "Name": "argon2-cffi",
+          "Identifier": {
+            "PURL": "pkg:pypi/argon2-cffi@25.1.0",
+            "UID": "f04edef5f7cbb346"
+          },
+          "Version": "25.1.0",
+          "Relationship": "direct",
+          "DependsOn": [
+            "argon2-cffi-bindings@26.1.0"
+          ],
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "cbor2@5.9.0",
+          "Name": "cbor2",
+          "Identifier": {
+            "PURL": "pkg:pypi/cbor2@5.9.0",
+            "UID": "49d5b2ae1357b1e1"
+          },
+          "Version": "5.9.0",
+          "Relationship": "direct",
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "cryptography@50.0.2",
+          "Name": "cryptography",
+          "Identifier": {
+            "PURL": "pkg:pypi/cryptography@50.0.2",
+            "UID": "a7f912e00bfbc592"
+          },
+          "Version": "50.0.2",
+          "Relationship": "direct",
+          "DependsOn": [
+            "cffi@2.1.1"
+          ],
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "django@5.2.18",
+          "Name": "django",
+          "Identifier": {
+            "PURL": "pkg:pypi/django@5.2.18",
+            "UID": "80def688a800655f"
+          },
+          "Version": "5.2.18",
+          "Relationship": "direct",
+          "DependsOn": [
+            "asgiref@3.12.1",
+            "sqlparse@0.6.0",
+            "tzdata@2026.5"
+          ],
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "djangorestframework@3.18.3",
+          "Name": "djangorestframework",
+          "Identifier": {
+            "PURL": "pkg:pypi/djangorestframework@3.18.3",
+            "UID": "57fed3190403076f"
+          },
+          "Version": "3.18.3",
+          "Relationship": "direct",
+          "DependsOn": [
+            "django@5.2.18"
+          ],
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "gunicorn@26.2.0",
+          "Name": "gunicorn",
+          "Identifier": {
+            "PURL": "pkg:pypi/gunicorn@26.2.0",
+            "UID": "3371715900beeed6"
+          },
+          "Version": "26.2.0",
+          "Relationship": "direct",
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "psycopg@3.3.6",
+          "Name": "psycopg",
+          "Identifier": {
+            "PURL": "pkg:pypi/psycopg@3.3.6",
+            "UID": "96437db6425e45fb"
+          },
+          "Version": "3.3.6",
+          "Relationship": "direct",
+          "DependsOn": [
+            "psycopg-binary@3.3.6",
+            "typing-extensions@4.16.0",
+            "tzdata@2026.5"
+          ],
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "pyotp@2.10.0",
+          "Name": "pyotp",
+          "Identifier": {
+            "PURL": "pkg:pypi/pyotp@2.10.0",
+            "UID": "a37bccf3cdcf5cf4"
+          },
+          "Version": "2.10.0",
+          "Relationship": "direct",
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "webauthn@2.8.0",
+          "Name": "webauthn",
+          "Identifier": {
+            "PURL": "pkg:pypi/webauthn@2.8.0",
+            "UID": "8c20de91794dc19c"
+          },
+          "Version": "2.8.0",
+          "Relationship": "direct",
+          "DependsOn": [
+            "cbor2@5.9.0",
+            "cryptography@50.0.2",
+            "pyasn1-modules@0.4.2",
+            "pyasn1@0.6.4",
+            "pyopenssl@26.4.0"
+          ],
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "argon2-cffi-bindings@26.1.0",
+          "Name": "argon2-cffi-bindings",
+          "Identifier": {
+            "PURL": "pkg:pypi/argon2-cffi-bindings@26.1.0",
+            "UID": "6be951fa71d14321"
+          },
+          "Version": "26.1.0",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "cffi@2.1.1"
+          ],
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "asgiref@3.12.1",
+          "Name": "asgiref",
+          "Identifier": {
+            "PURL": "pkg:pypi/asgiref@3.12.1",
+            "UID": "dce04b9af237ebfe"
+          },
+          "Version": "3.12.1",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "cffi@2.1.1",
+          "Name": "cffi",
+          "Identifier": {
+            "PURL": "pkg:pypi/cffi@2.1.1",
+            "UID": "82a136bfa19e7eca"
+          },
+          "Version": "2.1.1",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "pycparser@3.11"
+          ],
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "psycopg-binary@3.3.6",
+          "Name": "psycopg-binary",
+          "Identifier": {
+            "PURL": "pkg:pypi/psycopg-binary@3.3.6",
+            "UID": "d7c987f03a3710e1"
+          },
+          "Version": "3.3.6",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "pyasn1@0.6.4",
+          "Name": "pyasn1",
+          "Identifier": {
+            "PURL": "pkg:pypi/pyasn1@0.6.4",
+            "UID": "6cf083b6fcb0bd26"
+          },
+          "Version": "0.6.4",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "pyasn1-modules@0.4.2",
+          "Name": "pyasn1-modules",
+          "Identifier": {
+            "PURL": "pkg:pypi/pyasn1-modules@0.4.2",
+            "UID": "f73a29674c72c40"
+          },
+          "Version": "0.4.2",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "pyasn1@0.6.4"
+          ],
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "pycparser@3.11",
+          "Name": "pycparser",
+          "Identifier": {
+            "PURL": "pkg:pypi/pycparser@3.11",
+            "UID": "545887626e7e16be"
+          },
+          "Version": "3.11",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "pyopenssl@26.4.0",
+          "Name": "pyopenssl",
+          "Identifier": {
+            "PURL": "pkg:pypi/pyopenssl@26.4.0",
+            "UID": "4a604bdea8e021d0"
+          },
+          "Version": "26.4.0",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "cryptography@50.0.2",
+            "typing-extensions@4.16.0"
+          ],
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "sqlparse@0.6.0",
+          "Name": "sqlparse",
+          "Identifier": {
+            "PURL": "pkg:pypi/sqlparse@0.6.0",
+            "UID": "4bd5d22d329ed7db"
+          },
+          "Version": "0.6.0",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "typing-extensions@4.16.0",
+          "Name": "typing-extensions",
+          "Identifier": {
+            "PURL": "pkg:pypi/typing-extensions@4.16.0",
+            "UID": "23fd9c45aea880bf"
+          },
+          "Version": "4.16.0",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "AnalyzedBy": "uv"
+        },
+        {
+          "ID": "tzdata@2026.5",
+          "Name": "tzdata",
+          "Identifier": {
+            "PURL": "pkg:pypi/tzdata@2026.5",
+            "UID": "b85b7f606e80bfe5"
+          },
+          "Version": "2026.5",
+          "Indirect": true,
+          "Relationship": "indirect",
+          "AnalyzedBy": "uv"
+        }
+      ]
+    },
+    {
+      "Target": "Dockerfile",
+      "Class": "config",
+      "Type": "dockerfile",
+      "MisconfSummary": {
+        "Successes": 20,
+        "Failures": 0
+      }
+    }
+  ]
+}

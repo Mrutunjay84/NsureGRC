@@ -1,0 +1,230 @@
+{
+  "database": "ngrc_test",
+  "generated_at": "2026-10-20T19:28:03+00:00",
+  "generator": "tests/test_evidence_artifacts.py::rls_coverage.json",
+  "tables": {
+    "audit.action_registry": {
+      "class": "AUD",
+      "data_class": "I",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "audit.chain_head": {
+      "class": "AUD",
+      "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "audit.checkpoint": {
+      "class": "AUD",
+      "data_class": "R",
+      "policies": [
+        "sealer_all",
+        "tenant_read",
+        "verifier_read"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "audit.platform_event": {
+      "class": "AUD",
+      "data_class": "R",
+      "policies": [
+        "owner_insert",
+        "platform_reader_read",
+        "verifier_read"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "audit.tenant_event": {
+      "class": "AUD",
+      "data_class": "C",
+      "policies": [
+        "owner_insert",
+        "tenant_read",
+        "verifier_read"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "audit.verification_run": {
+      "class": "AUD",
+      "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "django_migrations": {
+      "class": "SYS",
+      "data_class": "I",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "idn_account": {
+      "class": "IDN",
+      "data_class": "R",
+      "policies": [
+        "auth_all",
+        "owner_all",
+        "profile_visibility"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": false
+    },
+    "idn_auth_token": {
+      "class": "IDN",
+      "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "idn_invitation": {
+      "class": "IDN",
+      "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "idn_recovery_code": {
+      "class": "IDN",
+      "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "idn_session": {
+      "class": "IDN",
+      "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "idn_throttle": {
+      "class": "IDN",
+      "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "idn_totp_factor": {
+      "class": "IDN",
+      "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "idn_webauthn_credential": {
+      "class": "IDN",
+      "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "plt_operator_account": {
+      "class": "PLT",
+      "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "plt_operator_role": {
+      "class": "PLT",
+      "data_class": "I",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "plt_operator_session": {
+      "class": "PLT",
+      "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "plt_operator_throttle": {
+      "class": "PLT",
+      "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "plt_operator_webauthn_credential": {
+      "class": "PLT",
+      "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "plt_support_access_grant": {
+      "class": "PLT",
+      "data_class": "C",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "plt_tenant": {
+      "class": "PLT",
+      "data_class": "I",
+      "policies": [
+        "app_own_row",
+        "auth_read",
+        "ops_all",
+        "owner_all"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_membership": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "audit_owner_membership",
+        "auth_own_memberships",
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_role": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "auth_own_roles",
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    }
+  },
+  "ten_tables_without_forced_rls": []
+}

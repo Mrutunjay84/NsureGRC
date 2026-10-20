@@ -1,0 +1,14 @@
+# Accepted risks. Nothing is accepted implicitly: every entry names the finding, the justification and when it must be revisited.
+# scripts/security_gate.py treats a finding as PASS only if it is listed here; RUNTIME dependency findings are never accepted
+# silently (the runtime audit has no allow-list path other than an explicit entry reviewed in the gate report).
+accepted:
+  - id: CVE-2026-59951
+    package: mcp 1.29.0
+    scope: dev-tooling only (transitive dependency of semgrep, dependency group `dev`)
+    justification: >
+      Not part of the production dependency export (verified: `uv export --no-dev` contains no `mcp`) and not installed in the
+      runtime image. The advisory concerns a Streamable-HTTP MCP *server* in stateful mode; neither semgrep's use of the client
+      library nor this project starts such a server. semgrep 1.181.0 pins mcp==1.29.0, so the fixed version (1.30.0 / 2.2.0) cannot
+      be selected without changing/removing semgrep.
+    review_by: "at the next semgrep upgrade and before the Phase 2 security gate"
+    residual_risk: low

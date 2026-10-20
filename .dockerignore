@@ -1,0 +1,14 @@
+.git
+.env
+.env.*
+*.pem
+*.key
+.venv
+__pycache__
+.pytest_cache
+.ruff_cache
+evidence
+docs
+tests
+db/bootstrap
+.github

@@ -1,0 +1,73 @@
+# Scope of the P2-2 independent security review. Input to scripts/build_review_package.py and scripts/check_review_record.py.
+# Paths are relative to 03_APP/nsuregrc. `tests` are the automated tests that exercise the scope (they are NOT a substitute for review).
+version: 1
+scopes:
+  - id: audit_hash
+    title: Audit event hash construction (canonical encoding, domain separation, DB/Python equivalence)
+    design_refs: [D-P0-006 s3, s4]
+    files:
+      - ngrc/audit/chain.py
+      - ngrc/audit/migrations/0001_audit_schema.py      # audit._lp, audit._t, audit._event_hash, append functions, triggers
+      - ngrc/audit/migrations/0002_seed_registry.py
+      - ngrc/audit/actions.py
+      - ngrc/audit/service.py
+    tests: [tests/test_audit_integrity.py]
+  - id: audit_integrity_checkpoint
+    title: Audit integrity - hash chain, signed checkpoints, sealer, verifier, export, role separation
+    design_refs: [D-P0-006 s2, s5, s6, s10]
+    files:
+      - ngrc/audit/chain.py
+      - ngrc/audit/sealer.py
+      - ngrc/audit/signer.py
+      - ngrc/audit/verifier.py
+      - ngrc/audit/migrations/0001_audit_schema.py
+      - db/bootstrap/00_roles.sql
+      - ngrc/control_plane/migrations/0004_harden_support_grant_guard.py   # audit-write precondition for operator actions
+    tests: [tests/test_audit_integrity.py, tests/test_rls_bypass_attempts.py, tests/test_support_grant_db_guard.py, tests/test_pending_controls.py]
+  - id: aead_helper
+    title: AEAD / envelope-encryption helper and token/pepper hashing
+    design_refs: [D-P0-007 s3]
+    files:
+      - ngrc/core/crypto.py
+      - ngrc/authn/totp.py                 # consumer: TOTP secret sealing
+      - ngrc/authn/recovery.py             # consumer: recovery-code HMAC
+      - config/settings/base.py
+      - config/settings/prod.py
+    tests: [tests/test_crypto.py, tests/test_config_security.py, tests/test_pending_controls.py]
+  - id: authn_session_mfa
+    title: Authentication, session management and MFA (password, TOTP, WebAuthn, recovery codes, throttling, step-up, operator realm)
+    design_refs: [D-P0-008 s2-s10, D-P0-005 s1, s3]
+    files:
+      - ngrc/authn/abstract.py
+      - ngrc/authn/flow.py
+      - ngrc/authn/middleware.py
+      - ngrc/authn/passwords.py
+      - ngrc/authn/realms.py
+      - ngrc/authn/recovery.py
+      - ngrc/authn/sessions.py
+      - ngrc/authn/throttle.py
+      - ngrc/authn/totp.py
+      - ngrc/authn/webauthn_.py
+      - ngrc/iam/services.py
+      - ngrc/iam/views.py
+      - ngrc/control_plane/views.py
+      - ngrc/control_plane/support.py
+      - ngrc/control_plane/migrations/0002_security.py
+      - ngrc/control_plane/migrations/0004_harden_support_grant_guard.py
+      - ngrc/authz/policy.py
+      - ngrc/authz/drf.py
+      - ngrc/core/middleware.py
+    tests: [tests/test_authentication.py, tests/test_support_access.py, tests/test_support_grant_db_guard.py, tests/test_authorization_api.py]
+supporting_docs:
+  - ../../00_CONTROL/PHASE0/D-P0-005_Platform_Access_Model.md
+  - ../../00_CONTROL/PHASE0/D-P0-006_Audit_Integrity.md
+  - ../../00_CONTROL/PHASE0/D-P0-007_Data_Classification.md
+  - ../../00_CONTROL/PHASE0/D-P0-008_Authentication_Specification.md
+  - docs/ARCHITECTURE_SUMMARY.md
+  - docs/SECURITY_CONTROL_MATRIX.md
+  - docs/SECURITY_TEST_REPORT.md
+  - docs/defects_found.yaml
+  - docs/OPEN_ITEMS.md
+  - docs/review/INDEPENDENT_REVIEW_PACKAGE.md
+  - pyproject.toml
+  - uv.lock

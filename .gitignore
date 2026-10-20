@@ -1,0 +1,18 @@
+# secrets / local state - NEVER commit
+.env
+.env.*
+*.pem
+*.key
+*.p12
+secrets/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+evidence/audit_checkpoints_dev/
+
+# review package archive is rebuilt on demand (manifest is tracked)
+evidence/review_package/*.zip
