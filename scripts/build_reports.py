@@ -492,7 +492,7 @@ def main() -> int:
             "skipped": sum(1 for c in cases if c["result"] == "skipped"), "duration": float(suite.get("time", 0)) if suite is not None else 0.0,
             "env": "Windows 11 workstation, Python 3.12 (uv), PostgreSQL 16 in WSL2 Ubuntu", "ci": ci_txt, "review": review_txt}
     evald, errors = evaluate(cmap, cases)
-    mapped = {(h["file"], h["name"]) for c in evald for h in c["selected"]}
+    mapped = {(h["file"], h["name"]) for c in evald for h in [*c["selected"], *c.get("pending", [])]}
     unmapped = [c for c in cases if (c["file"], c["name"]) not in mapped]
     write_matrix(evald, meta)
     write_test_report(cases, evald, defects, meta)

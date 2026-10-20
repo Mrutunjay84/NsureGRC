@@ -2,28 +2,28 @@
   "checkpoints_issued": [
     {
       "algorithm": "ed25519",
-      "head_hash": "01f28f28c46d069c5def1f666a973bde9130a1e70d5fc3891c13b28eb9d21902",
-      "issued_at": "2026-10-20T19:47:58.972578Z",
-      "key_id": "dev-2228f9d9314631c8",
+      "head_hash": "d7f3f6b3bacac89448e364971459d66f992ef87b3b32fdda86e56e770560b515",
+      "issued_at": "2026-10-20T19:50:38.413262Z",
+      "key_id": "dev-7b8e3dbdc178d443",
       "seq": 4,
-      "signature": "c7541685af0cddcea03e721ebc3784f73a773a45dd23c849b8347fb500dc35b762cbdb45fab33e7be38d33a98e4cad24c379e067d0a97c8ea9ad978bef075d04",
+      "signature": "cc611c74b25a111b689c74041190caefba2ca785da5c7a1da5516a06e248a2f3fe75cb676237c0aa1c5675e29246b6ebaae5254f242423d395fe8dc046db1004",
       "sink": "dev-local-file (NOT WORM)",
-      "stream_key": "077670f0-f351-4622-8a10-6735ce671a20"
+      "stream_key": "1f2f639a-9e7b-4d12-bd02-2dde84aa86bd"
     }
   ],
   "database": "ngrc_test",
   "export_sink": "local directory (NOT WORM storage)",
-  "generated_at": "2026-10-20T19:47:58+00:00",
+  "generated_at": "2026-10-20T19:50:38+00:00",
   "generator": "tests/test_evidence_artifacts.py::audit_chain_verification.json",
   "ok": true,
   "scope": "fresh tenant created by this test (the shared test database also holds deliberately tampered streams)",
   "signer": {
     "algorithm": "ed25519",
     "dev_only": true,
-    "key_id": "dev-2228f9d9314631c8",
+    "key_id": "dev-7b8e3dbdc178d443",
     "note": "DEV-ONLY Ed25519 key on the same host as the DB; NOT the production control (open item O-4)"
   },
-  "stream": "077670f0-f351-4622-8a10-6735ce671a20",
+  "stream": "1f2f639a-9e7b-4d12-bd02-2dde84aa86bd",
   "verified_through_seq": 4,
   "violations": []
 }

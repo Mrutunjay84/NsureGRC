@@ -292,7 +292,7 @@ controls:
     implementation: []
     tests: []
     pending_specs:
-      - {file: tests/test_pending_controls.py, match: [test_download_, test_unscanned_or_quarantined, test_stored_object_that, test_a_support_session_cannot_download, test_restricted_class_evidence, test_object_keys_are_tenant_prefixed]}
+      - {file: tests/test_pending_controls.py, match: [test_download_, test_cross_tenant_download, test_unscanned_or_quarantined, test_stored_object_that, test_a_support_session_cannot_download, test_restricted_class_evidence, test_object_keys_are_tenant_prefixed]}
     not_implemented: true
     gaps: ["Evidence handling is Phase 3. Cross-tenant download tests are BLOCKED until it exists", "Plan: docs/plans/P2-3_IMPLEMENTATION_PLANS.md s1; decision D-EV-1 (integrity verification mode) and the object store (O-4) are open"]
     blocked: ["cross-tenant download"]

@@ -1,14 +1,17 @@
 # NsureGRC — Security Test Report (Phase 1 / v1.3-alpha)
 
-*Generated 2026-10-20 16:54 UTC from `evidence/junit.xml`. Environment: Windows 11 workstation, Python 3.12 (uv), PostgreSQL 16 in WSL2 Ubuntu.*
+*Generated 2026-10-20 19:51 UTC from `evidence/junit.xml`. Environment: Windows 11 workstation, Python 3.12 (uv), PostgreSQL 16 in WSL2 Ubuntu.*
 
-**Execution result: 370 passed, 0 failed, 0 skipped, 370 total (pytest, 65 s).** Tests run against a throw-away PostgreSQL database built by the real migrations, connecting as the real least-privilege runtime roles (never a superuser).
+**Execution result: 433 passed, 0 failed, 53 XFAIL, 0 skipped, 486 total (pytest, 62 s).** Tests run against a throw-away PostgreSQL database built by the real migrations, connecting as the real least-privilege runtime roles (never a superuser).
+
+**XFAIL is not a pass.** An XFAIL case is an executable specification of a NOT IMPLEMENTED control, or a *gap demo* that runs today against a dev-only stand-in and fails an assertion stating the production property. They are listed separately below and never counted in the passed column; if one unexpectedly passes the run fails (strict xfail).
 
 ## Scope and limits
 
 - These are **automated regression tests written by the same team that built the controls**. They are not a penetration test, not an independent security assessment and not a certification. No penetration test has been performed.
 - WebAuthn is exercised with a software authenticator only. Time-dependent behaviour uses a controllable clock.
-- The suite has been run **locally only**; the CI workflow is defined but has not run on a CI runner.
+- CI: **NOT RUN — the workflow has never executed on a CI runner (`docs/ci/CI_RUN_RECORD.yaml`).** The suite was also run on a clean-room local PostgreSQL cluster (`docs/ci/LOCAL_REHEARSAL.md`), which is not CI.
+- Independent security review: **BLOCKED — no independent reviewer has reviewed any scope; the review package is prepared (`docs/review/`).**
 - Tests marked BLOCKED in `BLOCKED_TESTS.md` could not be run and are **not** counted above.
 
 ## Defects found while verifying, and their remediation
@@ -29,6 +32,8 @@
 | DEF-12 | idn_session carried a column literally named tenant_id, contradicting D-P0-009 s2.2 (IDN tables carry no plain tenant_id) | low (classification rule; made the automated shape check unable to be exact) | writing tests/test_table_classification.py | renamed to active_tenant_id (migration iam/0004_session_active_tenant.py); the SQL function that referenced it was redefined. | `tests/test_table_classification.py::test_non_tenant_classes_have_no_plain_tenant_id` | fixed |
 | DEF-13 | Import-time validation used assert (removed under python -O) | low | bandit B101 | explicit RuntimeError in ngrc/audit/actions.py. | `tests/test_audit_integrity.py::test_action_registry_matches_code` | fixed |
 | GAP-01 | Phase 1 steps with no implementation at the start of this verification (operator-plane API, classification manifest, CI workflow, Dockerfile, test suite, evidence generation, reports) | process | gap analysis against the Phase 1 brief | built in this session; see docs/PHASE1_SECURITY_GATE.md for the resulting status of each step. | `tests/test_support_access.py`<br>`tests/test_table_classification.py`<br>`tests/test_evidence_artifacts.py` | fixed |
+| DEF-14 | Support-grant guard trigger weaknesses - platform_admin accepted as requester (H-01); decision/time columns editable without a state change (an ACTIVE grant's expiry could be extended, approvers planted, activation/approval times rewritten); consent columns writable on any transition by the owner role; pre-set decision fields accepted on insert; role-only (not account-status) checks | high (the audit stream accepts operator `support.action` events while a grant is active and `expires_at > now()`, so an extended expiry widened the window in which operator actions were accepted; also weakened separation of duties at the database layer) | P2-4 re-review of plt_support_grant_guard (H-01 plus the same-state branch) | migration control_plane/0004_harden_support_grant_guard.py - requester must hold platform_support and be active; decision/time columns are write-once and set only with the matching transition; expiry can only be SHORTENED while active; the single remaining same-state write is the fully validated first break-glass approval; consent columns change only on approved -> tenant_consented; insert rejects pre-set fields and inconsistent scope; approvers/requester must be active accounts and the requester must still hold platform_support at activation. | `tests/test_support_grant_db_guard.py::test_only_platform_support_can_be_the_requester_even_by_direct_insert`<br>`tests/test_support_grant_db_guard.py::test_an_active_grant_cannot_be_widened_or_rewritten_without_a_state_transition`<br>`tests/test_support_grant_db_guard.py::test_expiry_may_be_cut_short_but_never_extended_and_audit_follows_the_real_expiry`<br>`tests/test_support_grant_db_guard.py::test_break_glass_first_approval_is_validated_in_full`<br>`tests/test_support_grant_db_guard.py::test_activation_requires_the_requester_to_still_hold_platform_support` | fixed — 25 of the 26 new tests fail against the Phase 1 trigger (evidence/p2_4_mutation_check_phase1_trigger.txt); the 26th guards a rule that already existed. |
+| DEF-15 | Account lock-out without an exit path - 20 failed logins for an e-mail address (10 for operators; 10 MFA failures for customers) set the account to recovery_required, but the ADR's "verified-email unlock + MFA, owner/admin notified, never a silent permanent lock" is not implemented | high (availability / lock-out denial of service by anyone who knows an e-mail address; contradicts D-P0-008 s4) | preparing the P2-2 review package (reading throttle.py against the ADR) | NOT FIXED. Decision needed from the project owner (keep the hard stop and accept the availability risk until F-ATH-008 exists, or remove the hard stop - back-off only - as an interim). Not changed unilaterally because either choice alters a security control. Tracked by the pending spec below and by plan section 5. | `tests/test_pending_controls.py::test_an_account_locked_by_failed_logins_has_an_email_unlock_path_and_the_owner_is_notified` | open |
 
 ## Results by test
 
@@ -146,6 +151,14 @@ Each row is one test function (parametrised cases are aggregated). *Remediation*
 | `test_authorization_api.py::test_tampered_session_tenant_is_not_honoured` | Tampered session tenant is not honoured | 1 | 1/1 passed | — | — | **PASS** |
 | `test_authorization_api.py::test_tenant_identifier_in_requests_is_never_trusted` | Tenant identifier in requests is never trusted | 1 | 1/1 passed | — | — | **PASS** |
 | `test_authorization_api.py::test_view_without_policy_is_denied` | View without policy is denied | 1 | 1/1 passed | — | — | **PASS** |
+| `test_ci_record.py::test_a_changed_workflow_makes_the_recorded_run_stale` | A changed workflow makes the recorded run stale | 1 | 1/1 passed | — | — | **PASS** |
+| `test_ci_record.py::test_a_missing_skipped_or_failed_job_is_never_a_pass` | A missing skipped or failed job is never a pass | 5 | 5/5 passed | — | — | **PASS** |
+| `test_ci_record.py::test_a_success_without_evidence_is_not_accepted` | A success without evidence is not accepted | 1 | 1/1 passed | — | — | **PASS** |
+| `test_ci_record.py::test_all_jobs_green_on_an_unchanged_workflow_is_the_only_pass` | All jobs green on an unchanged workflow is the only pass | 1 | 1/1 passed | — | — | **PASS** |
+| `test_ci_record.py::test_run_metadata_must_be_present_and_well_formed` | Run metadata must be present and well formed | 5 | 5/5 passed | — | — | **PASS** |
+| `test_ci_record.py::test_the_container_job_without_docker_does_not_count` | The container job without docker does not count | 1 | 1/1 passed | — | — | **PASS** |
+| `test_ci_record.py::test_the_real_record_says_ci_has_not_run` | The real record says ci has not run | 1 | 1/1 passed | — | — | **PASS** |
+| `test_ci_record.py::test_the_workflow_file_existing_is_not_a_result` | The workflow file existing is not a result | 1 | 1/1 passed | — | — | **PASS** |
 | `test_config_security.py::test_a_fully_secure_configuration_passes` | A fully secure configuration passes | 1 | 1/1 passed | — | — | **PASS** |
 | `test_config_security.py::test_dev_only_markers_are_explicit` | Dev-only stand-ins must announce themselves so nobody mistakes them for production controls. | 1 | 1/1 passed | — | — | **PASS** |
 | `test_config_security.py::test_django_baseline_features_are_not_installed` | Django baseline features are not installed | 1 | 1/1 passed | — | — | **PASS** |
@@ -195,6 +208,65 @@ Each row is one test function (parametrised cases are aggregated). *Remediation*
 | `test_input_and_exposure.py::test_sql_injection_in_tenant_api_inputs` | Sql injection in tenant api inputs | 10 | 10/10 passed | — | — | **PASS** |
 | `test_input_and_exposure.py::test_totp_secret_is_shown_exactly_once` | Totp secret is shown exactly once | 1 | 1/1 passed | — | — | **PASS** |
 | `test_input_and_exposure.py::test_unhandled_exceptions_return_a_generic_body` | Unhandled exceptions return a generic body | 1 | 1/1 passed | — | — | **PASS** |
+| `test_pending_controls.py::test_a_factor_belonging_to_someone_else_is_not_found` | A factor belonging to someone else is not found | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_a_support_session_cannot_download_evidence_under_a_metadata_only_grant` | A support session cannot download evidence under a metadata only grant | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_admin_assisted_reset_needs_a_different_approver_with_step_up` | Admin assisted reset needs a different approver with step up | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_an_account_locked_by_failed_logins_has_an_email_unlock_path_and_the_owner_is_notified` | DEF-15: the hard stop sets `recovery_required`; the ADR requires 'verified-email unlock + MFA, owner/admin notified, never a silent | 1 | 0/1 passed, 1 XFAIL | — | DEF-15 | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_an_operator_cannot_remove_their_own_webauthn_credential` | An operator cannot remove their own webauthn credential | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_an_overdue_verification_raises_its_own_alert` | An overdue verification raises its own alert | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_cross_tenant_download_is_not_found_leaks_nothing_and_is_audited` | Cross tenant download is not found leaks nothing and is audited | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_download_event_records_object_revision_hash_actor_and_result` | Download event records object revision hash actor and result | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_download_fails_closed_when_the_audit_event_cannot_be_written` | Download fails closed when the audit event cannot be written | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_download_requires_authentication_and_the_evidence_read_permission` | Download requires authentication and the evidence read permission | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_download_streams_exact_bytes_through_an_authorization_checked_endpoint` | Download streams exact bytes through an authorization checked endpoint | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_every_indexed_document_and_query_carries_the_tenant_id` | Every indexed document and query carries the tenant id | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_factor_removal_requires_step_up` | Factor removal requires step up | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_gap_demo_ciphertext_cannot_be_read_after_a_master_key_change` | GAP DEMO (runs now): the dev provider has a single master key and ignores the key id stored beside the ciphertext, so rotation | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_gap_demo_dev_signing_key_is_readable_by_the_process_that_signs` | GAP DEMO (runs now): the dev signer's private key is a file the application process can read, so a host-level attacker (or an | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_gap_demo_dropping_the_latest_exported_checkpoint_goes_unnoticed` | GAP DEMO (runs now): with a plain-file export, the newest checkpoint copy can be removed and the verifier - which only checks the | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_gap_demo_the_dev_export_file_can_be_rewritten_by_the_application_process` | GAP DEMO (runs now): the dev sink is an ordinary file opened for append by the same process that writes the database, so it is not | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_harness_separates_absent_features_from_broken_specs` | Self-test of the harness (RUNS and must PASS): an absent module/route is FeatureAbsent; an existing one resolves. Any other error | 1 | 1/1 passed | — | — | **PASS** |
+| `test_pending_controls.py::test_incremental_verification_reaches_the_same_verdict_as_a_full_run` | Incremental verification reaches the same verdict as a full run | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_kms_provider_envelope_round_trip_and_aad_binding` | Kms provider envelope round trip and aad binding | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_kms_provider_keeps_old_ciphertext_readable_after_rotation` | Kms provider keeps old ciphertext readable after rotation | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_kms_signer_is_sign_only_and_the_private_key_is_not_exportable` | Kms signer is sign only and the private key is not exportable | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_missing_external_checkpoint_copy_is_a_violation_in_production_mode` | Missing external checkpoint copy is a violation in production mode | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_object_keys_are_tenant_prefixed_and_cannot_be_chosen_by_the_client` | Object keys are tenant prefixed and cannot be chosen by the client | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_platform_support_can_never_reset_a_customers_mfa` | Platform support can never reset a customers mfa | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_production_settings_start_only_with_kms_backends_and_hold_no_key_material` | Production settings start only with kms backends and hold no key material | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_recovery_code_flow_restores_access_notifies_and_audits` | Recovery code flow restores access notifies and audits | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_recovery_endpoints_are_throttled_and_do_not_reveal_whether_an_account_exists` | Recovery endpoints are throttled and do not reveal whether an account exists | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_removal_must_leave_two_recovery_options` | ADR D-P0-008 s7: after removal the account keeps two factors, or one factor plus recovery codes. | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_removal_revokes_other_sessions_and_is_audited` | Removal revokes other sessions and is audited | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_restricted_class_evidence_is_excluded_from_bulk_export` | Restricted class evidence is excluded from bulk export | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_scheduled_run_detects_tampering_records_a_violation_and_raises_the_alert` | Scheduled run detects tampering records a violation and raises the alert | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_scheduled_run_verifies_every_stream_and_records_each_result` | Scheduled run verifies every stream and records each result | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_sealer_does_not_report_a_checkpoint_published_until_the_sink_acknowledges_it` | Sealer does not report a checkpoint published until the sink acknowledges it | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_search_hits_are_reauthorised_per_item_before_return` | Search hits are reauthorised per item before return | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_search_query_syntax_cannot_widen_the_tenant_filter` | Search query syntax cannot widen the tenant filter | 6 | 0/6 passed, 6 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_search_returns_only_the_callers_tenant` | Search returns only the callers tenant | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_search_without_valid_tenant_context_fails_closed` | Search without valid tenant context fails closed | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_sink_uses_credentials_the_application_database_and_runtime_roles_do_not_hold` | Sink uses credentials the application database and runtime roles do not hold | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_stored_object_that_no_longer_matches_its_recorded_hash_is_refused` | Stored object that no longer matches its recorded hash is refused | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_the_last_factor_cannot_be_removed` | The last factor cannot be removed | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_the_last_owner_requires_platform_security_approval_and_the_same_cooling_off` | The last owner requires platform security approval and the same cooling off | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_the_legitimate_user_can_cancel_during_cooling_off_and_all_sessions_are_revoked_on_completion` | The legitimate user can cancel during cooling off and all sessions are revoked on completion | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_the_new_factor_cannot_complete_before_the_cooling_off_period` | The new factor cannot complete before the cooling off period | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_the_verification_job_runs_only_as_the_verifier_identity_and_cannot_be_disabled_by_a_tenant` | The verification job runs only as the verifier identity and cannot be disabled by a tenant | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_unscanned_or_quarantined_evidence_is_never_served` | Unscanned or quarantined evidence is never served | 2 | 0/2 passed, 2 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_verifier_compares_database_checkpoints_with_the_sink_copy` | Verifier compares database checkpoints with the sink copy | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_pending_controls.py::test_worm_sink_refuses_overwrite_delete_and_truncate_of_a_published_checkpoint` | Worm sink refuses overwrite delete and truncate of a published checkpoint | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_review_record.py::test_a_complete_record_requires_every_scope_to_be_covered` | A complete record requires every scope to be covered | 1 | 1/1 passed | — | — | **PASS** |
+| `test_review_record.py::test_a_review_of_different_code_is_stale` | A review of different code is stale | 1 | 1/1 passed | — | — | **PASS** |
+| `test_review_record.py::test_a_review_without_report_digest_date_package_digest_or_disposition_is_incomplete` | A review without report digest date package digest or disposition is incomplete | 4 | 4/4 passed | — | — | **PASS** |
+| `test_review_record.py::test_an_empty_record_never_reads_as_reviewed` | An empty record never reads as reviewed | 1 | 1/1 passed | — | — | **PASS** |
+| `test_review_record.py::test_empty_findings_need_the_reviewers_explicit_confirmation` | Empty findings need the reviewers explicit confirmation | 1 | 1/1 passed | — | — | **PASS** |
+| `test_review_record.py::test_implementers_and_ai_tools_cannot_review_their_own_work` | Implementers and ai tools cannot review their own work | 7 | 7/7 passed | — | — | **PASS** |
+| `test_review_record.py::test_open_critical_or_high_findings_block_completion_and_lower_ones_leave_it_conditional` | Open critical or high findings block completion and lower ones leave it conditional | 1 | 1/1 passed | — | — | **PASS** |
+| `test_review_record.py::test_remediated_and_accepted_findings_need_evidence` | Remediated and accepted findings need evidence | 1 | 1/1 passed | — | — | **PASS** |
+| `test_review_record.py::test_reviewer_must_state_independence_themselves` | Reviewer must state independence themselves | 1 | 1/1 passed | — | — | **PASS** |
+| `test_review_record.py::test_the_checker_does_not_mutate_its_input` | The checker does not mutate its input | 1 | 1/1 passed | — | — | **PASS** |
+| `test_review_record.py::test_the_real_record_is_blocked_because_no_independent_review_exists` | The real record is blocked because no independent review exists | 1 | 1/1 passed | — | — | **PASS** |
 | `test_rls_bypass_attempts.py::test_a_hijacked_search_path_cannot_change_definer_behaviour` | A hostile session creates nothing (no CREATE), and even a changed search_path does not alter pinned definer functions. | 1 | 1/1 passed | — | — | **PASS** |
 | `test_rls_bypass_attempts.py::test_a_non_owner_cannot_grant_itself_or_public_more_access` | GRANT by a non-owner is a silent no-op WARNING in PostgreSQL (not an error), so assert the EFFECT. | 1 | 1/1 passed | — | — | **PASS** |
 | `test_rls_bypass_attempts.py::test_audit_append_binds_the_events_to_the_callers_own_tenant` | Audit append binds the events to the callers own tenant | 1 | 1/1 passed | — | — | **PASS** |
@@ -263,6 +335,17 @@ Each row is one test function (parametrised cases are aggregated). *Remediation*
 | `test_support_access.py::test_tenant_owner_revocation_is_immediate` | Tenant owner revocation is immediate | 1 | 1/1 passed | — | — | **PASS** |
 | `test_support_access.py::test_tenant_owner_sees_the_grant_and_its_actions` | Tenant owner sees the grant and its actions | 1 | 1/1 passed | — | — | **PASS** |
 | `test_support_access.py::test_tenant_users_cannot_use_platform_apis` | Tenant users cannot use platform apis | 1 | 1/1 passed | — | — | **PASS** |
+| `test_support_grant_db_guard.py::test_a_disabled_support_operator_cannot_open_a_request_and_the_positive_control_works` | A disabled support operator cannot open a request and the positive control works | 1 | 1/1 passed | — | — | **PASS** |
+| `test_support_grant_db_guard.py::test_a_requester_who_is_also_security_cannot_be_recorded_as_their_own_approver` | A requester who is also security cannot be recorded as their own approver | 1 | 1/1 passed | — | — | **PASS** |
+| `test_support_grant_db_guard.py::test_activation_requires_the_requester_to_still_hold_platform_support` | Activation requires the requester to still hold platform support | 1 | 1/1 passed | — | DEF-14 | **PASS** |
+| `test_support_grant_db_guard.py::test_an_active_grant_cannot_be_widened_or_rewritten_without_a_state_transition` | An active grant cannot be widened or rewritten without a state transition | 8 | 8/8 passed | — | DEF-14 | **PASS** |
+| `test_support_grant_db_guard.py::test_an_approver_cannot_be_planted_without_the_approval_transition` | An approver cannot be planted without the approval transition | 1 | 1/1 passed | — | — | **PASS** |
+| `test_support_grant_db_guard.py::test_break_glass_first_approval_is_validated_in_full` | Break glass first approval is validated in full | 1 | 1/1 passed | — | DEF-14 | **PASS** |
+| `test_support_grant_db_guard.py::test_consent_columns_cannot_be_written_outside_the_consent_transition_even_by_the_owner_role` | Consent columns cannot be written outside the consent transition even by the owner role | 1 | 1/1 passed | — | — | **PASS** |
+| `test_support_grant_db_guard.py::test_expiry_may_be_cut_short_but_never_extended_and_audit_follows_the_real_expiry` | The audit-integrity property: operator actions are accepted into the tenant audit stream only inside the approved window, | 1 | 1/1 passed | — | DEF-14 | **PASS** |
+| `test_support_grant_db_guard.py::test_insert_cannot_preload_decision_fields_or_an_inconsistent_scope` | Insert cannot preload decision fields or an inconsistent scope | 6 | 6/6 passed | — | — | **PASS** |
+| `test_support_grant_db_guard.py::test_only_platform_support_can_be_the_requester_even_by_direct_insert` | Only platform support can be the requester even by direct insert | 4 | 4/4 passed | — | DEF-14 | **PASS** |
+| `test_support_grant_db_guard.py::test_state_transitions_cannot_smuggle_changes_to_other_columns` | Ending a grant must not also rewrite the activation window or approvers in the same statement. | 1 | 1/1 passed | — | — | **PASS** |
 | `test_table_classification.py::test_audit_tables_have_mutation_guards` | Audit tables have mutation guards | 1 | 1/1 passed | — | — | **PASS** |
 | `test_table_classification.py::test_idn_account_column_level_grants` | ngrc_app sees only the four profile columns of idn_account - never password_hash or any credential material. | 1 | 1/1 passed | — | — | **PASS** |
 | `test_table_classification.py::test_manifest_entries_are_well_formed` | Manifest entries are well formed | 1 | 1/1 passed | — | — | **PASS** |
@@ -284,12 +367,26 @@ Each row is one test function (parametrised cases are aggregated). *Remediation*
 | `test_table_classification.py::test_tenant_plane_cannot_touch_credential_or_platform_tables` | Tenant plane cannot touch credential or platform tables | 14 | 14/14 passed | — | — | **PASS** |
 | `test_table_classification.py::test_views_over_tenant_data_would_need_security_invoker` | Views over tenant data would need security invoker | 1 | 1/1 passed | — | — | **PASS** |
 
+## Pending specifications and gap demonstrations (XFAIL — NOT passes)
+
+| Control | Status | XFAIL cases | What exists | Plan |
+|---|---|---|---|---|
+| **F-AUD-007** Scheduled continuous audit verification with alerting | NOT IMPLEMENTED | 6 | spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
+| **F-AUD-006** Immutable (WORM) audit checkpoint storage and external anchoring | NOT IMPLEMENTED | 6 | gap demo (runs today, fails its assertion); spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
+| **F-DAT-004** Authorization-checked evidence download (C-6) | NOT IMPLEMENTED | 11 | spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
+| **F-AUZ-005** Cross-tenant search isolation | NOT IMPLEMENTED | 10 | spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
+| **F-DAT-006** Production key management (KMS) for data encryption and audit signing | NOT IMPLEMENTED | 6 | gap demo (runs today, fails its assertion); spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
+| **F-ATH-014** MFA factor removal | NOT IMPLEMENTED | 6 | spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
+| **F-ATH-015** Lost-factor recovery and lock-out exit | NOT IMPLEMENTED | 8 | spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
+
+A control changes from NOT IMPLEMENTED to implemented only when its code exists, its specs pass with only the `@pending` marker removed, and `docs/control_map.yaml` is updated; the generator exits non-zero while a mapped pending spec is not in the XFAIL state.
+
 ## Coverage by required test category
 
 | Required category (Phase 1 brief) | Automated tests | Status |
 |---|---|---|
 | cross-tenant read / write / delete | 4 | **PASS** |
-| cross-tenant search / download | 0 | **BLOCKED — no search/download features exist yet (see BLOCKED_TESTS.md)** |
+| cross-tenant search / download | 0 | **BLOCKED — no search/download features exist yet; executable specs are XFAIL (see BLOCKED_TESTS.md)** |
 | BOLA / IDOR | 4 | **PASS** |
 | missing tenant context | 2 | **PASS** |
 | invalid tenant context | 3 | **PASS** |

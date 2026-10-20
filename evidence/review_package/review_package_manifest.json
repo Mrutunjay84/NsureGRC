@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-20T19:40:41+00:00",
-  "package_sha256": "485dfb73ef467d6dd034944d8c936e627d00a954f9cec680f8ff5f8170dcdd00",
+  "generated_at": "2026-10-20T19:49:57+00:00",
+  "package_sha256": "d28ad1868f5b7ad21288cd8ec2b84270ef86ac80c4bf7e3d626b687d833ebfe8",
   "digest_covers": "files in group 'reviewed' (scope files, tests, Phase 0 ADRs): sha256 over sorted '<sha256>  <path>' lines",
-  "git_commit": null,
+  "git_commit": "f3376a3591f2b6ff0ae6a920aa79e2de5b01284c",
   "git_dirty": true,
   "uv_lock_sha256": "d5f70c80a53ddd67b8a85c7ac2cdb62a7edf89b33df01c874cc899b72eab5f71",
   "python": "3.12.13",
@@ -390,8 +390,8 @@
     {
       "path": "03_APP/nsuregrc/tests/test_pending_controls.py",
       "group": "reviewed",
-      "sha256": "8e4f581f3ac30e18df13817f915c792f4d61bc59a5a01451402e3424072eaf0a",
-      "bytes": 32698,
+      "sha256": "025e4a67ea2a2381724d9501a33ee8b8446c671635d74e9f697977fe0a32d2d1",
+      "bytes": 32124,
       "lines": 625
     },
     {
@@ -418,16 +418,16 @@
     {
       "path": "03_APP/nsuregrc/docs/ARCHITECTURE_SUMMARY.md",
       "group": "context",
-      "sha256": "f1827e5416923cd60e5fad8ef10de021e03f047db454f2ef95177825015fd785",
-      "bytes": 8868,
-      "lines": 74
+      "sha256": "537299c9160dce85544b59f85bf4bb8d29de7904e5045a828e0508435f946737",
+      "bytes": 10009,
+      "lines": 77
     },
     {
       "path": "03_APP/nsuregrc/docs/OPEN_ITEMS.md",
       "group": "context",
-      "sha256": "b11f4a9923adc54415aac90288ae75382a7e62756e218e0cd88cc9489669fcd5",
-      "bytes": 4030,
-      "lines": 28
+      "sha256": "68e62ba931f7e662038964a57ee7b3d165bfdf273db42cf1dcdabb918922db81",
+      "bytes": 5193,
+      "lines": 32
     },
     {
       "path": "03_APP/nsuregrc/docs/SECURITY_CONTROL_MATRIX.md",

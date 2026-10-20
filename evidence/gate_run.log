@@ -10,21 +10,21 @@ semgrep (SAST, registry rules p/python p/django p/security-audit)
 pip-audit (SCA)
   -> exit 0 in 0.0s
   -> exit 0 in 0.0s
-  -> exit 0 in 2.1s
+  -> exit 0 in 0.9s
 [PASS   ] SCA pip-audit (runtime): 20 packages, 0 known vulnerabilities, 0 accepted
-  -> exit 1 in 5.1s
+  -> exit 1 in 1.6s
 [PASS   ] SCA pip-audit (dev-tooling): 109 packages, 1 known vulnerabilities, 1 accepted (mcp CVE-2026-59951 - see docs/accepted_risks.yaml)
 detect-secrets
-  -> exit 0 in 1.6s
-[FAIL   ] secret scan (detect-secrets): 12 candidate(s), 11 triaged as false positives in .secrets.baseline, 1 unreviewed
+  -> exit 0 in 1.8s
+[PASS   ] secret scan (detect-secrets): 12 candidate(s), 12 triaged as false positives in .secrets.baseline, 0 unreviewed
 gitleaks (history + working tree)
-  -> exit 1 in 1.3s
-  -> exit 1 in 4.2s
+  -> exit 0 in 0.7s
+  -> exit 0 in 0.7s
   -> exit 0 in 0.3s
-[FAIL   ] secret scan (gitleaks, git history): 23 finding(s) over 1 commit(s), HEAD 87d44e5de6cf
-[FAIL   ] secret scan (gitleaks, working tree): 235 finding(s)
+[PASS   ] secret scan (gitleaks, git history): 0 finding(s) over 2 commit(s), HEAD f3376a3591f2
+[PASS   ] secret scan (gitleaks, working tree): 0 finding(s)
 trivy fs + config
-  -> exit 0 in 2.2s
+  -> exit 0 in 1.8s
   -> exit 0 in 0.9s
 [PASS   ] trivy filesystem (lockfile vulns, secrets, misconfig): 0 finding(s) at the configured severities
 [PASS   ] trivy Dockerfile misconfiguration: 0 finding(s) at the configured severities
@@ -34,7 +34,7 @@ trivy fs + config
 [BLOCKED] CI workflow execution on a runner: no CI run recorded (docs/ci/CI_RUN_RECORD.yaml); no repository/runner
 [BLOCKED] independent crypto/AppSec review: no independent reviewer has reviewed any scope (docs/review/REVIEW_RECORD.yaml)
 pytest security regression suite
-  -> exit 0 in 65.5s
-[PASS   ] security regression suite (pytest): 433 passed, 53 xfailed in 64.46s (0:01:04)
+  -> exit 0 in 62.9s
+[PASS   ] security regression suite (pytest): 433 passed, 53 xfailed in 61.85s (0:01:01)
 
-{"PASS": 9, "FAIL": 3, "BLOCKED": 3}
+{"PASS": 12, "FAIL": 0, "BLOCKED": 3}

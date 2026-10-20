@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-20T19:48:40+00:00",
+  "generated_at": "2026-10-20T19:51:17+00:00",
   "python": "3.12.13",
   "platform": "Windows-11-10.0.26200-SP0",
   "gates": [
@@ -45,24 +45,24 @@
     },
     {
       "gate": "secret scan (detect-secrets)",
-      "status": "FAIL",
-      "detail": "12 candidate(s), 11 triaged as false positives in .secrets.baseline, 1 unreviewed",
+      "status": "PASS",
+      "detail": "12 candidate(s), 12 triaged as false positives in .secrets.baseline, 0 unreviewed",
       "artifacts": [
         "evidence/detect_secrets_scan.json"
       ]
     },
     {
       "gate": "secret scan (gitleaks, git history)",
-      "status": "FAIL",
-      "detail": "23 finding(s) over 1 commit(s), HEAD 87d44e5de6cf",
+      "status": "PASS",
+      "detail": "0 finding(s) over 2 commit(s), HEAD f3376a3591f2",
       "artifacts": [
         "evidence/gitleaks_history.json"
       ]
     },
     {
       "gate": "secret scan (gitleaks, working tree)",
-      "status": "FAIL",
-      "detail": "235 finding(s)",
+      "status": "PASS",
+      "detail": "0 finding(s)",
       "artifacts": [
         "evidence/gitleaks_worktree.json"
       ]
@@ -112,7 +112,7 @@
     {
       "gate": "security regression suite (pytest)",
       "status": "PASS",
-      "detail": "433 passed, 53 xfailed in 64.46s (0:01:04)",
+      "detail": "433 passed, 53 xfailed in 61.85s (0:01:01)",
       "artifacts": [
         "evidence/junit.xml",
         "evidence/pytest_output.txt"
@@ -120,8 +120,8 @@
     }
   ],
   "totals": {
-    "PASS": 9,
-    "FAIL": 3,
+    "PASS": 12,
+    "FAIL": 0,
     "BLOCKED": 3
   }
 }
