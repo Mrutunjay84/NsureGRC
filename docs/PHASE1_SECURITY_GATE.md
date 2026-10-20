@@ -1,79 +1,84 @@
-# NsureGRC — Phase 1 Security Gate (v1.3-alpha, Secure Foundation) — revision after the P2 conditions
+# NsureGRC — Phase 1 Security Gate (v1.3-alpha, Secure Foundation) — reassessment after the owner's decisions of 2026-10-21
 
-**Date:** 2026-10-21 · **Scope:** Phase 1 steps 1–29 + the four conditions P2-1…P2-4 set by the project owner · **Code status:** development alpha, not for production.
+**Date:** 2026-10-21 · **Scope:** Phase 1 steps 1–29, the four conditions P2-1…P2-4, and the owner's six decisions (CI approach, independent review, DEF-15, the P2-3 dependency split, H-11, Phase 2 authorisation) · **Code status:** development alpha, not for production.
 **Phase 2 has NOT been started and is not authorised by this report.**
 
-## DECISION: **CONDITIONAL PASS** (unchanged)
+## DECISION: **CONDITIONAL PASS** (unchanged — kept by owner instruction and confirmed by the evidence)
 
-The result does not become PASS: two of the four conditions cannot be satisfied from this workstation and are **BLOCKED**, and the controls that P2-3 asked to be planned and specified are still **not implemented**.
-It does not become FAIL: every gate that can run here is green, nothing regressed, and the one condition that could be fully closed (P2-4) is closed with proof.
+Why it is not PASS: two of the owner's pre-Phase-2 requirements need things this workstation cannot provide and are **BLOCKED** (a real CI run; an independent reviewer), DEF-15 is only *mitigated-temporary* by design, and H-11 is *deliberately still open*.
+Why it is not FAIL: every gate that can run here is green, nothing regressed, and the five controls the owner made Phase-2-required are now implemented with passing tests (plus mutation checks showing the tests detect the removal of the protecting code).
+**Nothing was waived and no status was converted by assertion.**
 
-### The four conditions
+### Exit-criteria checklist (the owner's list from 2026-10-21)
 
-| # | Condition | Status | What exists | What is still missing |
-|---|---|---|---|---|
-| **P2-1** | Run the real CI workflow on a real runner | **BLOCKED** | Workflow `ci.yml` lint-clean (actionlint); local git repo (2+ local commits, **nothing pushed**); clean-room rehearsal of the CI command lines on a fresh PostgreSQL cluster using the real `ci_bootstrap.sh` (`ci/LOCAL_REHEARSAL.md`); runbook (`ci/CI_RUNBOOK.md`); run record `ci/CI_RUN_RECORD.yaml` = **NOT_RUN** and a checker that refuses to call CI passed without a real run, all five jobs (incl. Docker-capable `container`), and an unchanged workflow | A repository and runner. No `gh`, remote or credentials exist here, and pushing project code externally is the owner's decision. The container image has still never been built or scanned. **The rehearsal is not CI** |
-| **P2-2** | Independent review of audit hash, audit integrity/checkpoints, AEAD helper, authentication/session/MFA | **BLOCKED** | Review package (`review/INDEPENDENT_REVIEW_PACKAGE.md`, `review_scope.yaml`, 44 files with SHA-256 manifest and zip), review record `review/REVIEW_RECORD.yaml` with **no reviewer, no findings, no disposition** (none exist) and a checker that rejects implementers, AI tools, undated/unsigned reviews and reviews of different code | **An independent human reviewer.** Reviewer, scope, findings, severity, remediation and disposition are all blank by design. Nothing was self-approved |
-| **P2-3** | Plans and tests for the NOT IMPLEMENTED / BLOCKED controls | **Plans + executable specs DONE; controls NOT IMPLEMENTED** | `plans/P2-3_IMPLEMENTATION_PLANS.md`; `tests/test_pending_controls.py`: 53 XFAIL cases covering evidence download, cross-tenant search, scheduled audit verification, factor removal, lost-factor recovery/lock-out exit, production KMS, immutable audit storage — of which 4 *gap demos* execute today against the dev stand-ins and fail their stated production assertion | The functionality. Every one of the seven controls is still NOT IMPLEMENTED or BLOCKED (KMS and WORM additionally need the O-4 provider). XFAIL is **not** counted as a pass anywhere |
-| **P2-4** | Tighten the trigger weakness; regression test for the audit-integrity property | **CLOSED** | Migration `control_plane/0004` (DEF-14); `tests/test_support_grant_db_guard.py` — 26 tests, **25 of which fail against the Phase 1 trigger** (`evidence/p2_4_mutation_check_phase1_trigger.txt`); reverse and re-apply of the migration verified | Nothing for this condition. Independent review of the state machine is requested within P2-2 scope |
+| # | Requirement | Status | Evidence / what is missing |
+|---|---|---|---|
+| 1 | **P2-4** trigger weakness closed | **CLOSED** (earlier) | migration `control_plane/0004`, 26 tests, 25 fail against the old trigger (DEF-14) |
+| 2 | **P2-1** real CI execution (private GitHub repo + Actions, real run URL; gate checks commit SHA, workflow identity, all jobs, unchanged workflow, test results, scans, PostgreSQL/RLS tests, image scan) | **BLOCKED** | Everything that can be prepared locally exists: workflow (actionlint-clean), local git history (6 commits, no remote), `docs/ci/GITHUB_SETUP_REQUIREMENTS.md` (the human steps), a CI checker that accepts nothing but a real run (`scripts/check_ci_record.py`, 28 tests), an importer for the run (`scripts/import_ci_run.py`, pure parts unit-tested; **its HTTP calls have never run against GitHub**). **Missing:** a human must create the private repository, set the secrets and push; no run exists; record is `NOT_RUN`. I did not push or create credentials. |
+| 3 | **P2-2** independent review (audit hash, checkpoint/signing, AEAD helper, authentication, session management, MFA/WebAuthn) | **BLOCKED** | Package re-issued because the mechanisms changed (63 reviewed files + 9 context documents, digest in `evidence/review_package/review_package_manifest.json`; supersedes the 44-file package) with 25 known concerns listed for the reviewer. **No independent reviewer exists**; record is BLOCKED; the checker refuses self-review, AI/tool review, undocumented or unsigned reviews. Nothing in this report is a review. |
+| 4 | **DEF-15** resolved with the approved temporary policy | **DONE as specified — status "mitigated-temporary", NOT closed** | Hard stop removed; progressive back-off, rate limiting, failed-login counting, audit events, suspicious-login detection, alert interface, stricter operator parameters (ADR D-P1-001; `tests/test_auth_backoff_policy.py`, 11 tests plus the exit-path test). Permanent recovery mechanism is the F-ATH-015 below. **Correction to my earlier report:** I had said locked accounts had "no exit path"; that was overstated — customer accounts could leave `recovery_required` through the password-reset confirmation (proven by a test); the real defects were stranger-triggered, repeatable forced resets, no notification and no unlock flow, and no exit at all for operators. The owner is asked to re-confirm the decision in light of that. |
+| 5 | **P2-3 required (1)** evidence download | **IMPLEMENTED + TESTED** (dev-only store) | F-DAT-004: 13 tests; F-DAT-005 lifecycle 46 tests; mutation run 17/20 killed (3 documented equivalent mutants). Object store and EICAR scanner are **DEV-ONLY**: no malware detection, no real object store. |
+| 6 | **P2-3 required (2)** cross-tenant search | **IMPLEMENTED + TESTED** | F-AUZ-005: 29 tests (metadata only; PostgreSQL FTS under RLS). Every future searchable resource needs the same tests (the inventory test fails the build otherwise). |
+| 7 | **P2-3 required (3)** scheduled audit verification | **IMPLEMENTED + TESTED** | F-AUD-007: 16 tests. **Alert delivery to a real channel is BLOCKED (O-4)**; alerts reach the log pipeline. Where the schedule and a separate-host watchdog run is a deployment decision. |
+| 8 | **P2-3 required (4)** MFA factor removal | **IMPLEMENTED + TESTED** | F-ATH-014: 13 tests; mutation 8/8 killed; DB trigger prevents the last factor being removed even by direct SQL. |
+| 9 | **P2-3 required (5)** lost-factor recovery | **IMPLEMENTED + TESTED** | F-ATH-015: 23 tests; mutation 14/14 killed; database-enforced state machine. Open: real mail delivery (O-7), Platform Security identity-verification procedure (O-5/O-8), operator-realm recovery, trust model of tenant-plane approval (`app.principal_id`) and the time-limited enrolment reservation — all listed for the reviewer. |
+| 10 | **Production gate** production KMS (F-DAT-006) | **NOT IMPLEMENTED — production gate, not a Phase 2 development blocker** | 4 executable specs + 2 gap demos, all XFAIL (not passes). Dev stand-ins are marked and refused by `config.settings.prod`. |
+| 11 | **Production gate** immutable/WORM audit storage (F-AUD-006) | **NOT IMPLEMENTED — production gate** | 4 specs + 1 gap demo, XFAIL. **No production-readiness claim may be made while 10 and 11 are open.** |
+| 12 | **H-11** analysed, mechanism designed, regression tests | **MECHANISM DONE; H-11 REMAINS OPEN by instruction** | ADR D-P1-003 states the threat model and the two properties the verifier must distinguish — (A) the supplied checkpoint chain is internally valid, (B) the sequence is complete and no latest checkpoint silently disappeared. Implemented: chained format-2 checkpoints with a database continuity trigger, heartbeat checkpoints, two-way external-copy comparison, previous-run high-water mark, freshness check, verdicts `internally_valid` + `completeness ∈ {violated, not_established, consistent, established}`. 16 regression tests; verifier mutation 7/7 killed. **Honest ceiling:** `completeness` can reach `consistent` but not `established` until an immutable sink exists (item 11); the high-water mark lives in the database it protects; events after the newest honest checkpoint are covered by chain consistency only (window = checkpoint interval). Not independently reviewed. |
 
-**P2-4 in detail.** The identified weakness (H-01) was that `platform_admin` could be inserted as requester. Re-review found the real hole was larger: the trigger's "same state" branch skipped all checks, so a holder of the `ngrc_ops` credential
-could, *without a state change*, **extend `expires_at` of an active grant**, rewrite approval/activation times, or plant approvers. That matters for audit integrity because `audit.append_tenant_event` accepts operator `support.action` events only while the grant is
-`active` and `expires_at > now()`: an extended expiry widened the window in which the tenant audit stream accepts operator actions. Now: decision/time columns are write-once and set only with their matching transition, expiry can only be **shortened**, requester must be an active
-Platform Support operator (re-checked at activation), approvers must be active, consent columns change only on the consent transition. `test_expiry_may_be_cut_short_but_never_extended_and_audit_follows_the_real_expiry` proves the audit function refuses events after the real expiry and that no database path reopens the window.
-Limits: the path required the operator database credential (or SQL injection into the operator plane); the application did not expose it.
+### Control counts (generated, `SECURITY_CONTROL_MATRIX.md`)
+50 controls: **41 TESTED — PASS** (each with its documented gaps/dev-only flags), **7 NOT IMPLEMENTED** (F-AUD-004 retention/purge, F-AUD-006 WORM, F-ATH-011 PATs, F-DAT-006 KMS, F-DR-001, F-DR-002, F-FWK-001), **2 BLOCKED** (F-GOV-004 independent review, F-GOV-005 CI run). A control is "TESTED — PASS" only because its mapped tests ran in the recorded run and passed — not because it is reviewed, production-grade or compliant.
 
-## Evidence (final run, 2026-10-21, fresh PostgreSQL 16.15 cluster bootstrapped by `scripts/ci_bootstrap.sh`; Windows 11; Python 3.12.13)
+## Evidence (final run, 2026-10-21; fresh PostgreSQL 16.15 cluster bootstrapped by `scripts/ci_bootstrap.sh`; Windows 11; Python 3.12.13; HEAD `5200e96`)
 
 | Gate | Result | Source |
 |---|---|---|
-| Security regression suite | **433 passed, 0 failed**, 53 XFAIL (pending specs / gap demos — not passes), 486 cases; real roles, throw-away DB | `evidence/junit.xml` |
+| Security regression suite | **615 passed, 0 failed**, 11 XFAIL (KMS/WORM specs and gap demos — not passes), 626 cases; real roles, throw-away DB | `evidence/junit.xml` |
 | Lint (ruff E,F,W,B,S,UP,I) | PASS | `evidence/ruff.txt` |
-| SAST bandit / semgrep | PASS, 0 findings (3,968 LOC) / 0 findings, 86 files (all of `ngrc` + `config`; the earlier "168" counted `__pycache__` before the tree was a git repo) | `evidence/bandit.json`, `semgrep.json` |
+| SAST bandit / semgrep | PASS, 0 findings (5,381 LOC) / 0 findings, 109 files | `evidence/bandit.json`, `semgrep.json` |
 | SCA runtime (20 pkgs) / dev tooling (109) | PASS, 0 vulns / 1 accepted advisory (`mcp` via `semgrep`, not in runtime) | `evidence/pip_audit*.json`, `docs/accepted_risks.yaml` |
-| Secret scan — detect-secrets | PASS (12 candidates, all triaged false positives) | `evidence/detect_secrets_scan.json` |
-| Secret scan — gitleaks 8.30.1 git history + working tree | PASS, 0 findings over 2 local commits (first run raised 23 + 235: SHA-1 digests in the baseline files and 211 third-party `.venv` files; resolved by a narrow documented allow-list `.gitleaks.toml`; a planted canary token was detected) | `evidence/gitleaks_*.json` |
+| Secret scan — detect-secrets | PASS (12 candidates, all triaged false positives; the new one is a test dictionary key named `"secrets"`) | `evidence/detect_secrets_scan.json` |
+| Secret scan — gitleaks 8.30.1 history + working tree | PASS, 0 findings over 6 local commits | `evidence/gitleaks_history.json`, `gitleaks_worktree.json` |
 | Trivy filesystem + Dockerfile config | PASS, 0 findings | `evidence/trivy_*.json` |
 | CI workflow lint (actionlint 1.7.12) | PASS (a lint of the file, **not a run**) | `evidence/ci_rehearsal/actionlint.txt` |
 | **Container image build + scan** | **BLOCKED** (no Docker/Podman) | `gate_summary.json` |
 | **CI workflow execution** | **BLOCKED** — record NOT_RUN | `docs/ci/CI_RUN_RECORD.yaml` |
 | **Independent crypto/AppSec review** | **BLOCKED** — no reviewer | `docs/review/REVIEW_RECORD.yaml` |
 | Gate totals | **12 PASS · 0 FAIL · 3 BLOCKED** | `evidence/gate_summary.json` |
-| Controls | **50** in the matrix: 35 TESTED — PASS (with documented gaps/dev-only flags), **13 NOT IMPLEMENTED**, **2 BLOCKED** (F-GOV-004 review, F-GOV-005 CI) | `SECURITY_CONTROL_MATRIX.md` |
+| Mutation checks (security-critical lines disabled one at a time; tests must fail) | H-11 verifier 7/7; recovery 14/14; factor removal 8/8; evidence 17/20 | `evidence/h11_mutation_check.txt`, `p2_*_mutation_check.txt` |
 
-Evidence integrity: `evidence/MANIFEST.json` lists SHA-256 digests; it guards against accidental change only (not signed, not held off-host).
+The mutation checks are an implementer-run measure of test strength, not independent assurance. Evidence integrity: `evidence/MANIFEST.json` lists SHA-256 digests; it guards against accidental change only (not signed, not held off-host).
 
-## Findings opened or closed by this round
-* **DEF-14 (fixed):** support-grant trigger weaknesses (above).
-* **DEF-15 (OPEN, high — decision needed from the project owner):** 20 failed logins for an e-mail address (10 for operators; 10 MFA failures) set the account to `recovery_required`, but the ADR's verified-e-mail unlock is not implemented, so a stranger who knows an address can lock that account until a DBA intervenes. Either keep the hard stop and accept the availability risk until F-ATH-015 exists, or remove the hard stop (back-off only) as an interim. I did **not** change it: both options alter a security control. Tracked in `OPEN_ITEMS.md` H-10 and by an XFAIL spec.
-* **H-11 (open, demonstrated):** the audit verifier ignores database checkpoints with no external copy, so dropping the newest export record is not detected (gap demo runs today; plan item W-3).
-* One lint defect in new test code was caught by the CI-rehearsal and fixed.
-
-## Phase 1 steps — status (unchanged except where noted)
-Steps 1–2, 8–29 as in the previous revision (Done, tested; dev-only components and missing parts listed per control). Step 3 CI/CD gates: **defined and linted, not executed on a runner**. Step 6 secret scanning: working tree and **local** git history now scanned (gitleaks); CI history scan pending.
-Step 7 container scanning: Dockerfile scanned; **image build/scan BLOCKED**. Step 26 append-only audit enforcement and step 24 support/break-glass: strengthened by DEF-14. Step 27 hash chaining/checkpoints: dev signer and sink only; production anchoring NOT IMPLEMENTED (plans F-DAT-006, F-AUD-006).
+## Defects and findings found while doing this work
+* **DEF-15** — see table above (mitigated-temporary; **earlier "no exit path" claim corrected**).
+* **DEF-16 (fixed)** — dev signer key-creation race on first concurrent use (found by the H-11 concurrency test).
+* **DEF-17 (fixed)** — a malformed client address caused an audit-append error and HTTP 500 on the login path; addresses are now normalised (residual: unparseable values share one throttle bucket).
+* **H-12/H-13/H-14 (new open items)** — evidence below-the-API components are dev-only and two interim decisions (D-EV-1, D-SR-1) await approval; numeric BASELINE values await approval; the tenant-plane recovery approval trusts a runtime-settable session variable.
+* **Surviving mutants (documented):** E9/E10 (security headers are also set by global middleware) and E15 (the allow-list is re-checked in `sniff.inspect`) are equivalent mutants — a second layer enforces the same property.
 
 ## What a CONDITIONAL PASS permits and does not permit
 * **Permits:** continued planning, and work that clears the remaining conditions. It does **not** authorise Phase 2 feature development.
 * **Does not permit:** production use, real customer data, or any statement of audit-readiness, certification or standards compliance. Standards columns are indicative mappings only. `config.settings.prod` cannot start by design.
 
-## To reach PASS (all required; nothing here may be waived by the implementers)
-1. **P2-1:** repository + runner; all five CI jobs green incl. container build, hadolint and Trivy image scan, gitleaks full-history; run recorded in `CI_RUN_RECORD.yaml`; `scripts/check_ci_record.py` prints PASSED.
-2. **P2-2:** independent reviewer(s) report on all four scopes; findings remediated or risk-accepted by name; `scripts/check_review_record.py` prints COMPLETE for the current package digest.
-3. **P2-3:** decide which of the seven controls Phase 2 depends on (and the open decisions D-EV-1, D-SR-1, O-4 provider); implement them with their specs passing with only the marker removed — or have the approver explicitly re-scope the Phase 1 exit criteria in writing.
-4. Decide **DEF-15**.
-5. Phase 0 exit gate wording "all Phase 0 testing requirements pass in CI" then becomes checkable; requirements for unimplemented features (email change, PATs, purge, restore drill, …) must be implemented or formally re-scoped.
+## To reach PASS (nothing here may be waived by the implementers)
+1. **P2-1 (human):** create the private GitHub repository, set `CI_PG_SUPERUSER_PASSWORD` (and `GITLEAKS_LICENSE` only for an organisation), push `main`, let the workflow run to completion; all five jobs green including container build, hadolint and Trivy image scan; record the run (`scripts/import_ci_run.py` with your own token, then `scripts/check_ci_record.py` must print PASSED). Expect red first runs in the never-executed container job.
+2. **P2-2 (human):** engage a reviewer independent of the implementer; they report on all four scopes (audit hash; checkpoint/integrity; AEAD helper; authentication, session management and MFA/WebAuthn) against the current package digest; findings remediated or risk-accepted by name; `scripts/check_review_record.py` prints COMPLETE.
+3. **DEF-15:** the owner re-confirms (or amends) D-P1-001 after reading the correction; it closes only when F-ATH-015 is independently reviewed.
+4. **H-11:** closes with the WORM sink (F-AUD-006) and review; the owner decides whether the interval-sized residual window is acceptable.
+5. **Production gates** (KMS, WORM, plus O-4/O-7/O-11 providers) before any production-readiness claim.
+6. Phase 0 exit wording "all Phase 0 testing requirements pass in CI" becomes checkable after item 1; requirements for still-unimplemented features (e-mail change, PATs, purge, restore drill, …) must be implemented or formally re-scoped by the owner.
 
 ## Limits of this verification (read before relying on it)
 * Tests are implementer-authored regression tests; **no penetration test, DAST or independent assessment** has been performed. WebAuthn uses a software authenticator; XSS only at API/header level.
-* Everything ran on one workstation. The CI workflow is unproven on a runner; the container image is unbuilt; hadolint never ran.
-* The bodies of the pending specs after their first `require_*` call have never executed against an implementation.
-* A database superuser can still alter audit data; detection depends on externally held checkpoints whose production sink does not exist.
-* Environment: Windows Python + WSL PostgreSQL is accepted for now; WSL networking is recorded as technical debt TD-001 (`TECH_DEBT.md`), not a gate blocker.
+* Everything ran on one workstation. The CI workflow is unproven on a runner; the container image is unbuilt; hadolint never ran; the GitHub-import script's HTTP path never ran.
+* Pending specs (KMS/WORM) bodies after their first `require_*` call have never executed against an implementation.
+* A database superuser can still alter audit data; detection depends on externally held anchors whose production sink does not exist.
+* Evidence storage, malware scanning, alert delivery, e-mail delivery and key management are dev stand-ins or absent.
+* Environment: Windows Python + WSL PostgreSQL is accepted for now; WSL networking is technical debt TD-001 (`TECH_DEBT.md`), not a gate blocker.
 
 ## Deliverables (under `03_APP/nsuregrc/docs/` unless stated)
 `PHASE1_SECURITY_GATE.md` (this) · `SECURITY_CONTROL_MATRIX.md` and `control_map.yaml` · `SECURITY_TEST_REPORT.md` · `SECURITY_SCAN_REPORT.md` · `BLOCKED_TESTS.md` · `OPEN_ITEMS.md` · `defects_found.yaml` ·
-`plans/P2-3_IMPLEMENTATION_PLANS.md` · `review/` · `ci/` · `TECH_DEBT.md` · traceability register `00_CONTROL/TRACEABILITY/feature_control_map.csv` · `00_CONTROL/CHANGELOG.md`.
+`plans/P2-3_IMPLEMENTATION_PLANS.md` · `review/` · `ci/` (incl. `GITHUB_SETUP_REQUIREMENTS.md`) · `TECH_DEBT.md` · decision records `00_CONTROL/PHASE1/D-P1-001…004` · traceability register `00_CONTROL/TRACEABILITY/feature_control_map.csv` · `00_CONTROL/CHANGELOG.md`.
 
 ## Reproduce
 ```

@@ -3,15 +3,15 @@
   "Trivy": {
     "Version": "0.76.0"
   },
-  "ReportID": "01a15b33-1bbf-74f6-8d00-c65c34c29296",
-  "CreatedAt": "2026-10-21T02:53:58.5273253+05:30",
-  "ArtifactID": "sha256:491aa860c93b7fd76d09dae7af153b4f1c685f0aa1ecbe6869abf09dde77ed53",
+  "ReportID": "01a15b35-fb15-74b1-9848-99b94dc69380",
+  "CreatedAt": "2026-10-21T02:57:06.7733075+05:30",
+  "ArtifactID": "sha256:016dc749698771b6107067a6eadec65126e6cee27a897e52f1e09df409cd4abc",
   "ArtifactName": ".",
   "ArtifactType": "repository",
   "Metadata": {
     "Branch": "main",
-    "Commit": "38bce8ac944d6c8644b38be65709d0a8063158de",
-    "CommitMsg": "P2 gate work: DEF-15 temporary baseline, H-11 checkpoint continuity, scheduled verification, factor removal and recovery, evidence download and search, CI gate tooling\n\nCo-Authored-By: Claude Sonnet 5.5 \u003cnoreply@anthropic.com\u003e",
+    "Commit": "5200e966c7842463c805fce0de731b9681fc65e9",
+    "CommitMsg": "Triage detect-secrets keyword hit in tests/test_ci_record.py (job key named 'secrets')\n\nCo-Authored-By: Claude Sonnet 5.5 \u003cnoreply@anthropic.com\u003e",
     "Author": "Rushi \u003crushigamer14@gmail.com\u003e",
     "Committer": "Rushi \u003crushigamer14@gmail.com\u003e"
   },

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-20T21:25:43+00:00",
+  "generated_at": "2026-10-20T21:28:49+00:00",
   "python": "3.12.13",
   "platform": "Windows-11-10.0.26200-SP0",
   "gates": [
@@ -45,8 +45,8 @@
     },
     {
       "gate": "secret scan (detect-secrets)",
-      "status": "FAIL",
-      "detail": "12 candidate(s), 11 triaged as false positives in .secrets.baseline, 1 unreviewed",
+      "status": "PASS",
+      "detail": "12 candidate(s), 12 triaged as false positives in .secrets.baseline, 0 unreviewed",
       "artifacts": [
         "evidence/detect_secrets_scan.json"
       ]
@@ -54,7 +54,7 @@
     {
       "gate": "secret scan (gitleaks, git history)",
       "status": "PASS",
-      "detail": "0 finding(s) over 5 commit(s), HEAD 38bce8ac944d",
+      "detail": "0 finding(s) over 6 commit(s), HEAD 5200e966c784",
       "artifacts": [
         "evidence/gitleaks_history.json"
       ]
@@ -112,7 +112,7 @@
     {
       "gate": "security regression suite (pytest)",
       "status": "PASS",
-      "detail": "615 passed, 11 xfailed in 102.42s (0:01:42)",
+      "detail": "615 passed, 11 xfailed in 100.30s (0:01:40)",
       "artifacts": [
         "evidence/junit.xml",
         "evidence/pytest_output.txt"
@@ -120,8 +120,8 @@
     }
   ],
   "totals": {
-    "PASS": 11,
-    "FAIL": 1,
+    "PASS": 12,
+    "FAIL": 0,
     "BLOCKED": 3
   }
 }

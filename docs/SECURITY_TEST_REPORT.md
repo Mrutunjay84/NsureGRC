@@ -1,8 +1,8 @@
 # NsureGRC — Security Test Report (Phase 1 / v1.3-alpha)
 
-*Generated 2026-10-20 19:51 UTC from `evidence/junit.xml`. Environment: Windows 11 workstation, Python 3.12 (uv), PostgreSQL 16 in WSL2 Ubuntu.*
+*Generated 2026-10-20 21:28 UTC from `evidence/junit.xml`. Environment: Windows 11 workstation, Python 3.12 (uv), PostgreSQL 16 in WSL2 Ubuntu.*
 
-**Execution result: 433 passed, 0 failed, 53 XFAIL, 0 skipped, 486 total (pytest, 62 s).** Tests run against a throw-away PostgreSQL database built by the real migrations, connecting as the real least-privilege runtime roles (never a superuser).
+**Execution result: 615 passed, 0 failed, 11 XFAIL, 0 skipped, 626 total (pytest, 100 s).** Tests run against a throw-away PostgreSQL database built by the real migrations, connecting as the real least-privilege runtime roles (never a superuser).
 
 **XFAIL is not a pass.** An XFAIL case is an executable specification of a NOT IMPLEMENTED control, or a *gap demo* that runs today against a dev-only stand-in and fails an assertion stating the production property. They are listed separately below and never counted in the passed column; if one unexpectedly passes the run fails (strict xfail).
 
@@ -33,7 +33,9 @@
 | DEF-13 | Import-time validation used assert (removed under python -O) | low | bandit B101 | explicit RuntimeError in ngrc/audit/actions.py. | `tests/test_audit_integrity.py::test_action_registry_matches_code` | fixed |
 | GAP-01 | Phase 1 steps with no implementation at the start of this verification (operator-plane API, classification manifest, CI workflow, Dockerfile, test suite, evidence generation, reports) | process | gap analysis against the Phase 1 brief | built in this session; see docs/PHASE1_SECURITY_GATE.md for the resulting status of each step. | `tests/test_support_access.py`<br>`tests/test_table_classification.py`<br>`tests/test_evidence_artifacts.py` | fixed |
 | DEF-14 | Support-grant guard trigger weaknesses - platform_admin accepted as requester (H-01); decision/time columns editable without a state change (an ACTIVE grant's expiry could be extended, approvers planted, activation/approval times rewritten); consent columns writable on any transition by the owner role; pre-set decision fields accepted on insert; role-only (not account-status) checks | high (the audit stream accepts operator `support.action` events while a grant is active and `expires_at > now()`, so an extended expiry widened the window in which operator actions were accepted; also weakened separation of duties at the database layer) | P2-4 re-review of plt_support_grant_guard (H-01 plus the same-state branch) | migration control_plane/0004_harden_support_grant_guard.py - requester must hold platform_support and be active; decision/time columns are write-once and set only with the matching transition; expiry can only be SHORTENED while active; the single remaining same-state write is the fully validated first break-glass approval; consent columns change only on approved -> tenant_consented; insert rejects pre-set fields and inconsistent scope; approvers/requester must be active accounts and the requester must still hold platform_support at activation. | `tests/test_support_grant_db_guard.py::test_only_platform_support_can_be_the_requester_even_by_direct_insert`<br>`tests/test_support_grant_db_guard.py::test_an_active_grant_cannot_be_widened_or_rewritten_without_a_state_transition`<br>`tests/test_support_grant_db_guard.py::test_expiry_may_be_cut_short_but_never_extended_and_audit_follows_the_real_expiry`<br>`tests/test_support_grant_db_guard.py::test_break_glass_first_approval_is_validated_in_full`<br>`tests/test_support_grant_db_guard.py::test_activation_requires_the_requester_to_still_hold_platform_support` | fixed — 25 of the 26 new tests fail against the Phase 1 trigger (evidence/p2_4_mutation_check_phase1_trigger.txt); the 26th guards a rule that already existed. |
-| DEF-15 | Account lock-out without an exit path - 20 failed logins for an e-mail address (10 for operators; 10 MFA failures for customers) set the account to recovery_required, but the ADR's "verified-email unlock + MFA, owner/admin notified, never a silent permanent lock" is not implemented | high (availability / lock-out denial of service by anyone who knows an e-mail address; contradicts D-P0-008 s4) | preparing the P2-2 review package (reading throttle.py against the ADR) | NOT FIXED. Decision needed from the project owner (keep the hard stop and accept the availability risk until F-ATH-008 exists, or remove the hard stop - back-off only - as an interim). Not changed unilaterally because either choice alters a security control. Tracked by the pending spec below and by plan section 5. | `tests/test_pending_controls.py::test_an_account_locked_by_failed_logins_has_an_email_unlock_path_and_the_owner_is_notified` | open |
+| DEF-15 | Failure-triggered lock-out was exploitable by a stranger: repeated failed logins (20; operators 10) or second-factor failures (10) set the account to recovery_required, and the ADR's dedicated unlock flow and owner/admin notification did not exist | medium-high (availability: repeatable lock-out denial of service; operator accounts had no self-service exit). First recorded as 'high, no exit path' - CORRECTED: customer accounts could leave the state via password reset | preparing the P2-2 review package (reading throttle.py against the ADR); corrected while building F-ATH-015 | TEMPORARY, by project-owner decision 2026-10-21 (ADR 00_CONTROL/PHASE1/D-P1-001): the automatic transition to recovery_required was removed for the customer and operator realms and for second-factor failures; replaced by counted, progressive, pre-hash delays, per-IP limiting, audit events, suspicious-login detection (many sources against one account; success after a failure burst) with alerts (log sink only; delivery is open item O-4), and STRICTER operator parameters (free 3, 120 s doubling to 3600 s). Found and fixed on the way: a malformed client address made the audit append fail (HTTP 500) - addresses are now normalised (ngrc/core/net.py). | `tests/test_auth_backoff_policy.py::test_no_number_of_failures_ever_locks_the_account`<br>`tests/test_auth_backoff_policy.py::test_delays_grow_progressively_to_the_cap_and_are_enforced_before_the_password_check`<br>`tests/test_auth_backoff_policy.py::test_attempts_from_several_sources_against_one_account_raise_one_alert`<br>`tests/test_auth_backoff_policy.py::test_operator_accounts_are_throttled_harder_and_alert_at_critical_severity`<br>`tests/test_auth_backoff_policy.py::test_hostile_source_addresses_cannot_break_the_counters`<br>`tests/test_auth_backoff_policy.py::test_a_recovery_required_account_still_has_an_exit_through_password_reset_with_mailbox_proof` | mitigated-temporary — NOT closed. Residual risks are written into D-P1-001 (an attacker can keep a victim waiting up to the delay cap; no cross-account distributed-attack detection; alert delivery missing). Closes only when the permanent recovery mechanism F-ATH-015 is implemented, tested and reviewed. The owner is asked to re-confirm the decision given the correction. |
+| DEF-16 | DevFileSigner key-creation race - two processes (sealer and verifier/scheduler) using the dev signer for the first time concurrently could each create a different key file, one signing with a key the other then overwrote or failed to load | low (DEV-ONLY signer; would produce spurious verification failures, not a bypass) | writing the concurrent-sealer test for H-11 (tests/test_audit_completeness.py) | ngrc/audit/signer.py creates the key file exclusively and, on FileExistsError, loads the key that won the race. | `tests/test_audit_completeness.py::test_concurrent_sealers_publish_each_checkpoint_exactly_once` | fixed |
+| DEF-17 | Malformed REMOTE_ADDR / X-forwarded values reached the audit append as an ip column value and raised DataError, turning a login attempt into HTTP 500 | low-medium (availability / error handling on an unauthenticated path) | writing tests/test_auth_backoff_policy.py | ngrc/core/net.py normalize_ip(); unparseable values share one throttle bucket ('unknown') and are stored as NULL. | `tests/test_auth_backoff_policy.py::test_hostile_source_addresses_cannot_break_the_counters` | fixed — residual - one shared bucket can be filled by an attacker controlling REMOTE_ADDR; production gets the address from a trusted proxy configuration that does not yet exist (review concern 23). |
 
 ## Results by test
 
@@ -41,6 +43,22 @@ Each row is one test function (parametrised cases are aggregated). *Remediation*
 
 | Test | Purpose | Cases | Result | Failure details | Remediation | Final status |
 |---|---|---|---|---|---|---|
+| `test_audit_completeness.py::test_a_changed_checkpoint_is_not_accepted_as_the_one_verified_earlier` | A changed checkpoint is not accepted as the one verified earlier | 1 | 1/1 passed | — | — | **PASS** |
+| `test_audit_completeness.py::test_a_forged_checkpoint_with_a_wrong_previous_digest_is_rejected` | A forged checkpoint with a wrong previous digest is rejected | 1 | 1/1 passed | — | — | **PASS** |
+| `test_audit_completeness.py::test_a_valid_chain_alone_never_proves_completeness` | B cannot be derived from the data: deleting the NEWEST checkpoint leaves a perfectly valid shorter chain. | 1 | 1/1 passed | — | — | **PASS** |
+| `test_audit_completeness.py::test_an_immutable_sink_is_the_only_way_to_reach_established` | An immutable sink is the only way to reach established | 1 | 1/1 passed | — | — | **PASS** |
+| `test_audit_completeness.py::test_checkpoints_are_chained_and_a_heartbeat_extends_the_chain_without_new_events` | Checkpoints are chained and a heartbeat extends the chain without new events | 1 | 1/1 passed | — | — | **PASS** |
+| `test_audit_completeness.py::test_concurrent_sealers_publish_each_checkpoint_exactly_once` | Concurrent sealers publish each checkpoint exactly once | 1 | 1/1 passed | — | DEF-16 | **PASS** |
+| `test_audit_completeness.py::test_deleting_the_newest_checkpoint_everywhere_is_caught_by_the_high_water_mark` | Deleting the newest checkpoint everywhere is caught by the high water mark | 1 | 1/1 passed | — | — | **PASS** |
+| `test_audit_completeness.py::test_deleting_the_newest_checkpoint_is_caught_by_the_external_copy` | Deleting the newest checkpoint is caught by the external copy | 1 | 1/1 passed | — | — | **PASS** |
+| `test_audit_completeness.py::test_deleting_the_newest_checkpoints_and_silencing_the_sealer_is_caught_by_staleness` | Deleting the newest checkpoints and silencing the sealer is caught by staleness | 1 | 1/1 passed | — | — | **PASS** |
+| `test_audit_completeness.py::test_legacy_checkpoints_still_verify_and_are_reported_as_legacy` | Legacy checkpoints still verify and are reported as legacy | 1 | 1/1 passed | — | — | **PASS** |
+| `test_audit_completeness.py::test_middle_checkpoint_deletion_and_insertion_are_detected_without_any_anchor` | Middle checkpoint deletion and insertion are detected without any anchor | 1 | 1/1 passed | — | — | **PASS** |
+| `test_audit_completeness.py::test_removing_the_newest_external_copy_is_caught` | The Phase 1 gap demo (H-11): dropping the newest exported record used to leave the stream 'healthy'. | 1 | 1/1 passed | — | — | **PASS** |
+| `test_audit_completeness.py::test_resealing_over_a_deleted_checkpoint_cannot_replace_it_silently` | Delete checkpoint 2 and let the sealer issue a new checkpoint 2: the sink still holds the original, so the replacement is exposed. | 1 | 1/1 passed | — | — | **PASS** |
+| `test_audit_completeness.py::test_the_sealer_role_cannot_skip_repeat_rewind_or_downgrade_checkpoints` | The sealer role cannot skip repeat rewind or downgrade checkpoints | 1 | 1/1 passed | — | — | **PASS** |
+| `test_audit_completeness.py::test_verdicts_are_recorded_and_only_successful_runs_move_the_high_water_mark` | Verdicts are recorded and only successful runs move the high water mark | 1 | 1/1 passed | — | — | **PASS** |
+| `test_audit_completeness.py::test_without_a_stale_check_the_residual_window_is_the_checkpoint_interval` | Documented limit: events written after the newest honest checkpoint are covered by chain consistency only until the next checkpoint. | 1 | 1/1 passed | — | — | **PASS** |
 | `test_audit_integrity.py::test_action_registry_matches_code` | Action registry matches code | 1 | 1/1 passed | — | DEF-13 | **PASS** |
 | `test_audit_integrity.py::test_app_cannot_write_to_another_tenants_stream` | App cannot write to another tenants stream | 1 | 1/1 passed | — | — | **PASS** |
 | `test_audit_integrity.py::test_append_chains_events_and_verifier_accepts` | Append chains events and verifier accepts | 1 | 1/1 passed | — | — | **PASS** |
@@ -69,8 +87,17 @@ Each row is one test function (parametrised cases are aggregated). *Remediation*
 | `test_audit_integrity.py::test_truncated_tail_detected` | Truncated tail detected | 1 | 1/1 passed | — | — | **PASS** |
 | `test_audit_integrity.py::test_unregistered_action_rejected` | Unregistered action rejected | 1 | 1/1 passed | — | — | **PASS** |
 | `test_audit_integrity.py::test_writer_role_must_be_registered_for_action` | ngrc_app may not emit an auth-service action; ngrc_auth may not emit tenant administration events. | 1 | 1/1 passed | — | — | **PASS** |
+| `test_auth_backoff_policy.py::test_a_recovery_required_account_still_has_an_exit_through_password_reset_with_mailbox_proof` | CORRECTION (found while building F-ATH-015): the DEF-15 write-up said accounts in `recovery_required` had NO exit. They do: the password-reset | 1 | 1/1 passed | — | DEF-15 | **PASS** |
+| `test_auth_backoff_policy.py::test_attempts_from_several_sources_against_one_account_raise_one_alert` | Attempts from several sources against one account raise one alert | 1 | 1/1 passed | — | DEF-15 | **PASS** |
+| `test_auth_backoff_policy.py::test_delays_grow_progressively_to_the_cap_and_are_enforced_before_the_password_check` | Delays grow progressively to the cap and are enforced before the password check | 1 | 1/1 passed | — | DEF-15 | **PASS** |
+| `test_auth_backoff_policy.py::test_hostile_source_addresses_cannot_break_the_counters` | Hostile source addresses cannot break the counters | 1 | 1/1 passed | — | DEF-15, DEF-17 | **PASS** |
+| `test_auth_backoff_policy.py::test_no_number_of_failures_ever_locks_the_account` | No number of failures ever locks the account | 1 | 1/1 passed | — | DEF-15 | **PASS** |
+| `test_auth_backoff_policy.py::test_operator_accounts_are_never_moved_to_a_lock_state_by_failures` | Operator accounts are never moved to a lock state by failures | 1 | 1/1 passed | — | — | **PASS** |
+| `test_auth_backoff_policy.py::test_operator_accounts_are_throttled_harder_and_alert_at_critical_severity` | Operator accounts are throttled harder and alert at critical severity | 1 | 1/1 passed | — | DEF-15 | **PASS** |
+| `test_auth_backoff_policy.py::test_second_factor_failures_back_off_but_never_lock_the_account` | Second factor failures back off but never lock the account | 1 | 1/1 passed | — | — | **PASS** |
+| `test_auth_backoff_policy.py::test_success_after_a_burst_of_failures_is_audited_and_alerted` | Success after a burst of failures is audited and alerted | 1 | 1/1 passed | — | — | **PASS** |
+| `test_auth_backoff_policy.py::test_the_temporary_policy_is_visible_in_configuration_and_has_no_hard_stop` | The temporary policy is visible in configuration and has no hard stop | 1 | 1/1 passed | — | — | **PASS** |
 | `test_authentication.py::test_absolute_timeout_even_with_continuous_activity` | Absolute timeout even with continuous activity | 1 | 1/1 passed | — | — | **PASS** |
-| `test_authentication.py::test_account_recovery_required_after_many_failures` | Account recovery required after many failures | 1 | 1/1 passed | — | — | **PASS** |
 | `test_authentication.py::test_argon2id_is_used_with_floor_parameters` | Argon2id is used with floor parameters | 1 | 1/1 passed | — | — | **PASS** |
 | `test_authentication.py::test_concurrent_token_consumption_has_exactly_one_winner` | Concurrent token consumption has exactly one winner | 1 | 1/1 passed | — | — | **PASS** |
 | `test_authentication.py::test_csrf_cookie_attributes` | Csrf cookie attributes | 1 | 1/1 passed | — | — | **PASS** |
@@ -154,16 +181,20 @@ Each row is one test function (parametrised cases are aggregated). *Remediation*
 | `test_ci_record.py::test_a_changed_workflow_makes_the_recorded_run_stale` | A changed workflow makes the recorded run stale | 1 | 1/1 passed | — | — | **PASS** |
 | `test_ci_record.py::test_a_missing_skipped_or_failed_job_is_never_a_pass` | A missing skipped or failed job is never a pass | 5 | 5/5 passed | — | — | **PASS** |
 | `test_ci_record.py::test_a_success_without_evidence_is_not_accepted` | A success without evidence is not accepted | 1 | 1/1 passed | — | — | **PASS** |
-| `test_ci_record.py::test_all_jobs_green_on_an_unchanged_workflow_is_the_only_pass` | All jobs green on an unchanged workflow is the only pass | 1 | 1/1 passed | — | — | **PASS** |
-| `test_ci_record.py::test_run_metadata_must_be_present_and_well_formed` | Run metadata must be present and well formed | 5 | 5/5 passed | — | — | **PASS** |
-| `test_ci_record.py::test_the_container_job_without_docker_does_not_count` | The container job without docker does not count | 1 | 1/1 passed | — | — | **PASS** |
+| `test_ci_record.py::test_all_jobs_green_for_the_right_commit_and_an_unchanged_workflow_is_the_only_pass` | All jobs green for the right commit and an unchanged workflow is the only pass | 1 | 1/1 passed | — | — | **PASS** |
+| `test_ci_record.py::test_run_metadata_must_be_present_well_formed_private_and_for_the_right_workflow` | Run metadata must be present well formed private and for the right workflow | 9 | 9/9 passed | — | — | **PASS** |
+| `test_ci_record.py::test_the_container_job_needs_docker_and_a_clean_image_scan` | The container job needs docker and a clean image scan | 1 | 1/1 passed | — | — | **PASS** |
+| `test_ci_record.py::test_the_importer_derives_job_results_from_api_shaped_data_and_never_invents_the_rest` | The importer derives job results from api shaped data and never invents the rest | 1 | 1/1 passed | — | — | **PASS** |
 | `test_ci_record.py::test_the_real_record_says_ci_has_not_run` | The real record says ci has not run | 1 | 1/1 passed | — | — | **PASS** |
+| `test_ci_record.py::test_the_run_must_have_executed_the_workflow_that_the_commit_contains` | The run must have executed the workflow that the commit contains | 1 | 1/1 passed | — | — | **PASS** |
+| `test_ci_record.py::test_the_secret_scan_must_have_seen_the_full_history` | The secret scan must have seen the full history | 1 | 1/1 passed | — | — | **PASS** |
+| `test_ci_record.py::test_the_tests_job_must_report_passes_no_failures_and_postgresql_rls_results` | The tests job must report passes no failures and postgresql rls results | 5 | 5/5 passed | — | — | **PASS** |
 | `test_ci_record.py::test_the_workflow_file_existing_is_not_a_result` | The workflow file existing is not a result | 1 | 1/1 passed | — | — | **PASS** |
 | `test_config_security.py::test_a_fully_secure_configuration_passes` | A fully secure configuration passes | 1 | 1/1 passed | — | — | **PASS** |
 | `test_config_security.py::test_dev_only_markers_are_explicit` | Dev-only stand-ins must announce themselves so nobody mistakes them for production controls. | 1 | 1/1 passed | — | — | **PASS** |
 | `test_config_security.py::test_django_baseline_features_are_not_installed` | Django baseline features are not installed | 1 | 1/1 passed | — | — | **PASS** |
-| `test_config_security.py::test_each_insecure_setting_is_detected` | Each insecure setting is detected | 23 | 23/23 passed | — | — | **PASS** |
-| `test_config_security.py::test_each_process_plane_receives_only_its_own_database_roles` | Each process plane receives only its own database roles | 3 | 3/3 passed | — | — | **PASS** |
+| `test_config_security.py::test_each_insecure_setting_is_detected` | Each insecure setting is detected | 28 | 28/28 passed | — | — | **PASS** |
+| `test_config_security.py::test_each_process_plane_receives_only_its_own_database_roles` | Each process plane receives only its own database roles | 5 | 5/5 passed | — | — | **PASS** |
 | `test_config_security.py::test_http_security_settings_are_secure_by_default` | Http security settings are secure by default | 1 | 1/1 passed | — | — | **PASS** |
 | `test_config_security.py::test_insecure_database_settings_are_detected` | Insecure database settings are detected | 1 | 1/1 passed | — | — | **PASS** |
 | `test_config_security.py::test_missing_required_secrets_stop_startup_and_nothing_has_a_default` | Missing required secrets stop startup and nothing has a default | 4 | 4/4 passed | — | — | **PASS** |
@@ -172,6 +203,17 @@ Each row is one test function (parametrised cases are aggregated). *Remediation*
 | `test_config_security.py::test_runtime_roles_in_database_settings_are_not_privileged` | Runtime roles in database settings are not privileged | 1 | 1/1 passed | — | — | **PASS** |
 | `test_config_security.py::test_signing_key_and_env_files_are_gitignored` | Signing key and env files are gitignored | 1 | 1/1 passed | — | — | **PASS** |
 | `test_config_security.py::test_weak_secret_key_and_wildcard_hosts_stop_startup` | Weak secret key and wildcard hosts stop startup | 1 | 1/1 passed | — | — | **PASS** |
+| `test_cross_tenant_search.py::test_a_term_that_exists_only_in_another_tenant_finds_nothing_and_looks_like_any_empty_search` | A term that exists only in another tenant finds nothing and looks like any empty search | 1 | 1/1 passed | — | — | **PASS** |
+| `test_cross_tenant_search.py::test_every_searchable_row_carries_its_tenant_and_the_vector_is_derived_by_the_database` | Every searchable row carries its tenant and the vector is derived by the database | 1 | 1/1 passed | — | — | **PASS** |
+| `test_cross_tenant_search.py::test_invalid_queries_are_rejected_cleanly` | Invalid queries are rejected cleanly | 7 | 7/7 passed | — | — | **PASS** |
+| `test_cross_tenant_search.py::test_query_syntax_cannot_widen_the_tenant_filter_or_break_the_server` | Query syntax cannot widen the tenant filter or break the server | 13 | 13/13 passed | — | — | **PASS** |
+| `test_cross_tenant_search.py::test_restricted_hits_are_reauthorised_per_item` | Restricted hits are reauthorised per item | 1 | 1/1 passed | — | — | **PASS** |
+| `test_cross_tenant_search.py::test_results_are_capped_and_ranked` | Results are capped and ranked | 1 | 1/1 passed | — | — | **PASS** |
+| `test_cross_tenant_search.py::test_results_come_only_from_the_callers_tenant` | Results come only from the callers tenant | 1 | 1/1 passed | — | — | **PASS** |
+| `test_cross_tenant_search.py::test_row_level_security_alone_confines_the_search_sql` | Row level security alone confines the search sql | 1 | 1/1 passed | — | — | **PASS** |
+| `test_cross_tenant_search.py::test_search_needs_authentication_a_tenant_context_and_the_permission` | Search needs authentication a tenant context and the permission | 1 | 1/1 passed | — | — | **PASS** |
+| `test_cross_tenant_search.py::test_snippets_are_plain_text_without_markup` | Snippets are plain text without markup | 1 | 1/1 passed | — | — | **PASS** |
+| `test_cross_tenant_search.py::test_the_query_text_is_never_audited_only_its_length_and_the_result_count` | The query text is never audited only its length and the result count | 1 | 1/1 passed | — | — | **PASS** |
 | `test_crypto.py::test_any_bit_flip_is_detected` | Any bit flip is detected | 1 | 1/1 passed | — | — | **PASS** |
 | `test_crypto.py::test_ciphertext_is_bound_to_tenant_record_and_field` | Ciphertext is bound to tenant record and field | 1 | 1/1 passed | — | — | **PASS** |
 | `test_crypto.py::test_constant_time_comparison` | Constant time comparison | 1 | 1/1 passed | — | — | **PASS** |
@@ -187,6 +229,50 @@ Each row is one test function (parametrised cases are aggregated). *Remediation*
 | `test_evidence_artifacts.py::test_rls_coverage_report` | Rls coverage report | 1 | 1/1 passed | — | — | **PASS** |
 | `test_evidence_artifacts.py::test_route_policy_inventory` | Route policy inventory | 1 | 1/1 passed | — | — | **PASS** |
 | `test_evidence_artifacts.py::test_security_configuration_snapshot` | Security configuration snapshot | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_download.py::test_a_database_row_pointing_at_another_tenants_object_is_never_opened` | A database row pointing at another tenants object is never opened | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_download.py::test_a_missing_or_truncated_object_is_an_integrity_failure_not_a_partial_download` | A missing or truncated object is an integrity failure not a partial download | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_download.py::test_a_revision_whose_scan_has_not_completed_is_never_served` | A revision whose scan has not completed is never served | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_download.py::test_an_object_that_no_longer_matches_its_recorded_hash_is_refused_and_alerted` | An object that no longer matches its recorded hash is refused and alerted | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_download.py::test_api_responses_never_expose_storage_keys_paths_or_urls` | Api responses never expose storage keys paths or urls | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_download.py::test_authentication_and_the_evidence_read_permission_are_required` | Authentication and the evidence read permission are required | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_download.py::test_cross_tenant_download_is_an_identical_audited_404` | Cross tenant download is an identical audited 404 | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_download.py::test_download_streams_the_exact_bytes_with_hardened_headers_and_no_redirect` | Download streams the exact bytes with hardened headers and no redirect | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_download.py::test_no_byte_is_released_when_the_download_event_cannot_be_written` | No byte is released when the download event cannot be written | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_download.py::test_quarantined_evidence_is_retained_but_never_served` | Quarantined evidence is retained but never served | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_download.py::test_restricted_evidence_is_invisible_without_the_restricted_permission` | Restricted evidence is invisible without the restricted permission | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_download.py::test_support_sessions_and_operators_have_no_path_to_evidence` | Support sessions and operators have no path to evidence | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_download.py::test_the_event_records_object_revision_hash_actor_and_result` | The event records object revision hash actor and result | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_a_pending_revision_can_receive_exactly_one_outcome` | A pending revision can receive exactly one outcome | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_a_reader_without_the_upload_permission_can_read_but_not_create_or_upload` | The upload permission is checked on its own: a role with evidence.read only passes the route policy but not the mutation. | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_content_must_be_what_it_claims_to_be` | Content must be what it claims to be | 8 | 8/8 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_eicar_is_quarantined_at_upload_with_a_critical_event` | Eicar is quarantined at upload with a critical event | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_hostile_storage_keys_are_refused` | Hostile storage keys are refused | 10 | 10/10 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_member_cannot_upload_and_validation_errors_are_clean` | Member cannot upload and validation errors are clean | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_nothing_can_delete_or_truncate_evidence_and_restricted_cannot_be_downgraded` | Nothing can delete or truncate evidence and restricted cannot be downgraded | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_office_packages_are_checked_for_bombs_path_escapes_and_real_structure` | Office packages are checked for bombs path escapes and real structure | 6 | 6/6 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_revision_content_is_immutable_and_the_scan_outcome_final` | Revision content is immutable and the scan outcome final | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_revisions_are_numbered_listed_and_each_one_is_independently_downloadable` | Revisions are numbered listed and each one is independently downloadable | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_rls_composite_fk_and_with_check_keep_evidence_inside_its_tenant` | Rls composite fk and with check keep evidence inside its tenant | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_size_limit_is_enforced_before_and_while_storing` | Size limit is enforced before and while storing | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_ten_evidence_and_ten_evidence_revision_follow_the_tenant_table_template` | Ten evidence and ten evidence revision follow the tenant table template | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_the_original_filename_is_metadata_only_and_sanitised` | The original filename is metadata only and sanitised | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_the_sniffer_is_pure_and_rejects_the_unknown` | The sniffer is pure and rejects the unknown | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_the_store_never_overwrites_and_keys_are_server_generated` | The store never overwrites and keys are server generated | 1 | 1/1 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_types_outside_the_allow_list_are_refused_and_nothing_is_stored` | Types outside the allow list are refused and nothing is stored | 7 | 7/7 passed | — | — | **PASS** |
+| `test_evidence_lifecycle.py::test_valid_documents_are_accepted_and_scanned_clean` | Valid documents are accepted and scanned clean | 1 | 1/1 passed | — | — | **PASS** |
+| `test_factor_removal.py::test_a_cloned_credential_is_not_a_usable_factor_and_may_always_be_removed` | A cloned credential is not a usable factor and may always be removed | 1 | 1/1 passed | — | — | **PASS** |
+| `test_factor_removal.py::test_a_factor_of_someone_else_is_not_found_and_stays_untouched` | A factor of someone else is not found and stays untouched | 1 | 1/1 passed | — | — | **PASS** |
+| `test_factor_removal.py::test_an_unfinished_enrolment_is_not_a_factor_and_can_be_replaced` | An unfinished enrolment is not a factor and can be replaced | 1 | 1/1 passed | — | — | **PASS** |
+| `test_factor_removal.py::test_concurrent_removals_cannot_both_succeed` | Two requests, two connections, an account with exactly two factors: the guard serialises on the account row, so one of them must fail. | 1 | 1/1 passed | — | — | **PASS** |
+| `test_factor_removal.py::test_operators_have_no_self_service_removal_and_the_database_protects_their_last_credential` | Operators have no self service removal and the database protects their last credential | 1 | 1/1 passed | — | — | **PASS** |
+| `test_factor_removal.py::test_removal_must_leave_two_recovery_options` | After removal: two usable factors, or one factor plus recovery codes (D-P0-008 s7). | 1 | 1/1 passed | — | — | **PASS** |
+| `test_factor_removal.py::test_removal_requires_a_recent_step_up` | Removal requires a recent step up | 1 | 1/1 passed | — | — | **PASS** |
+| `test_factor_removal.py::test_removal_revokes_other_sessions_rotates_mine_notifies_and_is_audited` | Removal revokes other sessions rotates mine notifies and is audited | 1 | 1/1 passed | — | — | **PASS** |
+| `test_factor_removal.py::test_someone_elses_totp_factor_is_not_found_and_stays_untouched` | Someone elses totp factor is not found and stays untouched | 1 | 1/1 passed | — | — | **PASS** |
+| `test_factor_removal.py::test_the_database_refuses_to_delete_the_last_usable_factor_even_without_the_application` | The database refuses to delete the last usable factor even without the application | 1 | 1/1 passed | — | — | **PASS** |
+| `test_factor_removal.py::test_the_factor_list_shows_only_my_factors_and_the_recovery_code_count` | The factor list shows only my factors and the recovery code count | 1 | 1/1 passed | — | — | **PASS** |
+| `test_factor_removal.py::test_the_last_usable_factor_cannot_be_removed` | The last usable factor cannot be removed | 1 | 1/1 passed | — | — | **PASS** |
+| `test_factor_removal.py::test_the_owner_role_is_the_only_exception_and_is_used_by_the_recovery_function` | Documented trust boundary: the schema owner (migrations, SECURITY DEFINER recovery completion) bypasses the guard. | 1 | 1/1 passed | — | — | **PASS** |
 | `test_input_and_exposure.py::test_all_responses_are_json_with_hardening_headers` | All responses are json with hardening headers | 1 | 1/1 passed | — | DEF-10 | **PASS** |
 | `test_input_and_exposure.py::test_api_responses_never_contain_credentials_or_hashes` | Api responses never contain credentials or hashes | 1 | 1/1 passed | — | — | **PASS** |
 | `test_input_and_exposure.py::test_cors_is_default_deny` | Cors is default deny | 1 | 1/1 passed | — | — | **PASS** |
@@ -208,52 +294,38 @@ Each row is one test function (parametrised cases are aggregated). *Remediation*
 | `test_input_and_exposure.py::test_sql_injection_in_tenant_api_inputs` | Sql injection in tenant api inputs | 10 | 10/10 passed | — | — | **PASS** |
 | `test_input_and_exposure.py::test_totp_secret_is_shown_exactly_once` | Totp secret is shown exactly once | 1 | 1/1 passed | — | — | **PASS** |
 | `test_input_and_exposure.py::test_unhandled_exceptions_return_a_generic_body` | Unhandled exceptions return a generic body | 1 | 1/1 passed | — | — | **PASS** |
-| `test_pending_controls.py::test_a_factor_belonging_to_someone_else_is_not_found` | A factor belonging to someone else is not found | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_a_support_session_cannot_download_evidence_under_a_metadata_only_grant` | A support session cannot download evidence under a metadata only grant | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_admin_assisted_reset_needs_a_different_approver_with_step_up` | Admin assisted reset needs a different approver with step up | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_an_account_locked_by_failed_logins_has_an_email_unlock_path_and_the_owner_is_notified` | DEF-15: the hard stop sets `recovery_required`; the ADR requires 'verified-email unlock + MFA, owner/admin notified, never a silent | 1 | 0/1 passed, 1 XFAIL | — | DEF-15 | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_an_operator_cannot_remove_their_own_webauthn_credential` | An operator cannot remove their own webauthn credential | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_an_overdue_verification_raises_its_own_alert` | An overdue verification raises its own alert | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_cross_tenant_download_is_not_found_leaks_nothing_and_is_audited` | Cross tenant download is not found leaks nothing and is audited | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_download_event_records_object_revision_hash_actor_and_result` | Download event records object revision hash actor and result | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_download_fails_closed_when_the_audit_event_cannot_be_written` | Download fails closed when the audit event cannot be written | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_download_requires_authentication_and_the_evidence_read_permission` | Download requires authentication and the evidence read permission | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_download_streams_exact_bytes_through_an_authorization_checked_endpoint` | Download streams exact bytes through an authorization checked endpoint | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_every_indexed_document_and_query_carries_the_tenant_id` | Every indexed document and query carries the tenant id | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_factor_removal_requires_step_up` | Factor removal requires step up | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
+| `test_lost_factor_recovery.py::test_a_denied_request_ends_and_the_user_is_told` | A denied request ends and the user is told | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_a_pending_password_session_is_required_to_ask_for_recovery` | A pending password session is required to ask for recovery | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_a_sole_owner_needs_platform_security_and_the_same_cooling_off` | A sole owner needs platform security and the same cooling off | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_admin_assisted_recovery_end_to_end` | Admin assisted recovery end to end | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_after_a_completed_recovery_only_the_completing_session_may_enrol_for_a_short_window` | After a completed recovery only the completing session may enrol for a short window | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_another_tenants_admin_cannot_see_or_approve` | Another tenants admin cannot see or approve | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_cancelling_during_the_cooling_off_stops_the_completion` | Cancelling during the cooling off stops the completion | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_expired_requests_cannot_be_approved_and_are_replaced_by_a_new_one` | Expired requests cannot be approved and are replaced by a new one | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_neither_the_audit_trail_nor_the_database_holds_a_usable_cancel_token` | Neither the audit trail nor the database holds a usable cancel token | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_no_runtime_role_can_write_or_read_the_request_table_directly` | No runtime role can write or read the request table directly | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_no_support_session_route_can_touch_recovery` | No support session route can touch recovery | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_nobody_can_approve_their_own_recovery` | Nobody can approve their own recovery | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_only_one_request_is_open_and_requests_are_throttled` | Only one request is open and requests are throttled | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_only_tenant_owners_and_admins_see_or_decide_and_a_fresh_step_up_is_required` | Only tenant owners and admins see or decide and a fresh step up is required | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_recovery_events_are_registered_and_stay_in_their_streams` | Recovery events are registered and stay in their streams | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_tenant_selection_rules_for_the_request` | Tenant selection rules for the request | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_terminal_states_cannot_be_reopened_even_by_the_owner_role` | Terminal states cannot be reopened even by the owner role | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_the_cancel_endpoint_is_throttled_and_does_not_reveal_anything` | The cancel endpoint is throttled and does not reveal anything | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_the_cooling_off_and_the_state_machine_hold_even_against_the_owner_role` | The cooling off and the state machine hold even against the owner role | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_the_emailed_link_cancels_once_and_nothing_can_follow` | The emailed link cancels once and nothing can follow | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_the_platform_approval_assertion_is_bound_to_that_one_request` | The platform approval assertion is bound to that one request | 1 | 1/1 passed | — | — | **PASS** |
+| `test_lost_factor_recovery.py::test_the_trigger_rejects_forged_approvals_even_from_the_owner_role` | Defence in depth: the functions never produce these rows, so each rule is exercised by a forged UPDATE as the schema owner. | 1 | 1/1 passed | — | — | **PASS** |
 | `test_pending_controls.py::test_gap_demo_ciphertext_cannot_be_read_after_a_master_key_change` | GAP DEMO (runs now): the dev provider has a single master key and ignores the key id stored beside the ciphertext, so rotation | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
 | `test_pending_controls.py::test_gap_demo_dev_signing_key_is_readable_by_the_process_that_signs` | GAP DEMO (runs now): the dev signer's private key is a file the application process can read, so a host-level attacker (or an | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_gap_demo_dropping_the_latest_exported_checkpoint_goes_unnoticed` | GAP DEMO (runs now): with a plain-file export, the newest checkpoint copy can be removed and the verifier - which only checks the | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
 | `test_pending_controls.py::test_gap_demo_the_dev_export_file_can_be_rewritten_by_the_application_process` | GAP DEMO (runs now): the dev sink is an ordinary file opened for append by the same process that writes the database, so it is not | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
 | `test_pending_controls.py::test_harness_separates_absent_features_from_broken_specs` | Self-test of the harness (RUNS and must PASS): an absent module/route is FeatureAbsent; an existing one resolves. Any other error | 1 | 1/1 passed | — | — | **PASS** |
-| `test_pending_controls.py::test_incremental_verification_reaches_the_same_verdict_as_a_full_run` | Incremental verification reaches the same verdict as a full run | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
 | `test_pending_controls.py::test_kms_provider_envelope_round_trip_and_aad_binding` | Kms provider envelope round trip and aad binding | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
 | `test_pending_controls.py::test_kms_provider_keeps_old_ciphertext_readable_after_rotation` | Kms provider keeps old ciphertext readable after rotation | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
 | `test_pending_controls.py::test_kms_signer_is_sign_only_and_the_private_key_is_not_exportable` | Kms signer is sign only and the private key is not exportable | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_missing_external_checkpoint_copy_is_a_violation_in_production_mode` | Missing external checkpoint copy is a violation in production mode | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_object_keys_are_tenant_prefixed_and_cannot_be_chosen_by_the_client` | Object keys are tenant prefixed and cannot be chosen by the client | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_platform_support_can_never_reset_a_customers_mfa` | Platform support can never reset a customers mfa | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
 | `test_pending_controls.py::test_production_settings_start_only_with_kms_backends_and_hold_no_key_material` | Production settings start only with kms backends and hold no key material | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_recovery_code_flow_restores_access_notifies_and_audits` | Recovery code flow restores access notifies and audits | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_recovery_endpoints_are_throttled_and_do_not_reveal_whether_an_account_exists` | Recovery endpoints are throttled and do not reveal whether an account exists | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_removal_must_leave_two_recovery_options` | ADR D-P0-008 s7: after removal the account keeps two factors, or one factor plus recovery codes. | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_removal_revokes_other_sessions_and_is_audited` | Removal revokes other sessions and is audited | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_restricted_class_evidence_is_excluded_from_bulk_export` | Restricted class evidence is excluded from bulk export | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_scheduled_run_detects_tampering_records_a_violation_and_raises_the_alert` | Scheduled run detects tampering records a violation and raises the alert | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_scheduled_run_verifies_every_stream_and_records_each_result` | Scheduled run verifies every stream and records each result | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
 | `test_pending_controls.py::test_sealer_does_not_report_a_checkpoint_published_until_the_sink_acknowledges_it` | Sealer does not report a checkpoint published until the sink acknowledges it | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_search_hits_are_reauthorised_per_item_before_return` | Search hits are reauthorised per item before return | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_search_query_syntax_cannot_widen_the_tenant_filter` | Search query syntax cannot widen the tenant filter | 6 | 0/6 passed, 6 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_search_returns_only_the_callers_tenant` | Search returns only the callers tenant | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_search_without_valid_tenant_context_fails_closed` | Search without valid tenant context fails closed | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
 | `test_pending_controls.py::test_sink_uses_credentials_the_application_database_and_runtime_roles_do_not_hold` | Sink uses credentials the application database and runtime roles do not hold | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_stored_object_that_no_longer_matches_its_recorded_hash_is_refused` | Stored object that no longer matches its recorded hash is refused | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_the_last_factor_cannot_be_removed` | The last factor cannot be removed | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_the_last_owner_requires_platform_security_approval_and_the_same_cooling_off` | The last owner requires platform security approval and the same cooling off | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_the_legitimate_user_can_cancel_during_cooling_off_and_all_sessions_are_revoked_on_completion` | The legitimate user can cancel during cooling off and all sessions are revoked on completion | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_the_new_factor_cannot_complete_before_the_cooling_off_period` | The new factor cannot complete before the cooling off period | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_the_verification_job_runs_only_as_the_verifier_identity_and_cannot_be_disabled_by_a_tenant` | The verification job runs only as the verifier identity and cannot be disabled by a tenant | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
-| `test_pending_controls.py::test_unscanned_or_quarantined_evidence_is_never_served` | Unscanned or quarantined evidence is never served | 2 | 0/2 passed, 2 XFAIL | — | — | **XFAIL — not a pass** |
 | `test_pending_controls.py::test_verifier_compares_database_checkpoints_with_the_sink_copy` | Verifier compares database checkpoints with the sink copy | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
 | `test_pending_controls.py::test_worm_sink_refuses_overwrite_delete_and_truncate_of_a_published_checkpoint` | Worm sink refuses overwrite delete and truncate of a published checkpoint | 1 | 0/1 passed, 1 XFAIL | — | — | **XFAIL — not a pass** |
 | `test_review_record.py::test_a_complete_record_requires_every_scope_to_be_covered` | A complete record requires every scope to be covered | 1 | 1/1 passed | — | — | **PASS** |
@@ -299,6 +371,19 @@ Each row is one test function (parametrised cases are aggregated). *Remediation*
 | `test_rls_tenant_isolation.py::test_tenant_id_is_immutable` | Tenant id is immutable | 1 | 1/1 passed | — | — | **PASS** |
 | `test_rls_tenant_isolation.py::test_tenant_roles_cannot_carry_platform_permissions` | Tenant roles cannot carry platform permissions | 1 | 1/1 passed | — | — | **PASS** |
 | `test_rls_tenant_isolation.py::test_unique_constraints_are_tenant_scoped` | Both tenants own a role keyed 'member' (system role) - uniqueness is per tenant, not global. | 1 | 1/1 passed | — | — | **PASS** |
+| `test_scheduled_verification.py::test_a_scheduled_run_detects_tampering_records_it_alerts_and_exits_non_zero` | A scheduled run detects tampering records it alerts and exits non zero | 1 | 1/1 passed | — | — | **PASS** |
+| `test_scheduled_verification.py::test_a_scheduled_run_verifies_each_stream_records_each_result_and_writes_a_summary_event` | A scheduled run verifies each stream records each result and writes a summary event | 1 | 1/1 passed | — | — | **PASS** |
+| `test_scheduled_verification.py::test_alert_details_may_not_carry_secrets_and_a_failing_sink_never_breaks_the_caller` | Alert details may not carry secrets and a failing sink never breaks the caller | 1 | 1/1 passed | — | — | **PASS** |
+| `test_scheduled_verification.py::test_documented_limit_an_in_place_edit_of_an_old_event_needs_a_full_run` | Documented limit an in place edit of an old event needs a full run | 1 | 1/1 passed | — | — | **PASS** |
+| `test_scheduled_verification.py::test_incremental_runs_agree_with_full_runs_on_clean_data_and_catch_new_tampering` | Incremental runs agree with full runs on clean data and catch new tampering | 1 | 1/1 passed | — | — | **PASS** |
+| `test_scheduled_verification.py::test_no_tenant_route_can_configure_pause_or_disable_verification` | No tenant route can configure pause or disable verification | 4 | 4/4 passed | — | — | **PASS** |
+| `test_scheduled_verification.py::test_production_mode_requires_the_external_copy_and_an_independent_anchor` | Production mode requires the external copy and an independent anchor | 1 | 1/1 passed | — | — | **PASS** |
+| `test_scheduled_verification.py::test_public_keys_come_from_configuration_so_the_verifier_needs_no_private_key` | Public keys come from configuration so the verifier needs no private key | 1 | 1/1 passed | — | — | **PASS** |
+| `test_scheduled_verification.py::test_silence_is_an_alert_the_watchdog_raises_when_no_run_is_recorded` | Silence is an alert the watchdog raises when no run is recorded | 1 | 1/1 passed | — | — | **PASS** |
+| `test_scheduled_verification.py::test_the_job_only_runs_as_the_verifier_identity` | The job only runs as the verifier identity | 1 | 1/1 passed | — | — | **PASS** |
+| `test_scheduled_verification.py::test_the_seal_command_issues_checkpoints_and_a_heartbeat` | The seal command issues checkpoints and a heartbeat | 1 | 1/1 passed | — | — | **PASS** |
+| `test_scheduled_verification.py::test_the_watchdog_is_a_separate_entry_point_and_the_command_maps_it_to_the_exit_code` | The watchdog is a separate entry point and the command maps it to the exit code | 1 | 1/1 passed | — | — | **PASS** |
+| `test_scheduled_verification.py::test_verified_clock_used_by_the_scheduler_is_the_shared_one` | Verified clock used by the scheduler is the shared one | 1 | 1/1 passed | — | — | **PASS** |
 | `test_smoke_flows.py::test_customer_full_login_flow` | Customer full login flow | 1 | 1/1 passed | — | — | **PASS** |
 | `test_smoke_flows.py::test_operator_login_flow` | Operator login flow | 1 | 1/1 passed | — | — | **PASS** |
 | `test_support_access.py::test_activation_is_impossible_without_tenant_consent` | Activation is impossible without tenant consent | 1 | 1/1 passed | — | — | **PASS** |
@@ -371,13 +456,8 @@ Each row is one test function (parametrised cases are aggregated). *Remediation*
 
 | Control | Status | XFAIL cases | What exists | Plan |
 |---|---|---|---|---|
-| **F-AUD-007** Scheduled continuous audit verification with alerting | NOT IMPLEMENTED | 6 | spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
-| **F-AUD-006** Immutable (WORM) audit checkpoint storage and external anchoring | NOT IMPLEMENTED | 6 | gap demo (runs today, fails its assertion); spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
-| **F-DAT-004** Authorization-checked evidence download (C-6) | NOT IMPLEMENTED | 11 | spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
-| **F-AUZ-005** Cross-tenant search isolation | NOT IMPLEMENTED | 10 | spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
+| **F-AUD-006** Immutable (WORM) audit checkpoint storage and external anchoring | NOT IMPLEMENTED | 5 | gap demo (runs today, fails its assertion); spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
 | **F-DAT-006** Production key management (KMS) for data encryption and audit signing | NOT IMPLEMENTED | 6 | gap demo (runs today, fails its assertion); spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
-| **F-ATH-014** MFA factor removal | NOT IMPLEMENTED | 6 | spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
-| **F-ATH-015** Lost-factor recovery and lock-out exit | NOT IMPLEMENTED | 8 | spec (stops at the absent interface) | `docs/plans/P2-3_IMPLEMENTATION_PLANS.md` |
 
 A control changes from NOT IMPLEMENTED to implemented only when its code exists, its specs pass with only the `@pending` marker removed, and `docs/control_map.yaml` is updated; the generator exits non-zero while a mapped pending spec is not in the XFAIL state.
 
@@ -386,20 +466,26 @@ A control changes from NOT IMPLEMENTED to implemented only when its code exists,
 | Required category (Phase 1 brief) | Automated tests | Status |
 |---|---|---|
 | cross-tenant read / write / delete | 4 | **PASS** |
-| cross-tenant search / download | 0 | **BLOCKED — no search/download features exist yet; executable specs are XFAIL (see BLOCKED_TESTS.md)** |
+| cross-tenant search | 29 | **PASS** |
+| cross-tenant download | 4 | **PASS** |
+| cross-tenant export / report / job / notification | 0 | **BLOCKED — those features do not exist (see BLOCKED_TESTS.md)** |
 | BOLA / IDOR | 4 | **PASS** |
 | missing tenant context | 2 | **PASS** |
 | invalid tenant context | 3 | **PASS** |
 | RLS bypass attempts | 44 | **PASS** |
 | unauthorized role changes / privilege escalation | 5 | **PASS** |
 | MFA bypass | 4 | **PASS** |
+| MFA factor removal / lost-factor recovery abuse | 22 | **PASS** |
+| account lock-out / brute force (temporary baseline) | 10 | **PASS** |
 | session revocation | 5 | **PASS** |
 | authorization default-deny | 4 | **PASS** |
 | audit tampering | 6 | **PASS** |
+| audit checkpoint completeness / continuity (H-11) | 16 | **PASS** |
 | audit UPDATE / DELETE / TRUNCATE attempts | 24 | **PASS** |
 | audit-write failure | 2 | **PASS** |
 | SQL injection | 23 | **PASS** |
+| file upload abuse (type confusion, archive bombs, traversal) | 45 | **PASS** |
 | CSRF | 5 | **PASS** |
 | XSS (where applicable) | 3 | **PASS (API/header level; no UI exists)** |
 | secret exposure | 4 | **PASS** |
-| insecure configuration | 40 | **PASS** |
+| insecure configuration | 47 | **PASS** |

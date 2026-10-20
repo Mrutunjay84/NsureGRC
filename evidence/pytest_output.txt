@@ -19,4 +19,4 @@ XFAIL tests/test_pending_controls.py::test_sink_uses_credentials_the_application
 XFAIL tests/test_pending_controls.py::test_sealer_does_not_report_a_checkpoint_published_until_the_sink_acknowledges_it - NOT IMPLEMENTED - F-AUD-006; executable specification per docs/plans/P2-3_IMPLEMENTATION_PLANS.md section 7
 XFAIL tests/test_pending_controls.py::test_verifier_compares_database_checkpoints_with_the_sink_copy - NOT IMPLEMENTED - F-AUD-006; executable specification per docs/plans/P2-3_IMPLEMENTATION_PLANS.md section 7
 XFAIL tests/test_pending_controls.py::test_gap_demo_the_dev_export_file_can_be_rewritten_by_the_application_process - GAP DEMONSTRATED - dev sink is a plain local file, not WORM (F-AUD-006, O-4)
-615 passed, 11 xfailed in 102.42s (0:01:42)
+615 passed, 11 xfailed in 100.30s (0:01:40)
