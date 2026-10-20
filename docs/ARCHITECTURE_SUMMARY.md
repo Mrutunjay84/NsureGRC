@@ -55,7 +55,7 @@ what they do not hold, modify themselves or outrank-modify; system roles and the
 Separate identity store (`plt_operator_*`), separate cookie, WebAuthn-only. Roles: Admin, Security, Curator, Support Engineer. **No standing access to tenant data.** Support flow:
 Support Engineer requests (ticket + reason + profile + duration) → Platform Security approves with a grant-bound T2 assertion → tenant **Owner** consents (step-up) → Engineer activates and starts a session
 bound to the grant → every request re-validates the grant (active, unexpired, same tenant) and is double-audited (tenant stream `support.action` + platform stream) → tenant can revoke instantly.
-The state machine and separation of duties are enforced **in the database** (trigger `plt_support_grant_guard`; consent columns writable only via `SECURITY DEFINER` functions).
+The state machine and separation of duties are enforced **in the database** (trigger `plt_support_grant_guard`; consent columns writable only via `SECURITY DEFINER` functions). The trigger was re-reviewed and tightened in the P2 gate work (migration `control_plane/0004`, DEF-14): only an active Platform Support operator can be the requester; decision/time columns are write-once and set only with their matching transition; an active grant's expiry can be shortened but never extended (the audit stream accepts operator `support.action` events only while the grant is active and unexpired); consent columns change only on the consent transition.
 Break-glass: requester ≠ approvers; Security then a *different* Platform Admin; ≤120 min; no tenant consent; flagged events.
 
 ## 7. Audit (D-P0-006, C-4)
@@ -66,9 +66,12 @@ Business change and audit events commit **together or not at all**; denials pers
 
 ## 8. Secure development & delivery
 `scripts/security_gate.py` (ruff+security rules, bandit, semgrep, pip-audit runtime & dev, detect-secrets with audited baseline, trivy fs/config, container build+scan, pytest) writes raw output + `MANIFEST.json` digests
-to `evidence/`; `.github/workflows/ci.yml` defines the same gates (**not yet run on a runner**); `Dockerfile` is multi-stage, non-root, locked, dev-free (**not yet built**). `scripts/build_reports.py` regenerates the matrix, test
+to `evidence/`; `.github/workflows/ci.yml` defines the same gates (**not yet run on a runner** - `docs/ci/CI_RUN_RECORD.yaml` says NOT_RUN; a local clean-room rehearsal is documented in `docs/ci/LOCAL_REHEARSAL.md` and is not CI); `Dockerfile` is multi-stage, non-root, locked, dev-free (**not yet built**). `scripts/build_reports.py` regenerates the matrix, test
 report, scan report, blocked-test list and the traceability register from real results.
 
 ## 9. What is explicitly NOT in Phase 1
 GRC feature modules; evidence handling/download (C-6 is an approved *design*, no code); search; personal access tokens; DR/restore; framework ingestion; audit retention/purge; scheduled audit verification;
 KMS/WORM; container image build; CI execution; penetration test. See `OPEN_ITEMS.md` and `BLOCKED_TESTS.md`.
+
+## 10. P2 gate work (2026-10-21) - what exists beside the foundation
+Executable specifications and gap demos for the NOT IMPLEMENTED controls (`tests/test_pending_controls.py`, reported XFAIL) with plans in `docs/plans/`; an independent-review package, scope and record with a checker that refuses self-approval (`docs/review/`, review BLOCKED); a CI runbook, run record and checker (`docs/ci/`, CI NOT_RUN); a technical-debt register (`docs/TECH_DEBT.md`).

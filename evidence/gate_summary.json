@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-20T16:53:29+00:00",
+  "generated_at": "2026-10-20T19:48:40+00:00",
   "python": "3.12.13",
   "platform": "Windows-11-10.0.26200-SP0",
   "gates": [
@@ -22,7 +22,7 @@
     {
       "gate": "SAST semgrep",
       "status": "PASS",
-      "detail": "0 findings; 168 files scanned",
+      "detail": "0 findings; 86 files scanned",
       "artifacts": [
         "evidence/semgrep.json"
       ]
@@ -45,10 +45,26 @@
     },
     {
       "gate": "secret scan (detect-secrets)",
-      "status": "PASS",
-      "detail": "11 candidate(s), 11 triaged as false positives in .secrets.baseline, 0 unreviewed",
+      "status": "FAIL",
+      "detail": "12 candidate(s), 11 triaged as false positives in .secrets.baseline, 1 unreviewed",
       "artifacts": [
         "evidence/detect_secrets_scan.json"
+      ]
+    },
+    {
+      "gate": "secret scan (gitleaks, git history)",
+      "status": "FAIL",
+      "detail": "23 finding(s) over 1 commit(s), HEAD 87d44e5de6cf",
+      "artifacts": [
+        "evidence/gitleaks_history.json"
+      ]
+    },
+    {
+      "gate": "secret scan (gitleaks, working tree)",
+      "status": "FAIL",
+      "detail": "235 finding(s)",
+      "artifacts": [
+        "evidence/gitleaks_worktree.json"
       ]
     },
     {
@@ -74,9 +90,29 @@
       "artifacts": []
     },
     {
+      "gate": "CI workflow lint (actionlint)",
+      "status": "PASS",
+      "detail": "workflow syntax/semantics clean (this is a lint of the file, NOT a CI run)",
+      "artifacts": [
+        "evidence/ci_rehearsal/actionlint.txt"
+      ]
+    },
+    {
+      "gate": "CI workflow execution on a runner",
+      "status": "BLOCKED",
+      "detail": "no CI run recorded (docs/ci/CI_RUN_RECORD.yaml); no repository/runner",
+      "artifacts": []
+    },
+    {
+      "gate": "independent crypto/AppSec review",
+      "status": "BLOCKED",
+      "detail": "no independent reviewer has reviewed any scope (docs/review/REVIEW_RECORD.yaml)",
+      "artifacts": []
+    },
+    {
       "gate": "security regression suite (pytest)",
       "status": "PASS",
-      "detail": "370 passed in 64.63s (0:01:04)",
+      "detail": "433 passed, 53 xfailed in 64.46s (0:01:04)",
       "artifacts": [
         "evidence/junit.xml",
         "evidence/pytest_output.txt"
@@ -85,7 +121,7 @@
   ],
   "totals": {
     "PASS": 9,
-    "FAIL": 0,
-    "BLOCKED": 1
+    "FAIL": 3,
+    "BLOCKED": 3
   }
 }

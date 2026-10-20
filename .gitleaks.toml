@@ -1,0 +1,19 @@
+# gitleaks configuration (used by the local gate and, by convention, auto-discovered in CI from the repository root).
+# Extends the default rule set; only the paths below are allow-listed, each with the reason it is not a secret store.
+# Anything else - including every OTHER file in evidence/ - stays scanned.
+title = "NsureGRC gitleaks config"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Third-party packages in the local virtual environment (not project code, not tracked by git; scanning them only produces entropy noise)"
+paths = ['''(^|/)\.venv/''']
+
+[[allowlists]]
+description = "detect-secrets baseline and its raw scan output: these files contain SHA-1 digests of already-triaged false positives by design (hashed_secret), never the values"
+paths = ['''^\.secrets\.baseline$''', '''^evidence/detect_secrets_scan\.json$''']
+
+[[allowlists]]
+description = "Audit-chain verification evidence: contains a PUBLIC Ed25519 checkpoint signature and SHA-256 chain digests from a throw-away test database (no key material)"
+paths = ['''^evidence/audit_chain_verification\.json$''']

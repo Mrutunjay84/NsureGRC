@@ -1,35 +1,51 @@
 {
-  "generated_at": "2026-10-20T16:53:29+00:00",
+  "generated_at": "2026-10-20T19:48:40+00:00",
   "host": "Windows-11-10.0.26200-SP0",
   "python": "3.12.13",
   "files": {
     "audit_chain_verification.json": {
-      "sha256": "f188974f1eeb3392d55be72fd7b2d7173b92f264a8c72558dcc3c74c0e0e8046",
+      "sha256": "44dc0e4997cedf5996083b5874811d0e37bc7427cb666b2d9b91a9428313dad5",
       "bytes": 1204
     },
     "bandit.json": {
-      "sha256": "2007c8f1b77d9f5bdd1218e14751f4f573bfe7f3308f4c5cac2bb701ab4c966f",
+      "sha256": "b0555e9063443ceb5306dce0082d726088cbc8a413e51af0fc93efe0537c21be",
       "bytes": 23053
     },
     "config_snapshot.json": {
-      "sha256": "ff551ebbe9feb4fd8b24780092b5e207fde4d3eee33034590328fd59170ea262",
+      "sha256": "5a4ee289156d724c3333698d0042bac4b2bcc3a95b7a4107f56c35d8e6a5f7c7",
       "bytes": 3268
     },
     "detect_secrets_scan.json": {
-      "sha256": "1844ade85a719f699e80b0e6ea3ef44c1eed217bd98e48f4b71d65fc8017cfb4",
-      "bytes": 5485
+      "sha256": "8fd4dbaa09177210c966593d6cd6636897c37ebd7e36d5b10a8234da08d217f4",
+      "bytes": 5773
     },
     "gate_run.log": {
-      "sha256": "4b464080ae08db235177df0766fb506a10d859b9499c77e04365a47eb68d4ef4",
-      "bytes": 1375
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
     },
     "gate_summary.json": {
-      "sha256": "9e676e0c19e694803b3f96072fc2804e5d300319d6e4f9bab6392a4db4f90445",
-      "bytes": 2472
+      "sha256": "f796309e395907e84fb072fdeb11008603f34d6486145ee8656b9874fa86430c",
+      "bytes": 3611
+    },
+    "gitleaks_history.json": {
+      "sha256": "39efecd19d962a90beb55d78369baa9f1441a618fd821626e98c73215efe5ef1",
+      "bytes": 28025
+    },
+    "gitleaks_meta.json": {
+      "sha256": "11e44a12d27efcb0cbf47dc6f54ca6943c70780dc26c86d033214513a28fd2e8",
+      "bytes": 87
+    },
+    "gitleaks_worktree.json": {
+      "sha256": "18fd459f73c60a665393bfab79abd6d237f9feb7398b9bad978d8c286cc48df1",
+      "bytes": 150495
     },
     "junit.xml": {
-      "sha256": "b250a7f8788e70d3acaac9e6c2c5f9fe65e30e5c444892dd54be18a43c16aec9",
-      "bytes": 48146
+      "sha256": "60e1498e7567a225b8855c20810407438998ea956ff5c137aef7a2918638458f",
+      "bytes": 83764
+    },
+    "p2_4_mutation_check_phase1_trigger.txt": {
+      "sha256": "d0390cdd91f51e86c41b8250ff92e0cc97f3798604962c523feb68d7fdb23895",
+      "bytes": 4803
     },
     "pip_audit.json": {
       "sha256": "589810b7cd36efdd4e564d3b2d8da37d62b4c5c7c085b1104881b81e28968541",
@@ -40,12 +56,12 @@
       "bytes": 1178
     },
     "privilege_matrix.json": {
-      "sha256": "758f505598979e5cac7af6cdf75c1ff17db2edb0241e0f2c5228292754e95277",
+      "sha256": "ce1cb9690eadabc768a6b9d077813b09cae126384bae7f7b988a6d4c101638c1",
       "bytes": 5094
     },
     "pytest_output.txt": {
-      "sha256": "98401080d5dc56f154e863d8ec56eed422a5f4aff0562acd6a058d1a3ef03ca9",
-      "bytes": 518
+      "sha256": "b7a27471f8454121e7dd14e458a7f04dd4607bf854dfe69ee2b0df752387814c",
+      "bytes": 22073
     },
     "requirements-all.txt": {
       "sha256": "03cb88a77b6e68edef4f9cd1a7aa323c3950170873d1b1b7caca631854dc6e90",
@@ -56,11 +72,11 @@
       "bytes": 1217
     },
     "rls_coverage.json": {
-      "sha256": "ab120bcadbee716dfc71be7d9e722a909bc727e26b6aa67b8fe56a2ae8a8b144",
+      "sha256": "075f865325bdc960cc373e37502c7792de2584ec8c0e59aa8ec589986e710c94",
       "bytes": 5558
     },
     "route_policy_inventory.json": {
-      "sha256": "7b09d67d0dd7493690e5b6bcdedb2e0765f34024b808e2adee86b7cd3ff226e5",
+      "sha256": "40423748e488198d6d874f8d36d8a387c489c886b1b5bea5cb8ab4347ce1788f",
       "bytes": 19641
     },
     "ruff.txt": {
@@ -68,16 +84,16 @@
       "bytes": 20
     },
     "semgrep.json": {
-      "sha256": "959bdc9b07d0e67868eaacf4c5667260a3c8284a270ac6e838fb42d5249f0cd6",
-      "bytes": 10020
+      "sha256": "5160380caa6662c3cee853f0a3f79e6190a340896e60668225463d2fe8f941b4",
+      "bytes": 5691
     },
     "trivy_config.json": {
-      "sha256": "7bed83e29bdfc35fec77dba5799b2177b4e2912cc7ce2ea13e271fdb5bcc1238",
+      "sha256": "d6779bda5fb20fafe4224c69f509cf4bc756683e0652770bfeba57b1ef510ef7",
       "bytes": 433
     },
     "trivy_fs.json": {
-      "sha256": "1bf602379f9cd2ad429be01844d8135b0378be3b1c98fdb9ad8862c211c8801f",
-      "bytes": 8692
+      "sha256": "9071d62eb28e62bd7bc33c5246a49d58602bbfa20976231919f4c280a5f8b0bb",
+      "bytes": 9566
     }
   }
 }

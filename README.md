@@ -14,6 +14,10 @@ Nothing here is production-ready, certified or independently reviewed. Start wit
 | [`docs/BLOCKED_TESTS.md`](docs/BLOCKED_TESTS.md) | What could not run, and what does not exist yet |
 | [`docs/OPEN_ITEMS.md`](docs/OPEN_ITEMS.md) | Phase 0 open items (O-x) and hardening follow-ups (H-x) — none silently resolved |
 | [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md), [`docs/OPERATIONS_NOTES.md`](docs/OPERATIONS_NOTES.md) | Versions; how to run and operate the dev environment |
+| [`docs/plans/P2-3_IMPLEMENTATION_PLANS.md`](docs/plans/P2-3_IMPLEMENTATION_PLANS.md) | Plans + executable specs (reported XFAIL) for the NOT IMPLEMENTED / BLOCKED controls |
+| [`docs/review/`](docs/review/INDEPENDENT_REVIEW_PACKAGE.md) | Independent-review package, scope and record (review is **BLOCKED**: no reviewer) |
+| [`docs/ci/`](docs/ci/CI_RUNBOOK.md) | How to run CI for real, the CI run record (**NOT_RUN**) and the local rehearsal |
+| [`docs/TECH_DEBT.md`](docs/TECH_DEBT.md) | Technical debt (WSL networking, etc.) — not gate blockers |
 
 ## Layout
 | Path | Purpose |

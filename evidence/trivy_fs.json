@@ -3,10 +3,18 @@
   "Trivy": {
     "Version": "0.76.0"
   },
-  "ReportID": "01a15a3a-7362-786a-a1e6-b3e6fc7cd06d",
-  "CreatedAt": "2026-10-20T22:22:22.4985515+05:30",
+  "ReportID": "01a15ada-d965-7741-86c4-4b22051f83e6",
+  "CreatedAt": "2026-10-21T01:17:34.3734754+05:30",
+  "ArtifactID": "sha256:47aed119ba17ee323ba77e782520f4f7af8457fae1a40d99b36d38752b4e5cd9",
   "ArtifactName": ".",
-  "ArtifactType": "filesystem",
+  "ArtifactType": "repository",
+  "Metadata": {
+    "Branch": "main",
+    "Commit": "87d44e5de6cf98d786e11aec41633be2f12aec0b",
+    "CommitMsg": "Phase 1 secure foundation (v1.3-alpha) with P2-1..P2-4 gate work\n\nLocal commit only (no remote, nothing pushed). Contents: Django/DRF application with PostgreSQL RLS tenant isolation, platform/tenant\nroles, MFA, audit hash chain with checkpoints, the security regression suite, CI workflow definition, hardened support-grant trigger\n(migration control_plane/0004), executable specifications for NOT IMPLEMENTED controls, independent-review package and record checkers.\n\nCo-Authored-By: Claude Sonnet 5.5 \u003cnoreply@anthropic.com\u003e",
+    "Author": "Rushi \u003crushigamer14@gmail.com\u003e",
+    "Committer": "Rushi \u003crushigamer14@gmail.com\u003e"
+  },
   "Results": [
     {
       "Target": "uv.lock",

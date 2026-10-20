@@ -256,12 +256,15 @@ def manifest() -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--skip-tests", action="store_true")
-    ap.add_argument("--only", choices=["secrets"], help="run a single gate (used by CI jobs that need just one)")
+    ap.add_argument("--only", choices=["secrets", "gitleaks"], help="run a single gate (used by CI jobs that need just one)")
     args = ap.parse_args()
     EV.mkdir(exist_ok=True)
     if args.only == "secrets":
         r = g_secrets()
         return 1 if r["status"] == "FAIL" else 0
+    if args.only == "gitleaks":
+        rs = g_gitleaks()
+        return 1 if any(r["status"] == "FAIL" for r in rs) else 0
     results = [g_ruff(), g_bandit(), g_semgrep(), *g_sca(), g_secrets(), *g_gitleaks(), *g_trivy(), g_container(), g_actionlint(), *g_records()]
     if not args.skip_tests:
         results.append(g_tests())
