@@ -3,15 +3,15 @@
   "Trivy": {
     "Version": "0.76.0"
   },
-  "ReportID": "01a15add-48bc-71e7-be8c-f24af10c2a84",
-  "CreatedAt": "2026-10-21T01:20:13.9481247+05:30",
-  "ArtifactID": "sha256:84e9d98276681688fefd4ac720846eb6edd18e41a9403ffa5df5f908be757e76",
+  "ReportID": "01a15b33-1bbf-74f6-8d00-c65c34c29296",
+  "CreatedAt": "2026-10-21T02:53:58.5273253+05:30",
+  "ArtifactID": "sha256:491aa860c93b7fd76d09dae7af153b4f1c685f0aa1ecbe6869abf09dde77ed53",
   "ArtifactName": ".",
   "ArtifactType": "repository",
   "Metadata": {
     "Branch": "main",
-    "Commit": "f3376a3591f2b6ff0ae6a920aa79e2de5b01284c",
-    "CommitMsg": "Gate: gitleaks allowlist with reasons; detect-secrets triage of one test password\n\nCo-Authored-By: Claude Sonnet 5.5 \u003cnoreply@anthropic.com\u003e",
+    "Commit": "38bce8ac944d6c8644b38be65709d0a8063158de",
+    "CommitMsg": "P2 gate work: DEF-15 temporary baseline, H-11 checkpoint continuity, scheduled verification, factor removal and recovery, evidence download and search, CI gate tooling\n\nCo-Authored-By: Claude Sonnet 5.5 \u003cnoreply@anthropic.com\u003e",
     "Author": "Rushi \u003crushigamer14@gmail.com\u003e",
     "Committer": "Rushi \u003crushigamer14@gmail.com\u003e"
   },

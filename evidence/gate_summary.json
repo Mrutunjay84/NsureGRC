@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-20T19:51:17+00:00",
+  "generated_at": "2026-10-20T21:25:43+00:00",
   "python": "3.12.13",
   "platform": "Windows-11-10.0.26200-SP0",
   "gates": [
@@ -14,7 +14,7 @@
     {
       "gate": "SAST bandit",
       "status": "PASS",
-      "detail": "0 findings {'HIGH': 0, 'MEDIUM': 0, 'LOW': 0}, 3968 LOC",
+      "detail": "0 findings {'HIGH': 0, 'MEDIUM': 0, 'LOW': 0}, 5381 LOC",
       "artifacts": [
         "evidence/bandit.json"
       ]
@@ -22,7 +22,7 @@
     {
       "gate": "SAST semgrep",
       "status": "PASS",
-      "detail": "0 findings; 86 files scanned",
+      "detail": "0 findings; 109 files scanned",
       "artifacts": [
         "evidence/semgrep.json"
       ]
@@ -45,8 +45,8 @@
     },
     {
       "gate": "secret scan (detect-secrets)",
-      "status": "PASS",
-      "detail": "12 candidate(s), 12 triaged as false positives in .secrets.baseline, 0 unreviewed",
+      "status": "FAIL",
+      "detail": "12 candidate(s), 11 triaged as false positives in .secrets.baseline, 1 unreviewed",
       "artifacts": [
         "evidence/detect_secrets_scan.json"
       ]
@@ -54,7 +54,7 @@
     {
       "gate": "secret scan (gitleaks, git history)",
       "status": "PASS",
-      "detail": "0 finding(s) over 2 commit(s), HEAD f3376a3591f2",
+      "detail": "0 finding(s) over 5 commit(s), HEAD 38bce8ac944d",
       "artifacts": [
         "evidence/gitleaks_history.json"
       ]
@@ -112,7 +112,7 @@
     {
       "gate": "security regression suite (pytest)",
       "status": "PASS",
-      "detail": "433 passed, 53 xfailed in 61.85s (0:01:01)",
+      "detail": "615 passed, 11 xfailed in 102.42s (0:01:42)",
       "artifacts": [
         "evidence/junit.xml",
         "evidence/pytest_output.txt"
@@ -120,8 +120,8 @@
     }
   ],
   "totals": {
-    "PASS": 12,
-    "FAIL": 0,
+    "PASS": 11,
+    "FAIL": 1,
     "BLOCKED": 3
   }
 }

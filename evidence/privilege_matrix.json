@@ -1,6 +1,6 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-20T21:22:03+00:00",
+  "generated_at": "2026-10-20T21:24:39+00:00",
   "generator": "tests/test_evidence_artifacts.py::privilege_matrix.json",
   "role_attributes": [
     {
