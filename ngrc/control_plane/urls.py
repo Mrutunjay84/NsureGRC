@@ -22,5 +22,9 @@ urlpatterns = [
     path("support/session/end/", v.SupportSessionEndView.as_view()),
     path("support/tenant/diagnostics/", v.TenantDiagnosticsView.as_view()),
     path("support/tenant/roles/", v.TenantRolesView.as_view()),
+    path("recovery/", v.RecoveryListView.as_view()),
+    path("recovery/<uuid:pk>/approve/begin/", v.RecoveryApproveBeginView.as_view()),
+    path("recovery/<uuid:pk>/approve/", v.RecoveryApproveView.as_view()),
+    path("recovery/<uuid:pk>/deny/", v.RecoveryDenyView.as_view()),
     path("audit/platform/", v.PlatformAuditView.as_view()),
 ]

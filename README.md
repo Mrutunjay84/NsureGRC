@@ -14,9 +14,10 @@ Nothing here is production-ready, certified or independently reviewed. Start wit
 | [`docs/BLOCKED_TESTS.md`](docs/BLOCKED_TESTS.md) | What could not run, and what does not exist yet |
 | [`docs/OPEN_ITEMS.md`](docs/OPEN_ITEMS.md) | Phase 0 open items (O-x) and hardening follow-ups (H-x) — none silently resolved |
 | [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md), [`docs/OPERATIONS_NOTES.md`](docs/OPERATIONS_NOTES.md) | Versions; how to run and operate the dev environment |
-| [`docs/plans/P2-3_IMPLEMENTATION_PLANS.md`](docs/plans/P2-3_IMPLEMENTATION_PLANS.md) | Plans + executable specs (reported XFAIL) for the NOT IMPLEMENTED / BLOCKED controls |
+| [`docs/plans/P2-3_IMPLEMENTATION_PLANS.md`](docs/plans/P2-3_IMPLEMENTATION_PLANS.md) | Status of the seven P2-3 controls: five implemented and tested, KMS and WORM still plans/specs (XFAIL) |
 | [`docs/review/`](docs/review/INDEPENDENT_REVIEW_PACKAGE.md) | Independent-review package, scope and record (review is **BLOCKED**: no reviewer) |
-| [`docs/ci/`](docs/ci/CI_RUNBOOK.md) | How to run CI for real, the CI run record (**NOT_RUN**) and the local rehearsal |
+| [`docs/ci/`](docs/ci/CI_RUNBOOK.md) | How to run CI for real ([`GITHUB_SETUP_REQUIREMENTS.md`](docs/ci/GITHUB_SETUP_REQUIREMENTS.md): private GitHub repo + Actions, human steps), the CI run record (**NOT_RUN**) and the local rehearsal |
+| [`../../00_CONTROL/PHASE1/`](../../00_CONTROL/PHASE1/) | Phase 1 decision records D-P1-001…004 (temporary auth throttling, evidence/search, audit checkpoint completeness, factor removal + recovery) |
 | [`docs/TECH_DEBT.md`](docs/TECH_DEBT.md) | Technical debt (WSL networking, etc.) — not gate blockers |
 
 ## Layout
@@ -29,7 +30,8 @@ Nothing here is production-ready, certified or independently reviewed. Start wit
 | `ngrc/iam/` | customer identity (IDN) models + auth/MFA/session API |
 | `ngrc/tenancy/` | tenant-owned (TEN) roles/memberships + tenant administration API |
 | `ngrc/control_plane/` | platform (PLT) data + operator realm API: provisioning, support grants, break-glass, platform audit |
-| `ngrc/audit/` | audit schema (raw SQL migration), service, chain, sealer, signer (dev-only), verifier |
+| `ngrc/audit/` | audit schema (raw SQL migration), service, chain, sealer, signer (dev-only), verifier, scheduler, alerts |
+| `ngrc/evidence/` | evidence + revisions, validated upload, scan state machine, authorised streaming download, tenant search (object store and scanner are DEV-ONLY) |
 | `db/bootstrap/` | role/database bootstrap SQL (run once by a DBA, never by the app); `table_classification.yaml` |
 | `tests/` | the security regression suite (pytest, real PostgreSQL, real runtime roles) |
 | `scripts/` | `security_gate.py` (all gates), `build_reports.py`, dev/CI bootstrap |

@@ -16,3 +16,6 @@ evidence/audit_checkpoints_dev/
 
 # review package archive is rebuilt on demand (manifest is tracked)
 evidence/review_package/*.zip
+
+# local dev evidence store
+var/

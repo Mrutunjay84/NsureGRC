@@ -60,6 +60,13 @@ class Api:
     def delete(self, path, **extra):
         return self.c.delete(self.prefix + path, secure=True, **self._hdr(extra))
 
+    def upload(self, path, body: bytes, content_type: str, filename: str = "file", **extra):
+        """Raw-body POST (evidence upload): the declared file type is the Content-Type, the original name travels percent-encoded in X-Filename."""
+        from urllib.parse import quote
+
+        return self.c.post(self.prefix + path, data=body, content_type=content_type, secure=True,
+                           **self._hdr({"HTTP_X_FILENAME": quote(filename, safe=""), **extra}))
+
     def raw(self, method, path, **kw):
         kw.setdefault("REMOTE_ADDR", self.ip)
         return getattr(self.c, method)(self.prefix + path, secure=True, **kw)

@@ -24,6 +24,8 @@ SECURE = {
     "PASSWORD_HASHING": {"time_cost": 3, "memory_cost_kib": 65536, "parallelism": 4},
     "DATABASES": {"default": {"USER": "ngrc_app", "PASSWORD": "x", "OPTIONS": {"sslmode": "verify-full"}}},
     "AUDIT_SIGNER_BACKEND": "kms", "KEY_PROVIDER": "kms", "INSTALLED_APPS": ["rest_framework", "ngrc.core"],
+    "AUDIT_REQUIRE_EXTERNAL_COPY": True, "AUDIT_REQUIRE_COMPLETENESS": True, "AUDIT_SINK_IMMUTABLE": True,
+    "EVIDENCE_STORE_BACKEND": "object_store", "EVIDENCE_SCANNER_BACKEND": "engine",
 }
 
 
@@ -43,6 +45,9 @@ def test_a_fully_secure_configuration_passes():
     ("PASSWORD_HASHING", {"time_cost": 1, "memory_cost_kib": 1024, "parallelism": 1}, "Argon2id"),
     ("AUDIT_SIGNER_BACKEND", "dev_file", "dev_file"), ("KEY_PROVIDER", "local", "local"),
     ("INSTALLED_APPS", ["django.contrib.admin"], "admin"),
+    ("AUDIT_REQUIRE_EXTERNAL_COPY", False, "AUDIT_REQUIRE_EXTERNAL_COPY"), ("AUDIT_REQUIRE_COMPLETENESS", False, "AUDIT_REQUIRE_COMPLETENESS"),
+    ("AUDIT_SINK_IMMUTABLE", False, "AUDIT_SINK_IMMUTABLE"), ("EVIDENCE_STORE_BACKEND", "local_dev", "EVIDENCE_STORE_BACKEND"),
+    ("EVIDENCE_SCANNER_BACKEND", "dev_eicar", "EVIDENCE_SCANNER_BACKEND"),
 ])
 def test_each_insecure_setting_is_detected(key, bad, fragment):
     cfg = copy.deepcopy(SECURE)
@@ -100,7 +105,8 @@ def test_weak_secret_key_and_wildcard_hosts_stop_startup():
 
 
 @pytest.mark.parametrize("plane,expected", [("customer", {"default", "autonomous", "auth"}),
-                                            ("operator", {"default", "autonomous", "ops", "audit_reader"}), ("migrate", {"default", "owner"})])
+                                            ("operator", {"default", "autonomous", "ops", "audit_reader"}), ("migrate", {"default", "owner"}),
+                                            ("audit_verify", {"default", "audit_verifier"}), ("audit_seal", {"default", "audit_sealer"})])
 def test_each_process_plane_receives_only_its_own_database_roles(plane, expected):
     code = "from django.conf import settings; import json; print(json.dumps(sorted(settings.DATABASES)))"
     over = {"NGRC_PLANE": plane}

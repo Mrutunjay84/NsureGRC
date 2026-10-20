@@ -1,6 +1,8 @@
-"""Login / second-factor throttling (D-P0-008 s4). DB-backed counters (Redis arrives with infrastructure; ADR requires
-degrading to DB counters, never to "unthrottled"). Progressive back-off rather than hard lockout to avoid lockout-DoS.
-Thresholds are NsureGRC baseline values (settings.AUTH_THROTTLE), not standard-mandated numbers.
+"""Login / second-factor throttling (D-P0-008 s4, amended by D-P1-001 for DEF-15). DB-backed counters (Redis arrives with infrastructure;
+ADR requires degrading to DB counters, never to "unthrottled"). Progressive back-off - there is deliberately NO hard stop to a
+`recovery_required` state while no unlock/recovery workflow exists (D-P1-001): a stranger who knows an address must not be able to lock
+the real user out for good. Operator accounts get stricter parameters. Failures are counted, delayed, rate-limited, audited and
+(DEF-15 decision) scanned for suspicious patterns. Thresholds are NsureGRC baseline values (settings.AUTH_THROTTLE), not standard-mandated numbers.
 """
 from __future__ import annotations
 
@@ -11,7 +13,7 @@ from django.conf import settings
 from django.db import transaction
 
 from ngrc.core import clock
-from ngrc.core.crypto import keyed_identifier_hash
+from ngrc.core.crypto import keyed_identifier_hash, sha256_hex
 
 from .realms import Realm
 
@@ -20,11 +22,22 @@ from .realms import Realm
 class FailureOutcome:
     failures: int
     locked_for_s: int
-    recovery_required: bool
+    suspicious: str | None = None  # None | "distributed_sources" (several distinct source addresses against one account)
+    distinct_sources: int = 1
+
+
+@dataclass(frozen=True)
+class SuccessOutcome:
+    prior_failures: int
+    suspicious: str | None = None  # None | "success_after_failures"
 
 
 def _acct_key(scope: str, identifier: str) -> str:
     return f"{scope}:{keyed_identifier_hash(identifier)}"
+
+
+def _src_prefix(scope: str, identifier: str) -> str:
+    return f"src:{_acct_key(scope, identifier)}:"
 
 
 def _ip_key(ip: str | None) -> str:
@@ -32,8 +45,8 @@ def _ip_key(ip: str | None) -> str:
 
 
 def _cfg(realm: Realm, name: str):
-    return settings.AUTH_THROTTLE[f"{realm.throttle_prefix}{name}"] if f"{realm.throttle_prefix}{name}" in settings.AUTH_THROTTLE \
-        else settings.AUTH_THROTTLE[name]
+    k = f"{realm.throttle_prefix}{name}"
+    return settings.AUTH_THROTTLE[k] if k in settings.AUTH_THROTTLE else settings.AUTH_THROTTLE[name]
 
 
 def retry_after(realm: Realm, identifier: str, ip: str | None, scope: str = "acct") -> int:
@@ -55,7 +68,8 @@ def record_failure(realm: Realm, identifier: str, ip: str | None, scope: str = "
     now = clock.now()
     cfg = settings.AUTH_THROTTLE
     free = _cfg(realm, "account_free_failures")
-    hard = _cfg(realm, "account_recovery_required_at")
+    base, cap = _cfg(realm, "account_base_delay_s"), _cfg(realm, "account_max_delay_s")
+    window = timedelta(seconds=_cfg(realm, "suspicious_window_s"))
     with transaction.atomic(using=realm.db):
         T = realm.Throttle.objects.using(realm.db).select_for_update()
         row, _ = T.get_or_create(key=_acct_key(scope, identifier),
@@ -64,7 +78,7 @@ def record_failure(realm: Realm, identifier: str, ip: str | None, scope: str = "
         row.updated_at = now
         locked_for = 0
         if row.failures >= free:
-            locked_for = min(cfg["account_base_delay_s"] * 2 ** (row.failures - free), cfg["account_max_delay_s"])
+            locked_for = min(base * 2 ** min(row.failures - free, 20), cap)  # exponent bounded: no huge intermediate integers
             row.locked_until = now + timedelta(seconds=locked_for)
         row.save()
         ip_row, _ = T.get_or_create(key=_ip_key(ip), defaults={"failures": 0, "window_started": now, "updated_at": now})
@@ -73,8 +87,24 @@ def record_failure(realm: Realm, identifier: str, ip: str | None, scope: str = "
         ip_row.failures += 1
         ip_row.updated_at = now
         ip_row.save()
-    return FailureOutcome(row.failures, locked_for, row.failures >= hard)
+        # suspicious-pattern detection: how many DISTINCT source addresses failed against this account recently?
+        src, created = T.get_or_create(key=_src_prefix(scope, identifier) + sha256_hex(ip or "unknown")[:24],  # <= 128 chars
+                                       defaults={"failures": 0, "window_started": now, "updated_at": now})
+        src.failures += 1
+        src.updated_at = now
+        src.save()
+        sources = T.filter(key__startswith=_src_prefix(scope, identifier), updated_at__gte=now - window).count()
+    flagged = None
+    if sources == _cfg(realm, "suspicious_distinct_sources") and created:  # raised once, when the threshold is first crossed
+        flagged = "distributed_sources"
+    return FailureOutcome(row.failures, locked_for, flagged, sources)
 
 
-def record_success(realm: Realm, identifier: str, scope: str = "acct") -> None:
-    realm.Throttle.objects.using(realm.db).filter(key=_acct_key(scope, identifier)).delete()
+def record_success(realm: Realm, identifier: str, scope: str = "acct") -> SuccessOutcome:
+    """Clear the counters; report whether this success followed a burst of failures (a possible guessed credential)."""
+    T = realm.Throttle.objects.using(realm.db)
+    row = T.filter(key=_acct_key(scope, identifier)).first()
+    prior = row.failures if row else 0
+    T.filter(key=_acct_key(scope, identifier)).delete()
+    T.filter(key__startswith=_src_prefix(scope, identifier)).delete()
+    return SuccessOutcome(prior, "success_after_failures" if prior >= _cfg(realm, "account_free_failures") else None)

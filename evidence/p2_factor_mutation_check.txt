@@ -1,0 +1,19 @@
+== factor removal
+F1 DB guard: last-factor check disabled: KILLED  (2 failed, 11 passed in 5.01s)
+      by test_the_database_refuses_to_delete_the_last_usable_factor_even_without_the_application
+      by test_concurrent_removals_cannot_both_succeed
+F2 DB guard: account row lock removed: KILLED  (1 failed, 12 passed in 5.11s)
+      by test_concurrent_removals_cannot_both_succeed
+F3 DB guard: operator guard disabled: KILLED  (1 failed, 12 passed in 5.16s)
+      by test_operators_have_no_self_service_removal_and_the_database_protects_their_last_credential
+F4 view: step-up requirement removed: KILLED  (1 failed, 12 passed in 5.03s)
+      by test_removal_requires_a_recent_step_up
+F5 view: recovery-options rule removed: KILLED  (1 failed, 12 passed in 5.07s)
+      by test_removal_must_leave_two_recovery_options
+F6 view: ownership filter removed (IDOR): KILLED  (1 failed, 12 passed in 4.99s)
+      by test_someone_elses_totp_factor_is_not_found_and_stays_untouched
+F7 view: other sessions not revoked: KILLED  (1 failed, 12 passed in 5.06s)
+      by test_removal_revokes_other_sessions_rotates_mine_notifies_and_is_audited
+F8 view: usable check ignores cloned flag: KILLED  (1 failed, 12 passed in 5.16s)
+      by test_a_cloned_credential_is_not_a_usable_factor_and_may_always_be_removed
+survivors: none

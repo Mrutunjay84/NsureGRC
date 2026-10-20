@@ -27,7 +27,7 @@ def _a(name, category, severity, stream, writers, keys=()):
     return Action(name, category, severity, stream, tuple(writers), tuple(keys))
 
 
-ACTIONS: tuple[Action, ...] = (
+ACTIONS_P1: tuple[Action, ...] = (
     # ---- authentication (customer realm). Pre-tenant events land in the PLATFORM stream.
     _a("auth.login.success", "auth", "info", "platform", [AUTH], ["stage"]),
     _a("auth.login.failure", "auth", "notice", "platform", [AUTH], ["identifier_hash"]),
@@ -104,6 +104,35 @@ ACTIONS: tuple[Action, ...] = (
     _a("platform.audit.read", "audit", "info", "platform", [OPS, "ngrc_audit_reader_platform"], ["count"]),
     _a("audit.integrity_violation", "audit", "critical", "platform", [VERIFIER], ["stream", "detail"]),
 )
+
+# Actions added after the Phase 1 registry was released: seeded by migration audit/0003 (0002 is frozen to ACTIONS_P1).
+ACTIONS_P2: tuple[Action, ...] = (
+    # ---- DEF-15 / D-P1-001: suspicious-login detection (temporary baseline while recovery does not exist)
+    _a("auth.login.suspicious", "auth", "warning", "platform", [AUTH], ["reason", "failures", "distinct_sources"]),
+    _a("platform.operator.login.suspicious", "platform_auth", "critical", "platform", [OPS], ["reason", "failures", "distinct_sources"]),
+    # ---- F-ATH-015: lost-factor recovery (tenant stream where a tenant is involved; platform stream always)
+    _a("auth.recovery.requested", "auth", "warning", "both", [AUTH], ["kind"]),
+    _a("auth.recovery.approved", "auth", "warning", "both", [APP, OPS], ["kind"]),
+    _a("auth.recovery.denied", "auth", "notice", "both", [APP, OPS], ["kind"]),
+    _a("auth.recovery.cancelled", "auth", "warning", "both", [AUTH], ["kind", "by"]),
+    _a("auth.recovery.completed", "auth", "critical", "both", [AUTH], ["kind"]),
+    # ---- F-DAT-004 / F-DAT-005: evidence lifecycle and downloads (tenant stream, written by the tenant plane)
+    _a("evidence.created", "evidence", "info", "tenant", [APP], ["data_class"]),
+    _a("evidence.revision.added", "evidence", "notice", "tenant", [APP], ["revision_no", "size_bytes", "detected_type"]),
+    _a("evidence.scan.clean", "evidence", "info", "tenant", [APP], ["revision_no"]),
+    _a("evidence.scan.quarantined", "evidence", "critical", "tenant", [APP], ["revision_no", "detail"]),
+    _a("evidence.scan.error", "evidence", "warning", "tenant", [APP], ["revision_no"]),
+    _a("evidence.upload_rejected", "evidence", "notice", "tenant", [APP], ["reason"]),
+    _a("evidence.downloaded", "evidence", "notice", "tenant", [APP], ["revision_no", "revision_sha256", "size_bytes"]),
+    _a("evidence.hash_mismatch", "evidence", "critical", "tenant", [APP], ["revision_no", "expected_sha256", "actual_sha256"]),
+    # ---- F-AUZ-005: search (the query text is never recorded; only its length and the result count)
+    _a("search.executed", "search", "info", "tenant", [APP], ["count", "query_length"]),
+    # ---- F-AUD-007: scheduled verification (writer: the verifier identity)
+    _a("audit.verification.completed", "audit", "info", "platform", [VERIFIER], ["mode", "streams", "violations"]),
+    _a("audit.verification.overdue", "audit", "critical", "platform", [VERIFIER], ["max_age_h", "last_run"]),
+)
+
+ACTIONS: tuple[Action, ...] = ACTIONS_P1 + ACTIONS_P2
 
 BY_NAME = {a.name: a for a in ACTIONS}
 if len(BY_NAME) != len(ACTIONS):  # explicit raise: asserts vanish under `python -O`

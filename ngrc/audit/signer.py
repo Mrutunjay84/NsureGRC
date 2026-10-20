@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from pathlib import Path
 
 from cryptography.hazmat.primitives import serialization
@@ -26,18 +27,31 @@ class DevFileSigner:
             raise RuntimeError("NGRC_AUDIT_SIGNER_KEY_PATH must be set for the dev_file signer")
         p = Path(path)
         if p.exists():
-            self._key = serialization.load_pem_private_key(p.read_bytes(), password=None)
+            self._key = self._load(p)
         else:
             p.parent.mkdir(parents=True, exist_ok=True)
-            self._key = Ed25519PrivateKey.generate()
-            pem = self._key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
-                                          serialization.NoEncryption())
-            fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            with os.fdopen(fd, "wb") as fh:
-                fh.write(pem)
-            log.warning("generated DEV-ONLY audit signing key (not a production control)")
+            key = Ed25519PrivateKey.generate()
+            pem = key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())
+            try:
+                fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            except FileExistsError:  # another process/thread created it first (race on first use): use THEIR key, never overwrite
+                self._key = self._load(p)
+            else:
+                with os.fdopen(fd, "wb") as fh:
+                    fh.write(pem)
+                self._key = key
+                log.warning("generated DEV-ONLY audit signing key (not a production control)")
         pub = self._key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
         self.key_id = "dev-" + pub.hex()[:16]
+
+    @staticmethod
+    def _load(p: Path):
+        for _ in range(100):  # the creating process may still be writing the file
+            data = p.read_bytes()
+            if data:
+                return serialization.load_pem_private_key(data, password=None)
+            time.sleep(0.02)
+        raise RuntimeError("audit signer key file exists but stayed empty")
 
     def sign(self, message: bytes) -> bytes:
         return self._key.sign(message)

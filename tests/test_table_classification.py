@@ -26,9 +26,10 @@ OPERATOR_TABLES = ["plt_operator_account", "plt_operator_role", "plt_operator_se
 # for ngrc_app and plt_support_access_grant's column-level UPDATE for ngrc_ops are asserted separately below.
 EXPECTED = {
     "ngrc_app": {"ten_role": CRUD, "ten_membership": CRUD, "plt_tenant": {"SELECT"}, "audit.tenant_event": {"SELECT"},
-                 "audit.checkpoint": {"SELECT"}},
+                 "audit.checkpoint": {"SELECT"},
+                 "ten_evidence": {"SELECT", "INSERT", "UPDATE"}, "ten_evidence_revision": {"SELECT", "INSERT", "UPDATE"}},  # never DELETE
     "ngrc_auth": {**{t: CRUD for t in IDN_TABLES}, "plt_tenant": {"SELECT"}, "ten_membership": {"SELECT"},
-                  "ten_role": {"SELECT"}},
+                  "ten_role": {"SELECT"}, "idn_recovery_request": {"SELECT"}},  # recovery: read-only, every write via SECURITY DEFINER fns
     "ngrc_ops": {**{t: CRUD for t in OPERATOR_TABLES}, "plt_tenant": {"SELECT", "INSERT", "UPDATE"},
                  "plt_support_access_grant": {"SELECT", "INSERT"}},
     "ngrc_audit_reader_platform": {"audit.platform_event": {"SELECT"}},

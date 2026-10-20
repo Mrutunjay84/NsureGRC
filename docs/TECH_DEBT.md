@@ -20,3 +20,6 @@ Items here are **not** security controls and are **not** Phase 1 gate blockers u
 
 ## TD-004 — Pending-spec bodies are unexecuted
 * The statements in `tests/test_pending_controls.py` after each `require_*` call have never run against an implementation. When a feature is built they need a first real run and likely small corrections (fixture names, response shapes). This is expected and is why the specs are reported as XFAIL, not as coverage.
+
+## TD-002 — Dev-only components that stand in for production services (not gate blockers; production start-up refuses all of them)
+Local key provider, file signer, rewritable export directory, local evidence store, EICAR scanner, log-only alerts, locmem e-mail. Each is tied to an open item (O-4, O-7, O-11) and a control gap in `control_map.yaml`; none may be described as a production control.

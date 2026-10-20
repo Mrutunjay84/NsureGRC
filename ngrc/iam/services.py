@@ -99,6 +99,11 @@ def send_notice(account: Account, subject: str, body: str) -> None:
     send_mail(subject, body, None, [account.email], fail_silently=True)
 
 
+def send_mail_notice(address: str, subject: str, body: str) -> None:
+    """Notification to an address that is not the acting account (e.g. approvers)."""
+    send_mail(subject, body, None, [address], fail_silently=True)
+
+
 def set_password(account: Account, new_password: str) -> None:
     pw = passwords.check_policy(new_password, context_terms=context_terms(account.email, account.display_name))
     Account.objects.using("auth").filter(pk=account.pk).update(

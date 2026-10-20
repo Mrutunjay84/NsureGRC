@@ -1,7 +1,7 @@
 """Seed audit.action_registry from ngrc.audit.actions.ACTIONS (frozen at release; later changes = new migration)."""
 from django.db import migrations
 
-from ngrc.audit.actions import ACTIONS
+from ngrc.audit.actions import ACTIONS_P1 as ACTIONS  # frozen: later additions are seeded by 0003
 
 
 def seed(apps, schema_editor):

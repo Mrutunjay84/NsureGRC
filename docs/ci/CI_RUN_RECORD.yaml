@@ -1,24 +1,28 @@
 # P2-1 CI run record.
 #
-# STATUS: NOT_RUN. The CI workflow (.github/workflows/ci.yml) has never executed on a CI runner: this workstation has no remote repository,
-# no CI service credentials and no `gh` CLI, and nothing was pushed anywhere. Local rehearsals (docs/ci/LOCAL_REHEARSAL.md) are NOT CI runs.
-# scripts/check_ci_record.py decides what this file may mean. Do not edit `run:` by hand from memory - copy it from the CI service's run page.
+# STATUS: NOT_RUN. The CI workflow (.github/workflows/ci.yml) has never executed on a CI runner. The approved CI approach (owner decision 2026-10-21) is a PRIVATE GitHub
+# repository with GitHub Actions; no repository, remote or credential exists on this workstation and none will be created from it (docs/ci/GITHUB_SETUP_REQUIREMENTS.md lists the
+# human steps). Local rehearsals (docs/ci/LOCAL_REHEARSAL.md) are NOT CI runs.
+# scripts/check_ci_record.py decides what this file may mean. Fill `run:` from the CI service's run page / scripts/import_ci_run.py, never from memory.
 version: 1
 status: NOT_RUN
-status_reason: "No repository/runner exists for this project yet (needs the project owner to create one and push; see docs/ci/CI_RUNBOOK.md)."
+status_reason: "No repository/runner exists for this project yet. Needs a human to create the private GitHub repository, set the secrets and push (docs/ci/GITHUB_SETUP_REQUIREMENTS.md)."
 run: null
 
 # ------------------------------------------------------------------------------------------------------------------ template (do not use as-is)
 # run:
 #   service: "GitHub Actions"
 #   url: "https://github.com/<owner>/<repo>/actions/runs/<id>"
-#   commit_sha: "<40-hex commit that the run built>"
-#   workflow_sha256: "<sha256 of .github/workflows/ci.yml at that commit>"
+#   commit_sha: "<40-hex commit that the run built>"                      # must exist in this repository (git fetch it)
+#   workflow_sha256: "<sha256 of .github/workflows/ci.yml AT THAT COMMIT>"   # from `git show`, not from the API
+#   workflow_path: ".github/workflows/ci.yml"
+#   workflow_name: "ci"
+#   repository_private: true
 #   completed_at: "<ISO-8601 time from the run page>"
 #   runner_image: "<e.g. ubuntu-24.04 + image version shown in the run log>"
 #   jobs:
-#     tests:     {conclusion: success, evidence: "artifact test-evidence (junit.xml sha256 ...)"}
+#     tests:     {conclusion: success, tests_passed: <N>, tests_failed: 0, rls_tests_passed: <M>, evidence: "artifact test-evidence (junit.xml)"}
 #     sast:      {conclusion: success, evidence: "artifact sast-evidence"}
 #     sca:       {conclusion: success, evidence: "artifact sca-evidence"}
-#     secrets:   {conclusion: success, evidence: "run log: detect-secrets + gitleaks full-history scan"}
-#     container: {conclusion: success, docker_available: true, evidence: "artifact container-evidence (trivy-image.sarif) + hadolint output"}
+#     secrets:   {conclusion: success, history_scanned: true, evidence: "run log: detect-secrets + gitleaks over the full history"}
+#     container: {conclusion: success, docker_available: true, image_scan: clean, evidence: "artifact container-evidence (trivy-image.sarif) + hadolint output"}

@@ -1,0 +1,31 @@
+== lost-factor recovery
+R1 tenant decide: self-approval check removed: KILLED  (1 failed, 21 passed in 12.74s)
+      by test_nobody_can_approve_their_own_recovery
+R2 trigger: cooling-off completion check removed: KILLED  (1 failed, 21 passed in 12.63s)
+      by test_the_cooling_off_and_the_state_machine_hold_even_against_the_owner_role
+R3 function complete: cooling-off check removed: KILLED  (1 failed, 21 passed in 12.37s)
+      by test_the_cooling_off_and_the_state_machine_hold_even_against_the_owner_role
+R4 trigger: approver realm check removed: KILLED  (1 failed, 21 passed in 12.67s)
+      by test_the_trigger_rejects_forged_approvals_even_from_the_owner_role
+R5 platform decide: Platform Security role check removed: KILLED  (1 failed, 21 passed in 12.13s)
+      by test_a_sole_owner_needs_platform_security_and_the_same_cooling_off
+R6 tenant decide: system Owner/Admin membership check removed (decide): KILLED  (1 failed, 21 passed in 12.16s)
+      by test_only_tenant_owners_and_admins_see_or_decide_and_a_fresh_step_up_is_required
+R7 trigger: write-once approval removed: KILLED  (1 failed, 21 passed in 12.48s)
+      by test_the_cooling_off_and_the_state_machine_hold_even_against_the_owner_role
+R8 trigger: cooling window equality removed: KILLED  (1 failed, 21 passed in 12.19s)
+      by test_the_trigger_rejects_forged_approvals_even_from_the_owner_role
+R9 create: peer detection forced to admin_assisted: KILLED  (2 failed, 20 passed in 11.47s)
+      by test_a_sole_owner_needs_platform_security_and_the_same_cooling_off
+      by test_the_platform_approval_assertion_is_bound_to_that_one_request
+R10 trigger: terminal states mutable: KILLED  (1 failed, 21 passed in 12.55s)
+      by test_terminal_states_cannot_be_reopened_even_by_the_owner_role
+R11 view: completion no longer revokes other sessions: KILLED  (1 failed, 21 passed in 12.25s)
+      by test_admin_assisted_recovery_end_to_end
+R12 tenant approve: step-up requirement removed: KILLED  (1 failed, 21 passed in 12.55s)
+      by test_only_tenant_owners_and_admins_see_or_decide_and_a_fresh_step_up_is_required
+R13 view: recovery request allowed from any stage: KILLED  (1 failed, 21 passed in 12.41s)
+      by test_a_pending_password_session_is_required_to_ask_for_recovery
+R14 operator approval: T2 binding removed: KILLED  (1 failed, 21 passed in 12.19s)
+      by test_a_sole_owner_needs_platform_security_and_the_same_cooling_off
+survivors: none

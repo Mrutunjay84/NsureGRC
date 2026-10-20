@@ -38,9 +38,18 @@ tables:
      tenant_column: subject_tenant_id,
      notes: "Deviation A10 from D-P0-009 s6: IDN-class (token hash is Restricted). Tenant admins use SECURITY DEFINER fns only."}
 
+  - {table: idn_recovery_request, class: IDN, data_class: R, domain: iam, owner_module: ngrc.iam, rls: none,
+     tenant_column: subject_tenant_id,
+     notes: "Lost-factor recovery (F-ATH-015). No runtime role can write it: SECURITY DEFINER functions + a state-machine trigger. Cancel token stored as a hash."}
+
   # ------------------------------------------------------------------ TEN (tenant-owned; ngrc_app under RLS)
   - {table: ten_role, class: TEN, data_class: C, domain: iam, owner_module: ngrc.tenancy, rls: required, tenant_column: tenant_id}
   - {table: ten_membership, class: TEN, data_class: C, domain: iam, owner_module: ngrc.tenancy, rls: required, tenant_column: tenant_id}
+
+  - {table: ten_evidence, class: TEN, data_class: R, domain: evidence, owner_module: ngrc.evidence, rls: required, tenant_column: tenant_id,
+     notes: "Evidence records; row-level data_class C|R (Restricted needs a privileged permission). Searchable via a generated tsvector under RLS."}
+  - {table: ten_evidence_revision, class: TEN, data_class: R, domain: evidence, owner_module: ngrc.evidence, rls: required, tenant_column: tenant_id,
+     notes: "Immutable file revisions (hash, size, scan state). No DELETE for any runtime role; scan outcome recordable once."}
 
   # ------------------------------------------------------------------ AUD (audit schema; append functions only)
   - {table: audit.action_registry, class: AUD, data_class: I, domain: audit, owner_module: ngrc.audit, rls: none}

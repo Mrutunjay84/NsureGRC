@@ -177,6 +177,16 @@ def write_matrix(evald: list[dict], meta: dict) -> None:
     for c in evald:
         counts[c["status"]] += 1
     lines += ["## Summary", "", "| Status | Controls |", "|---|---|"] + [f"| {k} | {v} |" for k, v in sorted(counts.items())]
+    lines += ["", "## Owner-decided groups (decision 2026-10-21)", "",
+              "**Required before Phase 2 can be called security-ready** (implement AND test):", "", "| Control | Status | Result |", "|---|---|---|"]
+    for c in evald:
+        if c.get("phase2_required"):
+            lines.append(f"| {c['id']} {md_escape(c['feature'])} | **{c['status']}** | {c['passed']}/{c['total']} passed |")
+    lines += ["", "**Production-security gates** (NOT Phase 2 development blockers; no production-readiness claim while any is open):", "",
+              "| Control | Status |", "|---|---|"]
+    for c in evald:
+        if c.get("production_gate"):
+            lines.append(f"| {c['id']} {md_escape(c['feature'])} | **{c['status']}** |")
     lines += ["", "## Matrix", "",
               "| Control | Implementation | Test | Result | Audit event(s) | Evidence | Status |", "|---|---|---|---|---|---|---|"]
     for c in evald:
@@ -272,19 +282,25 @@ def write_test_report(cases: list[dict], evald: list[dict], defects: list[dict],
               "| Required category (Phase 1 brief) | Automated tests | Status |", "|---|---|---|"]
     cats = [
         ("cross-tenant read / write / delete", "tests/test_rls_tenant_isolation.py", ["cross_tenant"], "PASS"),
-        ("cross-tenant search / download", None, [], "BLOCKED — no search/download features exist yet; executable specs are XFAIL (see BLOCKED_TESTS.md)"),
+        ("cross-tenant search", "tests/test_cross_tenant_search.py", [""], "PASS"),
+        ("cross-tenant download", "tests/test_evidence_download.py", ["cross_tenant", "database_row_pointing", "restricted", "support_sessions"], "PASS"),
+        ("cross-tenant export / report / job / notification", None, [], "BLOCKED — those features do not exist (see BLOCKED_TESTS.md)"),
         ("BOLA / IDOR", "tests/test_authorization_api.py", ["idor", "tenant_identifier", "selecting_a_tenant"], "PASS"),
         ("missing tenant context", "tests/test_rls_tenant_isolation.py", ["no_context", "orm_guard"], "PASS"),
         ("invalid tenant context", "tests/test_authorization_api.py", ["tampered_session_tenant", "no_tenant_selected", "suspended_tenant"], "PASS"),
         ("RLS bypass attempts", "tests/test_rls_bypass_attempts.py", [""], "PASS"),
         ("unauthorized role changes / privilege escalation", "tests/test_authorization_api.py", ["admin_cannot", "nobody_can_modify", "system_roles", "platform_permissions"], "PASS"),
         ("MFA bypass", "tests/test_authentication.py", ["password_only_session", "pending_mfa", "mfa_endpoints_require", "wrong_totp"], "PASS"),
+        ("MFA factor removal / lost-factor recovery abuse", "tests/test_lost_factor_recovery.py", [""], "PASS"),
+        ("account lock-out / brute force (temporary baseline)", "tests/test_auth_backoff_policy.py", [""], "PASS"),
         ("session revocation", "tests/test_authentication.py", ["logout_revokes", "password_change_revokes", "membership_suspension", "idle_timeout", "absolute_timeout"], "PASS"),
         ("authorization default-deny", "tests/test_authorization_api.py", ["every_route", "every_non_public", "view_without_policy", "drf_defaults"], "PASS"),
         ("audit tampering", "tests/test_audit_integrity.py", ["tampered", "deleted", "reordered", "truncated", "full_chain", "forged_checkpoint"], "PASS"),
+        ("audit checkpoint completeness / continuity (H-11)", "tests/test_audit_completeness.py", [""], "PASS"),
         ("audit UPDATE / DELETE / TRUNCATE attempts", "tests/test_audit_integrity.py", ["runtime_roles_cannot_mutate", "triggers_block", "chain_head"], "PASS"),
         ("audit-write failure", "tests/test_authorization_api.py", ["audit_append_fails", "denial_stays_a_denial"], "PASS"),
         ("SQL injection", "tests/test_input_and_exposure.py", ["sql_injection", "operator_api_inputs", "no_string_built_sql"], "PASS"),
+        ("file upload abuse (type confusion, archive bombs, traversal)", "tests/test_evidence_lifecycle.py", [""], "PASS"),
         ("CSRF", "tests/test_authentication.py", ["csrf"], "PASS"),
         ("XSS (where applicable)", "tests/test_input_and_exposure.py", ["html_payloads", "reflected_input", "all_responses_are_json"], "PASS (API/header level; no UI exists)"),
         ("secret exposure", "tests/test_input_and_exposure.py", ["no_secret_ever", "secrets_are_not_logged", "api_responses_never", "repository_contains_no"], "PASS"),
@@ -305,17 +321,18 @@ def write_blocked(evald: list[dict], gate: dict | None) -> None:
              f"*Generated {NOW}.* A BLOCKED test is one that **cannot run** until infrastructure or a feature exists. It is not counted as a pass.", "",
              "## BLOCKED — infrastructure or feature missing", "", "| ID | Test that cannot run | Blocked by | Related control | Becomes runnable when |", "|---|---|---|---|---|"]
     rows = [
-        ("B-01", "cross-tenant SEARCH isolation (5 executable specs, XFAIL)", "no search feature/index exists (Phase 2+)", "F-AUZ-005", "a search endpoint or index is added (the endpoint-inventory test fails the build until this suite is extended)"),
-        ("B-02", "cross-tenant DOWNLOAD / export / report / job / notification isolation (download: 10 specs, XFAIL)", "no evidence storage, reporting or job features (Phase 3)", "F-AUZ-002, F-DAT-004", "evidence download (C-6) and reporting exist"),
+        ("B-02", "cross-tenant EXPORT / REPORT / JOB / NOTIFICATION isolation (search and download are now tested: F-AUZ-005, F-DAT-004)", "no export, reporting, job or notification features exist", "F-AUZ-002", "those features are added (the endpoint-inventory test fails the build until the suite is extended)"),
         ("B-03", "context isolation behind a transaction-mode connection pooler", "no PgBouncer/pooler in the environment", "F-TEN-002", "a pooler is deployed in the test environment"),
         ("B-04", "throttling behaviour when Redis is down", "no Redis/cache infrastructure; throttling is DB-backed only", "F-ATH-002", "Redis is introduced (ADR requires degradation to DB counters, never to unthrottled)"),
-        ("B-05", "scheduled audit verification and alert delivery (6 executable specs, XFAIL)", "no worker/scheduler/monitoring stack", "F-AUD-007", "scheduler and alert routing exist"),
-        ("B-06", "production audit anchoring (KMS signature, WORM sink) and key rotation (8 specs + 4 gap demos, all XFAIL)", "hosting / KMS / immutable storage not selected (open item O-4)", "F-AUD-006, F-DAT-006", "O-4 is decided and implemented"),
+        ("B-05", "DELIVERY of audit/security alerts to a real channel (pager, SIEM, e-mail); scheduling on real infrastructure; a separate-host watchdog", "hosting / monitoring stack not selected (O-4); alerts reach the log pipeline only", "F-AUD-007, F-ATH-002", "alert routing exists and is tested end to end"),
+        ("B-06", "production audit anchoring (KMS signature, WORM sink) and key rotation (7 specs + 3 gap demos, all XFAIL)", "hosting / KMS / immutable storage not selected (open item O-4)", "F-AUD-006, F-DAT-006", "O-4 is decided and implemented"),
         ("B-07", "container image build and image vulnerability scan", "no container runtime on the Phase 1 workstation (Docker/Podman absent)", "F-GOV-005", "CI container job runs (defined in .github/workflows/ci.yml)"),
         ("B-08", "execution of the CI workflow on a runner", "no repository/CI service connected to this project yet; pushing project code externally needs the owner's decision", "F-GOV-005", "repository is pushed, Actions enabled, and docs/ci/CI_RUN_RECORD.yaml filled from the real run"),
         ("B-09", "network-restricted operator hostname / VPN allow-list", "hosting not selected (O-4)", "F-PLT-001", "deployment topology exists"),
         ("B-10", "Restricted-class content consent enforcement during support sessions", "no Restricted-class content endpoints exist", "F-PLT-002", "evidence / privacy modules exist"),
         ("B-11", "hardware-authenticator and cross-browser WebAuthn interoperability", "only a software authenticator is available", "F-ATH-006", "manual/hardware test pass is scheduled"),
+        ("B-15", "real-mailbox delivery of recovery / factor-removal notifications", "no e-mail provider (O-7)", "F-ATH-015, F-ATH-014", "provider configured; delivery and authentication (SPF/DKIM/DMARC) tested"),
+        ("B-16", "real private object store and malware-scanning engine for evidence", "hosting not selected (O-4); no engine selected (O-11)", "F-DAT-004, F-DAT-005", "store and engine chosen; the same tests run against them"),
         ("B-12", "dynamic application security testing (DAST) and penetration test", "not performed; requires a deployed environment and independent testers", "all", "environment + testers available"),
         ("B-13", "independent cryptographic / AppSec review of audit hash, checkpoints, AEAD helper, authentication/session/MFA", "no independent reviewer engaged; package prepared (docs/review/)", "F-GOV-004", "a reviewer's signed report is recorded in docs/review/REVIEW_RECORD.yaml and scripts/check_review_record.py reports COMPLETE"),
         ("B-14", "tests that need the real KMS/WORM provider (IAM key separation, non-exportability, retention lock, account separation)", "provider not selected (O-4)", "F-DAT-006, F-AUD-006", "provider chosen; interface conformance suite extended with integration tests"),
@@ -404,14 +421,15 @@ def write_scan_report(gate: dict | None, risks: dict) -> None:
         lines += [f"**Semgrep** (registry rule packs `p/python`, `p/django`, `p/security-audit`): {len(d.get('results', []))} findings over {len(d.get('paths', {}).get('scanned', []))} files.", ""]
     lines += ["Ruff with security-lint rules (`S`, `B`, `E`, `F`, `W`, `UP`, `I`): see `evidence/ruff.txt`. Rule `E501` (line length) is deliberately ignored as a formatting preference.", "",
               "## 3. Secret scanning", "",
-              "`detect-secrets` with an audited baseline (`.secrets.baseline`). Eleven candidates were raised and each was inspected by hand; **all eleven are false positives**:", "",
+              "`detect-secrets` with an audited baseline (`.secrets.baseline`). Twelve candidates were raised and each was inspected by hand; **all twelve are false positives**:", "",
               "| Location | Type | Triage |", "|---|---|---|",
               "| `ngrc/audit/service.py:9` | keyword | the word \"secrets\" in a docstring |",
               "| `ngrc/authn/abstract.py:37`, `ngrc/iam/models.py:101` | keyword | enum names `password_ok` / `password_reset` |",
               "| `tests/conftest.py:27` | keyword | deliberately fake test-only password (not in any real system) |",
               "| `tests/test_input_and_exposure.py:183,213,231,242` | keyword / entropy | fake strings used to prove redaction and non-disclosure |",
               "| `tests/test_support_access.py:353` | keyword | a settings key name (`operator_account_free_failures`) |",
-              "| `tests/test_evidence_artifacts.py:121` | keyword | a dictionary key containing the word PASSWORD in an explanatory note |", "",
+              "| `tests/test_evidence_artifacts.py:121` | keyword | a dictionary key containing the word PASSWORD in an explanatory note |",
+              "| `tests/test_pending_controls.py` / `tests/test_auth_backoff_policy.py` | keyword | deliberately wrong passwords used to provoke failures |", "",
               _gitleaks_paragraph(), "",
               "## 4. Container and IaC scanning", ""]
     for g in (gate or {"gates": []})["gates"]:
@@ -427,7 +445,7 @@ def write_scan_report(gate: dict | None, risks: dict) -> None:
               "The independent cryptographic/AppSec review is also **BLOCKED** (no reviewer).",
               "3. Actions are pinned by tag, and the base image by tag, not by commit SHA / digest.",
               "4. Open items (hosting/KMS/immutable storage, retention, RPO/RTO, legal review, framework licensing, crypto review, AppSec review) remain open — see `docs/OPEN_ITEMS.md`.",
-              "5. Open defect DEF-15 (lock-out without an unlock path) awaits a project-owner decision — see `docs/defects_found.yaml`.",
+              "5. Defect DEF-15 (failure-triggered lock-out) is **mitigated-temporary** by owner decision D-P1-001 (progressive back-off + detection, stricter operator parameters); it closes only when the lost-factor recovery mechanism (F-ATH-015) has been independently reviewed — see `docs/defects_found.yaml`.",
               "", "## 6. CI and independent-review status (records, not claims)", ""]
     ci_txt, review_txt = record_status_text()
     lines += [f"- **CI:** {ci_txt}", f"- **Independent review:** {review_txt}",

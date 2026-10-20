@@ -1,6 +1,6 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-20T19:50:37+00:00",
+  "generated_at": "2026-10-20T21:22:03+00:00",
   "generator": "tests/test_evidence_artifacts.py::rls_coverage.json",
   "tables": {
     "audit.action_registry": {
@@ -107,6 +107,14 @@
       "rls_expected": "none",
       "rls_forced": false
     },
+    "idn_recovery_request": {
+      "class": "IDN",
+      "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
     "idn_session": {
       "class": "IDN",
       "data_class": "R",
@@ -195,6 +203,28 @@
         "auth_read",
         "ops_all",
         "owner_all"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_evidence": {
+      "class": "TEN",
+      "data_class": "R",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_evidence_revision": {
+      "class": "TEN",
+      "data_class": "R",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
       ],
       "rls_enabled": true,
       "rls_expected": "required",

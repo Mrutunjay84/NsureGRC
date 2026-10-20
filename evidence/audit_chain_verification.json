@@ -2,28 +2,33 @@
   "checkpoints_issued": [
     {
       "algorithm": "ed25519",
-      "head_hash": "d7f3f6b3bacac89448e364971459d66f992ef87b3b32fdda86e56e770560b515",
-      "issued_at": "2026-10-20T19:50:38.413262Z",
-      "key_id": "dev-7b8e3dbdc178d443",
+      "cp_index": 1,
+      "digest": "7a2e5221de95b91851eeb49fe5963a7e54d9cff0649c39dabb6fbba15c4759b3",
+      "format": 2,
+      "head_hash": "3f25df4e9e1987946ea4a654e2aab69d91cad60b1f2eeca1aeacf7ca010e931c",
+      "heartbeat": false,
+      "issued_at": "2026-10-20T21:22:03.690762Z",
+      "key_id": "dev-1eae3313bde8de10",
+      "prev_cp_digest": "82bdbfc2e04114a60c16895fb0b3f4d49c450af91547f8f4e1c4f7e181f56d96",
       "seq": 4,
-      "signature": "cc611c74b25a111b689c74041190caefba2ca785da5c7a1da5516a06e248a2f3fe75cb676237c0aa1c5675e29246b6ebaae5254f242423d395fe8dc046db1004",
+      "signature": "973dad60ee53ed793789e20b7ad225c59e3864e678ed34f16d42eae2bc5d58acfe7d0258f70a9aa6123a69dba861e649e1b556c30825c195fd1ae1b7acfd7701",
       "sink": "dev-local-file (NOT WORM)",
-      "stream_key": "1f2f639a-9e7b-4d12-bd02-2dde84aa86bd"
+      "stream_key": "7461ae85-9954-461d-a2e2-028e14d4444e"
     }
   ],
   "database": "ngrc_test",
   "export_sink": "local directory (NOT WORM storage)",
-  "generated_at": "2026-10-20T19:50:38+00:00",
+  "generated_at": "2026-10-20T21:22:03+00:00",
   "generator": "tests/test_evidence_artifacts.py::audit_chain_verification.json",
   "ok": true,
   "scope": "fresh tenant created by this test (the shared test database also holds deliberately tampered streams)",
   "signer": {
     "algorithm": "ed25519",
     "dev_only": true,
-    "key_id": "dev-7b8e3dbdc178d443",
+    "key_id": "dev-1eae3313bde8de10",
     "note": "DEV-ONLY Ed25519 key on the same host as the DB; NOT the production control (open item O-4)"
   },
-  "stream": "1f2f639a-9e7b-4d12-bd02-2dde84aa86bd",
+  "stream": "7461ae85-9954-461d-a2e2-028e14d4444e",
   "verified_through_seq": 4,
   "violations": []
 }

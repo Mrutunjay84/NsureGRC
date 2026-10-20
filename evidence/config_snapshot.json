@@ -9,11 +9,15 @@
     "account_base_delay_s": 60,
     "account_free_failures": 5,
     "account_max_delay_s": 900,
-    "account_recovery_required_at": 20,
     "ip_max_attempts": 20,
     "ip_window_s": 60,
+    "operator_account_base_delay_s": 120,
     "operator_account_free_failures": 3,
-    "operator_recovery_required_at": 10
+    "operator_account_max_delay_s": 3600,
+    "operator_suspicious_distinct_sources": 2,
+    "operator_suspicious_window_s": 7200,
+    "suspicious_distinct_sources": 3,
+    "suspicious_window_s": 3600
   },
   "BREAK_GLASS_MAX_MINUTES": 120,
   "CSRF_COOKIE_HTTPONLY": true,
@@ -43,6 +47,7 @@
     "ngrc.control_plane",
     "ngrc.iam",
     "ngrc.tenancy",
+    "ngrc.evidence",
     "ngrc.authz",
     "ngrc.audit"
   ],
@@ -109,6 +114,6 @@
   "SUPPORT_GRANT_MAX_MINUTES": 480,
   "X_FRAME_OPTIONS": "DENY",
   "database": "ngrc_test",
-  "generated_at": "2026-10-20T19:50:38+00:00",
+  "generated_at": "2026-10-20T21:22:03+00:00",
   "generator": "tests/test_evidence_artifacts.py::config_snapshot.json"
 }

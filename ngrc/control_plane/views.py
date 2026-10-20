@@ -26,6 +26,7 @@ from ngrc.authz.drf import NgrcAPIView, Policy
 from ngrc.core import clock
 from ngrc.core.context import tenant_context  # noqa: F401  (re-exported for tests)
 from ngrc.core.crypto import hash_token, new_token
+from ngrc.core.net import normalize_ip
 
 from .models import OperatorSession, SupportAccessGrant, Tenant
 
@@ -34,7 +35,7 @@ ANY_STAGE = ("password_ok", "enroll_mfa", "active")
 
 
 def _ip(request):
-    return request.META.get("REMOTE_ADDR")
+    return normalize_ip(request.META.get("REMOTE_ADDR"))
 
 
 def _ua(request):
@@ -502,3 +503,82 @@ class PlatformAuditView(NgrcAPIView):
         _emit("platform.audit.read", request, details={"count": len(rows)})
         return Response({"events": [{"seq": r[0], "occurred_at": r[1].isoformat(), "actor_type": r[2], "actor_id": r[3], "action": r[4],
                                      "result": r[5], "reason_code": r[6], "related_tenant_id": r[7], "hash": r[8]} for r in rows]})
+
+
+# ----------------------------------------------------------------- last-Owner recovery (F-ATH-015): Platform Security only
+def _platform_recovery_requests() -> list[dict]:
+    cols = ("id", "tenant_id", "tenant_name", "display_name", "email", "state", "created_at", "expires_at", "approved_at", "cooling_until")
+    with connections["ops"].cursor() as cur:
+        cur.execute("SELECT id, tenant_id, tenant_name, display_name, email, state, created_at, expires_at, approved_at, cooling_until "
+                    "FROM plt_recovery_platform_list()")
+        return [dict(zip(cols, r, strict=True)) for r in cur.fetchall()]
+
+
+class RecoveryListView(NgrcAPIView):
+    ngrc_policy = Policy("operator", "platform.recovery.approve")
+
+    def get(self, request):
+        iso = lambda d: d.isoformat() if d else None  # noqa: E731
+        return Response({"requests": [{"id": str(r["id"]), "tenant": r["tenant_name"], "member": r["display_name"] or r["email"], "email": r["email"],
+                                       "state": r["state"], "created_at": iso(r["created_at"]), "expires_at": iso(r["expires_at"]),
+                                       "cooling_until": iso(r["cooling_until"])} for r in _platform_recovery_requests()]})
+
+
+class RecoveryApproveBeginView(NgrcAPIView):
+    """T2: the approver first obtains a WebAuthn challenge bound to THIS recovery request id."""
+
+    ngrc_policy = Policy("operator", "platform.recovery.approve")
+
+    def post(self, request, pk):
+        if not any(str(r["id"]) == str(pk) for r in _platform_recovery_requests()):
+            return _err("not_found", 404)
+        s, a = _session_account(request)
+        try:
+            return Response(webauthn_.authentication_options(OPERATOR, s, a, require_uv=True, purpose="stepup", binding=f"recovery.approve:{pk}"))
+        except webauthn_.WebAuthnError:
+            return _err("no_credentials")
+
+
+class RecoveryApproveView(NgrcAPIView):
+    ngrc_policy = Policy("operator", "platform.recovery.approve")
+
+    def post(self, request, pk):
+        d = CredentialSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        if not any(str(r["id"]) == str(pk) for r in _platform_recovery_requests()):
+            return _err("not_found", 404)
+        s, a = _session_account(request)
+        try:
+            webauthn_.complete_authentication(OPERATOR, s, a, d.validated_data["credential"], require_uv=True, purpose="stepup",
+                                              binding=f"recovery.approve:{pk}")
+        except webauthn_.WebAuthnError:
+            _emit("platform.operator.stepup.failure", request, result="denied", details={"tier": "T2", "binding": "recovery.approve"})
+            return _err("invalid_assertion", 401)
+        _emit("platform.operator.stepup.success", request, details={"tier": "T2", "binding": "recovery.approve"})
+        try:
+            with transaction.atomic(using="ops"), connections["ops"].cursor() as cur:
+                cur.execute("SELECT account_id, cooling_until, email FROM plt_recovery_platform_decide(%s::uuid, %s::uuid, 'approve')", [str(pk), str(a.id)])
+                account_id, cooling_until, email = cur.fetchone()
+        except Exception:  # noqa: BLE001 - function raises 42501: not Platform Security / wrong state
+            self.deny(request, "platform.recovery.approve", "decision_refused")
+        _emit("auth.recovery.approved", request, object_type="recovery_request", object_id=str(pk), details={"kind": "last_owner"})
+        send_mail("Your NsureGRC sign-in recovery was approved",
+                      f"NsureGRC Platform Security approved your recovery. You can complete it after {cooling_until.isoformat()}. If you did not ask for "
+                      "this, cancel it now with the link in the earlier e-mail, or sign in and cancel it from your account.", None, [email], fail_silently=True)
+        _ = account_id
+        return Response({"status": "ok", "cooling_until": cooling_until.isoformat()})
+
+
+class RecoveryDenyView(NgrcAPIView):
+    ngrc_policy = Policy("operator", "platform.recovery.approve", step_up="T1")
+
+    def post(self, request, pk):
+        _s, a = _session_account(request)
+        try:
+            with transaction.atomic(using="ops"), connections["ops"].cursor() as cur:
+                cur.execute("SELECT account_id, cooling_until, email FROM plt_recovery_platform_decide(%s::uuid, %s::uuid, 'deny')", [str(pk), str(a.id)])
+                cur.fetchone()
+        except Exception:  # noqa: BLE001
+            return _err("illegal_transition", 409)
+        _emit("auth.recovery.denied", request, object_type="recovery_request", object_id=str(pk), details={"kind": "last_owner"})
+        return Response({"status": "ok"})

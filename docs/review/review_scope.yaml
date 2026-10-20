@@ -19,11 +19,17 @@ scopes:
       - ngrc/audit/chain.py
       - ngrc/audit/sealer.py
       - ngrc/audit/signer.py
-      - ngrc/audit/verifier.py
+      - ngrc/audit/verifier.py              # H-11: validity (A) vs completeness (B) verdicts, anchors, incremental mode
+      - ngrc/audit/scheduler.py             # F-AUD-007: scheduled verification, identity guard, watchdog
+      - ngrc/audit/alerts.py
       - ngrc/audit/migrations/0001_audit_schema.py
+      - ngrc/audit/migrations/0003_registry_p2.py
+      - ngrc/audit/migrations/0004_checkpoint_continuity.py   # checkpoint format 2 + continuity trigger
       - db/bootstrap/00_roles.sql
       - ngrc/control_plane/migrations/0004_harden_support_grant_guard.py   # audit-write precondition for operator actions
-    tests: [tests/test_audit_integrity.py, tests/test_rls_bypass_attempts.py, tests/test_support_grant_db_guard.py, tests/test_pending_controls.py]
+      - ngrc/evidence/views.py              # evidence.hash_mismatch / download audit ordering (fail-closed)
+    tests: [tests/test_audit_integrity.py, tests/test_audit_completeness.py, tests/test_scheduled_verification.py, tests/test_rls_bypass_attempts.py,
+            tests/test_support_grant_db_guard.py, tests/test_pending_controls.py]
   - id: aead_helper
     title: AEAD / envelope-encryption helper and token/pepper hashing
     design_refs: [D-P0-007 s3]
@@ -48,8 +54,14 @@ scopes:
       - ngrc/authn/throttle.py
       - ngrc/authn/totp.py
       - ngrc/authn/webauthn_.py
+      - ngrc/core/net.py
       - ngrc/iam/services.py
       - ngrc/iam/views.py
+      - ngrc/iam/recovery_service.py        # F-ATH-015
+      - ngrc/iam/models.py
+      - ngrc/iam/migrations/0005_recovery_request.py
+      - ngrc/iam/migrations/0006_recovery_security.py   # factor guard, recovery state machine, SECURITY DEFINER functions
+      - ngrc/tenancy/views.py               # tenant-plane recovery approval
       - ngrc/control_plane/views.py
       - ngrc/control_plane/support.py
       - ngrc/control_plane/migrations/0002_security.py
@@ -57,7 +69,8 @@ scopes:
       - ngrc/authz/policy.py
       - ngrc/authz/drf.py
       - ngrc/core/middleware.py
-    tests: [tests/test_authentication.py, tests/test_support_access.py, tests/test_support_grant_db_guard.py, tests/test_authorization_api.py]
+    tests: [tests/test_authentication.py, tests/test_auth_backoff_policy.py, tests/test_factor_removal.py, tests/test_lost_factor_recovery.py,
+            tests/test_support_access.py, tests/test_support_grant_db_guard.py, tests/test_authorization_api.py]
 supporting_docs:
   - ../../00_CONTROL/PHASE0/D-P0-005_Platform_Access_Model.md
   - ../../00_CONTROL/PHASE0/D-P0-006_Audit_Integrity.md
@@ -69,5 +82,8 @@ supporting_docs:
   - docs/defects_found.yaml
   - docs/OPEN_ITEMS.md
   - docs/review/INDEPENDENT_REVIEW_PACKAGE.md
+  - ../../00_CONTROL/PHASE1/D-P1-001_Temporary_Authentication_Throttling_Baseline.md
+  - ../../00_CONTROL/PHASE1/D-P1-003_Audit_Checkpoint_Completeness.md
+  - ../../00_CONTROL/PHASE1/D-P1-004_Factor_Removal_and_Lost_Factor_Recovery.md
   - pyproject.toml
   - uv.lock

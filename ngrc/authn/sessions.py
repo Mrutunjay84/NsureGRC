@@ -112,3 +112,16 @@ def set_cookie(response, realm: Realm, raw: str) -> None:
 
 def clear_cookie(response, realm: Realm) -> None:
     response.set_cookie(realm.cookie_name, "", max_age=0, secure=True, httponly=True, samesite="Lax", path="/")
+
+
+def demote_to_enrollment(realm: Realm, s) -> str:
+    """After a COMPLETED lost-factor recovery the old factors are gone: the session that completed it continues as an ENROLMENT session
+    (stage enroll_mfa, short lifetime, no step-up, no MFA time) with a rotated id - nobody else can slip into enrolment first via a stale
+    session, because the caller revokes every other session of the account."""
+    now = clock.now()
+    idle, absolute = _policy("pending_mfa")
+    realm.Session.objects.using(realm.db).filter(pk=s.pk).update(
+        stage="enroll_mfa", mfa_at=None, step_up_at=None, step_up_method="", auth_methods=["password", "recovery_enrolment"], webauthn_challenge=None,
+        idle_timeout_s=idle, last_seen_at=now, expires_at=now + timedelta(seconds=absolute))
+    s.stage = "enroll_mfa"
+    return rotate(realm, s)

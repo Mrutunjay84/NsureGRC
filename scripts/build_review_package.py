@@ -37,8 +37,8 @@ def main() -> int:
     for s in spec["scopes"]:
         for f in [*s["files"], *s["tests"]]:
             material[rel(ROOT / f)] = ROOT / f
-    adrs = {rel((ROOT / d).resolve()): (ROOT / d).resolve() for d in spec["supporting_docs"] if "PHASE0" in d}
-    context = {rel((ROOT / d).resolve()): (ROOT / d).resolve() for d in spec["supporting_docs"] if "PHASE0" not in d}
+    adrs = {rel((ROOT / d).resolve()): (ROOT / d).resolve() for d in spec["supporting_docs"] if "/PHASE" in d}
+    context = {rel((ROOT / d).resolve()): (ROOT / d).resolve() for d in spec["supporting_docs"] if "/PHASE" not in d}
     context.update({rel(ROOT / "docs" / "review" / "review_scope.yaml"): ROOT / "docs" / "review" / "review_scope.yaml"})
     missing = [k for k, v in {**material, **adrs, **context}.items() if not v.is_file()]
     if missing:

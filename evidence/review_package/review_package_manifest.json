@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-20T19:49:57+00:00",
-  "package_sha256": "d28ad1868f5b7ad21288cd8ec2b84270ef86ac80c4bf7e3d626b687d833ebfe8",
+  "generated_at": "2026-10-20T21:23:13+00:00",
+  "package_sha256": "fe008f35606831692394aefd16507eb4aba25b7fc17ec68fdb495535540bccfa",
   "digest_covers": "files in group 'reviewed' (scope files, tests, Phase 0 ADRs): sha256 over sorted '<sha256>  <path>' lines",
-  "git_commit": "f3376a3591f2b6ff0ae6a920aa79e2de5b01284c",
+  "git_commit": "8c4f60ccdab2f23b4daa5bd01d11ec438883f099",
   "git_dirty": true,
   "uv_lock_sha256": "d5f70c80a53ddd67b8a85c7ac2cdb62a7edf89b33df01c874cc899b72eab5f71",
   "python": "3.12.13",
@@ -39,12 +39,19 @@
         "ngrc/audit/sealer.py",
         "ngrc/audit/signer.py",
         "ngrc/audit/verifier.py",
+        "ngrc/audit/scheduler.py",
+        "ngrc/audit/alerts.py",
         "ngrc/audit/migrations/0001_audit_schema.py",
+        "ngrc/audit/migrations/0003_registry_p2.py",
+        "ngrc/audit/migrations/0004_checkpoint_continuity.py",
         "db/bootstrap/00_roles.sql",
-        "ngrc/control_plane/migrations/0004_harden_support_grant_guard.py"
+        "ngrc/control_plane/migrations/0004_harden_support_grant_guard.py",
+        "ngrc/evidence/views.py"
       ],
       "tests": [
         "tests/test_audit_integrity.py",
+        "tests/test_audit_completeness.py",
+        "tests/test_scheduled_verification.py",
         "tests/test_rls_bypass_attempts.py",
         "tests/test_support_grant_db_guard.py",
         "tests/test_pending_controls.py"
@@ -88,8 +95,14 @@
         "ngrc/authn/throttle.py",
         "ngrc/authn/totp.py",
         "ngrc/authn/webauthn_.py",
+        "ngrc/core/net.py",
         "ngrc/iam/services.py",
         "ngrc/iam/views.py",
+        "ngrc/iam/recovery_service.py",
+        "ngrc/iam/models.py",
+        "ngrc/iam/migrations/0005_recovery_request.py",
+        "ngrc/iam/migrations/0006_recovery_security.py",
+        "ngrc/tenancy/views.py",
         "ngrc/control_plane/views.py",
         "ngrc/control_plane/support.py",
         "ngrc/control_plane/migrations/0002_security.py",
@@ -100,6 +113,9 @@
       ],
       "tests": [
         "tests/test_authentication.py",
+        "tests/test_auth_backoff_policy.py",
+        "tests/test_factor_removal.py",
+        "tests/test_lost_factor_recovery.py",
         "tests/test_support_access.py",
         "tests/test_support_grant_db_guard.py",
         "tests/test_authorization_api.py"
@@ -131,23 +147,44 @@
     {
       "path": "00_CONTROL/PHASE0/D-P0-008_Authentication_Specification.md",
       "group": "reviewed",
-      "sha256": "344d4b1226dc51514626128e10227b8ba8176d6df6933ef10cbafe3af4ddcbc8",
-      "bytes": 21267,
-      "lines": 171
+      "sha256": "11686d563cd962ed3582567514cc86e936737bd2c2bd222795a5af46eff15a01",
+      "bytes": 21742,
+      "lines": 174
+    },
+    {
+      "path": "00_CONTROL/PHASE1/D-P1-001_Temporary_Authentication_Throttling_Baseline.md",
+      "group": "reviewed",
+      "sha256": "d618d1d88b44452e0614d8cab0d5aaf9bd62d0fcac74dfb7b4f1e0411012c700",
+      "bytes": 7359,
+      "lines": 55
+    },
+    {
+      "path": "00_CONTROL/PHASE1/D-P1-003_Audit_Checkpoint_Completeness.md",
+      "group": "reviewed",
+      "sha256": "a36fcfb01976e42bbd38013a9b9572cf041ac1451b1c06e3592c618fb0e104fd",
+      "bytes": 8369,
+      "lines": 60
+    },
+    {
+      "path": "00_CONTROL/PHASE1/D-P1-004_Factor_Removal_and_Lost_Factor_Recovery.md",
+      "group": "reviewed",
+      "sha256": "fe2bc952cf3ec9dcbf88441a858a3363e36f83ab55b9903e45428d28f4ca7092",
+      "bytes": 6304,
+      "lines": 32
     },
     {
       "path": "03_APP/nsuregrc/config/settings/base.py",
       "group": "reviewed",
-      "sha256": "3a66a12b31313cbd6d08e45226aa245ffb6ccfbf869d0429c63967a4321b39a6",
-      "bytes": 11063,
-      "lines": 237
+      "sha256": "d0fda448174c156c81920185395628636be326fd7a13be8fe6c2405113be0d7c",
+      "bytes": 14861,
+      "lines": 278
     },
     {
       "path": "03_APP/nsuregrc/config/settings/prod.py",
       "group": "reviewed",
-      "sha256": "bb7c53f0bdc2c23ef5048dd2798de51e75bd7021383b64ed89b930e2e606cfbb",
-      "bytes": 752,
-      "lines": 14
+      "sha256": "73c3ab19363bcba3e5d7100b684d0d5e9f054014eaccbb53ea16e841f8aa4f07",
+      "bytes": 1054,
+      "lines": 17
     },
     {
       "path": "03_APP/nsuregrc/db/bootstrap/00_roles.sql",
@@ -159,16 +196,23 @@
     {
       "path": "03_APP/nsuregrc/ngrc/audit/actions.py",
       "group": "reviewed",
-      "sha256": "602b789e5fffb3094ee10d0cf7e21fd14261b805d4e0af51a706115496d2a716",
-      "bytes": 8380,
-      "lines": 116
+      "sha256": "9ccc7b38e0e5caaebf0c485e2710e6e52d603e84fc26edf5c51598053bbd5307",
+      "bytes": 10929,
+      "lines": 145
+    },
+    {
+      "path": "03_APP/nsuregrc/ngrc/audit/alerts.py",
+      "group": "reviewed",
+      "sha256": "c5abe7ce221007276cffd296283b2f51b40350a28fb342169e8c98675a9d27ca",
+      "bytes": 2550,
+      "lines": 63
     },
     {
       "path": "03_APP/nsuregrc/ngrc/audit/chain.py",
       "group": "reviewed",
-      "sha256": "8845f56ea47ea4025b7c0232672bbab7663471f19f65d4dee987e8fdd6c0bd50",
-      "bytes": 2171,
-      "lines": 46
+      "sha256": "433c7fbb3976f643ac7f18a90881ffa5dce24dc2a167d45dca780e967bf870f8",
+      "bytes": 3529,
+      "lines": 69
     },
     {
       "path": "03_APP/nsuregrc/ngrc/audit/migrations/0001_audit_schema.py",
@@ -180,37 +224,58 @@
     {
       "path": "03_APP/nsuregrc/ngrc/audit/migrations/0002_seed_registry.py",
       "group": "reviewed",
-      "sha256": "17f1793580b056230834fc466b3446409df47c9a145c0688c59ea3dadfdb5e45",
-      "bytes": 863,
+      "sha256": "caf6b4c354bc5c366a683b638383e340b897c1a6d7e485c13358271eb1ca4c02",
+      "bytes": 944,
       "lines": 21
+    },
+    {
+      "path": "03_APP/nsuregrc/ngrc/audit/migrations/0003_registry_p2.py",
+      "group": "reviewed",
+      "sha256": "eb685cac14b13cd71cb79adf4365147c3dea19031fd53869721b1922ce562c5d",
+      "bytes": 891,
+      "lines": 21
+    },
+    {
+      "path": "03_APP/nsuregrc/ngrc/audit/migrations/0004_checkpoint_continuity.py",
+      "group": "reviewed",
+      "sha256": "5519f5cd2d911ed3008f9d6bbc95cd74e94b359930f0583a0314ba1c4ae38b3a",
+      "bytes": 3204,
+      "lines": 53
+    },
+    {
+      "path": "03_APP/nsuregrc/ngrc/audit/scheduler.py",
+      "group": "reviewed",
+      "sha256": "08b078847576453e6d4dad2bac0629d834540ac304756b811fb09d74d5e72703",
+      "bytes": 5169,
+      "lines": 100
     },
     {
       "path": "03_APP/nsuregrc/ngrc/audit/sealer.py",
       "group": "reviewed",
-      "sha256": "e6e0f0c5738b5b432aaebfdee64b6c116c1492393fadf46586832cede8d68b88",
-      "bytes": 2425,
-      "lines": 54
+      "sha256": "b548516e3a708a7f939c193e6f37cf97a05ef0f3fadb38597859c33189d53c40",
+      "bytes": 4998,
+      "lines": 81
     },
     {
       "path": "03_APP/nsuregrc/ngrc/audit/service.py",
       "group": "reviewed",
-      "sha256": "b6dc80f0f18a897c357dd1ba78890d6e52e5485301fa01c6103754d057cf4b99",
-      "bytes": 7083,
-      "lines": 172
+      "sha256": "50d160971bb808d7d2c9ce979e2472ced765d186c577d60d16d626e735413814",
+      "bytes": 8214,
+      "lines": 187
     },
     {
       "path": "03_APP/nsuregrc/ngrc/audit/signer.py",
       "group": "reviewed",
-      "sha256": "b2143e6c46a4e02ea25d7ce365bd86186052b7f8b49302004a466842f6174b72",
-      "bytes": 2648,
-      "lines": 65
+      "sha256": "b9aa63218e07e4d88d2f05d4d4fb4cc2b25974043a6b02cb4fd49cf08b7cc62a",
+      "bytes": 3254,
+      "lines": 79
     },
     {
       "path": "03_APP/nsuregrc/ngrc/audit/verifier.py",
       "group": "reviewed",
-      "sha256": "24249323e7233b434456dc30966f2888afce279777df5308dea2bde607322b66",
-      "bytes": 7361,
-      "lines": 149
+      "sha256": "04da73cf9db2feac9cc0e8be4e6b24f6b9e8c600eaa85331a1ca87d111176004",
+      "bytes": 18424,
+      "lines": 313
     },
     {
       "path": "03_APP/nsuregrc/ngrc/authn/abstract.py",
@@ -222,16 +287,16 @@
     {
       "path": "03_APP/nsuregrc/ngrc/authn/flow.py",
       "group": "reviewed",
-      "sha256": "a04fe4faa31d2abe028d2a73015e60635c208fd5bb9b38025ef142c451a8d707",
-      "bytes": 5905,
-      "lines": 111
+      "sha256": "fbb870a3d2279420794fb35cb431c8cd65f9d9fb6ca905873cf0b7e277354a2d",
+      "bytes": 7015,
+      "lines": 124
     },
     {
       "path": "03_APP/nsuregrc/ngrc/authn/middleware.py",
       "group": "reviewed",
-      "sha256": "ccc27bf4d94c4016280c2cb55e6b03fc9919844b2f57bc5b9881291c6b461409",
-      "bytes": 2622,
-      "lines": 64
+      "sha256": "72031d3c67272b3f0e39b5d2b0e4728e8c91afff78c668e76b687ea919b4defe",
+      "bytes": 2676,
+      "lines": 65
     },
     {
       "path": "03_APP/nsuregrc/ngrc/authn/passwords.py",
@@ -257,16 +322,16 @@
     {
       "path": "03_APP/nsuregrc/ngrc/authn/sessions.py",
       "group": "reviewed",
-      "sha256": "c3f680b223e41a7ec8b12d9e4a0380687bbc3ed3c6396db76074e771a2ee5c4e",
-      "bytes": 4964,
-      "lines": 114
+      "sha256": "8c71461739b2fb479a126a7ac93e0be741c350d8254111941c520e6cbca855a1",
+      "bytes": 5813,
+      "lines": 127
     },
     {
       "path": "03_APP/nsuregrc/ngrc/authn/throttle.py",
       "group": "reviewed",
-      "sha256": "ccdc359c12f819590329918f7fbb5b6074d96be910498a96f154545dcf9ba07d",
-      "bytes": 3423,
-      "lines": 80
+      "sha256": "0f4442c63dc5ec5fe3bad7874c480df3c64ce175fd14099a35ca0b338bb133d8",
+      "bytes": 5480,
+      "lines": 110
     },
     {
       "path": "03_APP/nsuregrc/ngrc/authn/totp.py",
@@ -320,9 +385,9 @@
     {
       "path": "03_APP/nsuregrc/ngrc/control_plane/views.py",
       "group": "reviewed",
-      "sha256": "318af5dd6637334194ccc49f680e5d6abf8c20d0bfa2c69c5ff77cdb773d50e5",
-      "bytes": 25713,
-      "lines": 504
+      "sha256": "085519267cc2b693580930c98efc9d4c888ea8694372311c7ba9dcce1eb1792c",
+      "bytes": 30570,
+      "lines": 584
     },
     {
       "path": "03_APP/nsuregrc/ngrc/core/crypto.py",
@@ -339,18 +404,74 @@
       "lines": 37
     },
     {
+      "path": "03_APP/nsuregrc/ngrc/core/net.py",
+      "group": "reviewed",
+      "sha256": "9cbcd4e6d7ee3ecd2a51004ea5db693cbcd5e1d63d201b6f6da4750d95ffd6fa",
+      "bytes": 614,
+      "lines": 15
+    },
+    {
+      "path": "03_APP/nsuregrc/ngrc/evidence/views.py",
+      "group": "reviewed",
+      "sha256": "d82138d0546f548f1ce347924fc74c187cee650a194a4359106fa5337c0c275a",
+      "bytes": 11508,
+      "lines": 224
+    },
+    {
+      "path": "03_APP/nsuregrc/ngrc/iam/migrations/0005_recovery_request.py",
+      "group": "reviewed",
+      "sha256": "86e17a5142ffbf262b1ef4334c2b15cc3970540deb6b2b9a9791f6659f410b2e",
+      "bytes": 2808,
+      "lines": 40
+    },
+    {
+      "path": "03_APP/nsuregrc/ngrc/iam/migrations/0006_recovery_security.py",
+      "group": "reviewed",
+      "sha256": "676dc58b8ad176f40a2e5799f3acef71208ef95fbe35c88de8f7e842a6bdc3cf",
+      "bytes": 21089,
+      "lines": 257
+    },
+    {
+      "path": "03_APP/nsuregrc/ngrc/iam/models.py",
+      "group": "reviewed",
+      "sha256": "622bfa21df9cd7f1e44523b66fb0e5c4139a7cb50532a35bdfd0d3b6f44af02d",
+      "bytes": 8009,
+      "lines": 189
+    },
+    {
+      "path": "03_APP/nsuregrc/ngrc/iam/recovery_service.py",
+      "group": "reviewed",
+      "sha256": "4a70cce465c9a4a2767dcaae596fb19f9bd05d2084988818a44aa939581e0040",
+      "bytes": 4007,
+      "lines": 85
+    },
+    {
       "path": "03_APP/nsuregrc/ngrc/iam/services.py",
       "group": "reviewed",
-      "sha256": "d4f13bf74660b2b5da6ff6c9a64b6d79072da39fd478259cb6f4012e3e428ea9",
-      "bytes": 6842,
-      "lines": 149
+      "sha256": "ca76c40d36b778cd364fc1daec4a5cf62bde5d54823ae2fe638fc8bcd3640c75",
+      "bytes": 7219,
+      "lines": 154
     },
     {
       "path": "03_APP/nsuregrc/ngrc/iam/views.py",
       "group": "reviewed",
-      "sha256": "32314bc71411799ff2d026292fb25b109f5c826798c0a73f2f3f335092617874",
-      "bytes": 23987,
-      "lines": 511
+      "sha256": "714c34b18243f46370fca28cd8bf5f90c19cfb3c44d0dba904f2bb8e65cbf131",
+      "bytes": 36637,
+      "lines": 738
+    },
+    {
+      "path": "03_APP/nsuregrc/ngrc/tenancy/views.py",
+      "group": "reviewed",
+      "sha256": "5ea33ffc9d201c7bc6cb8ab49c76441ab8c4dcce3df31782263740b9bd87ab14",
+      "bytes": 24466,
+      "lines": 482
+    },
+    {
+      "path": "03_APP/nsuregrc/tests/test_audit_completeness.py",
+      "group": "reviewed",
+      "sha256": "3f888384c99b8ae1fbd429a4d1c955a3c7ba064c8647f43250850ad3f55f8498",
+      "bytes": 16864,
+      "lines": 309
     },
     {
       "path": "03_APP/nsuregrc/tests/test_audit_integrity.py",
@@ -360,25 +481,32 @@
       "lines": 361
     },
     {
+      "path": "03_APP/nsuregrc/tests/test_auth_backoff_policy.py",
+      "group": "reviewed",
+      "sha256": "64c7531292a0dc95fecdcf4a5afdf918677762beee6522e9761beeda979f376f",
+      "bytes": 10187,
+      "lines": 166
+    },
+    {
       "path": "03_APP/nsuregrc/tests/test_authentication.py",
       "group": "reviewed",
-      "sha256": "2f78eb668707aaddebd0af9c037ee20be8a054cc5a2732fe237fb66db50c59ab",
-      "bytes": 29610,
-      "lines": 589
+      "sha256": "bba5c2f4c18806ed8c2293cd9ee379ebf4e9444d5449ee859f5df1a184cb42d9",
+      "bytes": 28911,
+      "lines": 579
     },
     {
       "path": "03_APP/nsuregrc/tests/test_authorization_api.py",
       "group": "reviewed",
-      "sha256": "ee0976fd090fe83d48d303b6b5a81d2b534143e6b52394aaf56f90fc9fc7c7b2",
-      "bytes": 21028,
-      "lines": 378
+      "sha256": "6df4fcd20dcaab39c5f88617b2547b2b90b4051c9dfafa3608096066e6acfdbe",
+      "bytes": 21566,
+      "lines": 383
     },
     {
       "path": "03_APP/nsuregrc/tests/test_config_security.py",
       "group": "reviewed",
-      "sha256": "b13d71dd8874d747fa90d7f8fd050b2c034fcefc37c686a2f05c8f50df23e82c",
-      "bytes": 10703,
-      "lines": 179
+      "sha256": "226624276b9ce8db6f55c940958612a3e59afdb59142ca31d1b140c3bee0fdc1",
+      "bytes": 11385,
+      "lines": 185
     },
     {
       "path": "03_APP/nsuregrc/tests/test_crypto.py",
@@ -388,11 +516,25 @@
       "lines": 87
     },
     {
+      "path": "03_APP/nsuregrc/tests/test_factor_removal.py",
+      "group": "reviewed",
+      "sha256": "3d3a382c96b4406a46cdae5f9e69a2388408ea2584cd8e3f3649d2e27ff3b5ca",
+      "bytes": 11275,
+      "lines": 204
+    },
+    {
+      "path": "03_APP/nsuregrc/tests/test_lost_factor_recovery.py",
+      "group": "reviewed",
+      "sha256": "c0c1bede2c9925f2a1bc00daf7950fef3dfe1f847c8bd14069f0a76681524107",
+      "bytes": 26723,
+      "lines": 437
+    },
+    {
       "path": "03_APP/nsuregrc/tests/test_pending_controls.py",
       "group": "reviewed",
-      "sha256": "025e4a67ea2a2381724d9501a33ee8b8446c671635d74e9f697977fe0a32d2d1",
-      "bytes": 32124,
-      "lines": 625
+      "sha256": "bd15e0b9a524e14541abf3f87a1dade83cafe791be5ce07416a1bc2beb3913c0",
+      "bytes": 9486,
+      "lines": 191
     },
     {
       "path": "03_APP/nsuregrc/tests/test_rls_bypass_attempts.py",
@@ -400,6 +542,13 @@
       "sha256": "be10beadcc47443343d2558f6cdc5200bfe36face28a902bd8cfbf02ba0a9966",
       "bytes": 9755,
       "lines": 166
+    },
+    {
+      "path": "03_APP/nsuregrc/tests/test_scheduled_verification.py",
+      "group": "reviewed",
+      "sha256": "f9dd8954562cd60e44c4fb60b75da33b8ab503e136c6695070a02c04ebcfb99b",
+      "bytes": 9646,
+      "lines": 184
     },
     {
       "path": "03_APP/nsuregrc/tests/test_support_access.py",
@@ -418,51 +567,51 @@
     {
       "path": "03_APP/nsuregrc/docs/ARCHITECTURE_SUMMARY.md",
       "group": "context",
-      "sha256": "537299c9160dce85544b59f85bf4bb8d29de7904e5045a828e0508435f946737",
-      "bytes": 10009,
-      "lines": 77
+      "sha256": "88f0cd04761378cde7ec497781b8c64983fc56d4875a3849e9687f9d9af98c3f",
+      "bytes": 11654,
+      "lines": 84
     },
     {
       "path": "03_APP/nsuregrc/docs/OPEN_ITEMS.md",
       "group": "context",
-      "sha256": "68e62ba931f7e662038964a57ee7b3d165bfdf273db42cf1dcdabb918922db81",
-      "bytes": 5193,
-      "lines": 32
+      "sha256": "64e174f1bdc3055db7f3c8313106ebf7cb70d7441d375c79a8930deff0ffe0f8",
+      "bytes": 7191,
+      "lines": 35
     },
     {
       "path": "03_APP/nsuregrc/docs/SECURITY_CONTROL_MATRIX.md",
       "group": "context",
-      "sha256": "1bb520a64178a0a2af17af7fee3da5117ad8e7117e690f2cc40d16b42a89bb64",
-      "bytes": 22518,
-      "lines": 190
+      "sha256": "243b034c17d2d96bbe8f80fd7e378448dddeded49881354850cf59e65e586c6d",
+      "bytes": 28558,
+      "lines": 238
     },
     {
       "path": "03_APP/nsuregrc/docs/SECURITY_TEST_REPORT.md",
       "group": "context",
-      "sha256": "e6a88a5afc4344661beaa4b7d218a6c4a4326e030a842d10ab4f9d4725de0104",
-      "bytes": 50869,
-      "lines": 308
+      "sha256": "cd3a9f03be2234174ab96f04d3ca2476fa4059f1326dafba69197d20a9a03b32",
+      "bytes": 73404,
+      "lines": 405
     },
     {
       "path": "03_APP/nsuregrc/docs/defects_found.yaml",
       "group": "context",
-      "sha256": "32c803a4af96ef838cb880f2c2d1b225f5f3016e08e7476a2542df6640d325dd",
-      "bytes": 12190,
-      "lines": 126
+      "sha256": "b9e8907176a662519acebfb56fb583117034faf106225697393c8c7281cc39a9",
+      "bytes": 15345,
+      "lines": 142
     },
     {
       "path": "03_APP/nsuregrc/docs/review/INDEPENDENT_REVIEW_PACKAGE.md",
       "group": "context",
-      "sha256": "14649649af6a4508cb927661009cafc4838c5e12354cabe58d7c4c9f962c7fde",
-      "bytes": 15225,
-      "lines": 125
+      "sha256": "cf95f3d61ba6979233429ede4da07c98ea5ba6cc8bfe145a8a9e2750c2fe9d64",
+      "bytes": 19549,
+      "lines": 138
     },
     {
       "path": "03_APP/nsuregrc/docs/review/review_scope.yaml",
       "group": "context",
-      "sha256": "242ecbde3ff9f7b346917616b1c7eda6ddc78c6b437e6d8d16a6f3efe7b5eac8",
-      "bytes": 3403,
-      "lines": 73
+      "sha256": "f727f34b1ad8bcc4c46f2d97ce2638cd2f7474ee43832f1654d02db49ca86e80",
+      "bytes": 4774,
+      "lines": 89
     },
     {
       "path": "03_APP/nsuregrc/pyproject.toml",

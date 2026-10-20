@@ -45,6 +45,7 @@ def _database(django_db_blocker, tmp_path_factory):
     django_db_blocker.unblock()
     # audit signing material + local checkpoint export (DEV/TEST ONLY, never production controls)
     keydir = tmp_path_factory.mktemp("audit")
+    settings.EVIDENCE_STORE_DIR = str(tmp_path_factory.mktemp("evidence"))   # DEV-ONLY local store, private to this test session
     settings.AUDIT_SIGNER_BACKEND = "dev_file"
     settings.AUDIT_SIGNER_KEY_PATH = str(keydir / "signer.pem")
     settings.AUDIT_CHECKPOINT_EXPORT_DIR = str(keydir / "export")

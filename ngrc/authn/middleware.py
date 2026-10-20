@@ -6,6 +6,7 @@ from dataclasses import replace
 
 from ngrc.audit import service as audit
 from ngrc.authz.principal import Principal
+from ngrc.core.net import normalize_ip
 
 from . import sessions
 from .realms import OPERATOR, realm_for_path
@@ -47,7 +48,7 @@ class SessionAuthMiddleware:
             else:
                 request.ngrc_principal = build_principal(realm, s)
         meta = audit.RequestMeta(
-            ip=request.META.get("REMOTE_ADDR"), user_agent=request.META.get("HTTP_USER_AGENT", "")[:256],
+            ip=normalize_ip(request.META.get("REMOTE_ADDR")), user_agent=request.META.get("HTTP_USER_AGENT", "")[:256],
             request_id=getattr(request, "request_id", None),
             session_ref=request.ngrc_principal.session_ref if request.ngrc_principal else None,
         )

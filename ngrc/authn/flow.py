@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from django.db import transaction
 
+from ngrc.audit import alerts
 from ngrc.audit import service as audit
 from ngrc.core import clock
 from ngrc.core.crypto import keyed_identifier_hash
@@ -29,6 +30,17 @@ class LoginResult:
     stage: str | None = None
     retry_after: int = 0
     account: object = None
+
+
+def _suspicious(realm: Realm, account, reason: str, *, failures: int, sources: int, stage: str) -> None:
+    """DEF-15 / D-P1-001: audit + alert a suspicious authentication pattern. Never raises into the login path."""
+    name = "platform.operator.login.suspicious" if realm is OPERATOR else "auth.login.suspicious"
+    audit.emit_platform(realm.db, name, actor_type="operator" if realm is OPERATOR else "user", actor_id=getattr(account, "id", None),
+                        result="failure", reason_code=reason, details={"reason": reason, "failures": failures, "distinct_sources": sources})
+    alerts.notify(alerts.Alert(kind="suspicious_login", severity="critical" if realm is OPERATOR else "warning",
+                               message=f"{reason} during {stage}", stream="platform",
+                               details={"realm": realm.name, "reason": reason, "failures": failures, "distinct_sources": sources,
+                                        "account_id": str(getattr(account, "id", ""))}))
 
 
 def _has_factor(realm: Realm, account) -> bool:
@@ -66,14 +78,14 @@ def password_login(realm: Realm, email: str, password: str, *, ip: str | None, u
         reason = "bad_credentials" if not ok else f"account_{account.status}"
         audit.emit_platform(realm.db, ev(realm, "login.failure"), actor_type="anonymous", result="denied", reason_code=reason,
                             details={"identifier_hash": ident_hash})
-        if outcome.recovery_required and account is not None and account.status == "active":
-            realm.Account.objects.using(realm.db).filter(pk=account.pk).update(status="recovery_required")
-            if realm is CUSTOMER:
-                audit.emit_platform(realm.db, "auth.account.locked", actor_type="system", actor_id=account.id,
-                                    result="failure", reason_code="too_many_failures", details={"reason": "login_failures"})
+        # DEF-15 / D-P1-001: no status change here. The account stays usable; the progressive delay (throttle.record_failure) is the control.
+        if outcome.suspicious and account is not None:
+            _suspicious(realm, account, outcome.suspicious, failures=outcome.failures, sources=outcome.distinct_sources, stage="login")
         return LoginResult("invalid")
 
-    throttle.record_success(realm, email)
+    done = throttle.record_success(realm, email)
+    if done.suspicious:
+        _suspicious(realm, account, done.suspicious, failures=done.prior_failures, sources=1, stage="login")
     if passwords.needs_rehash(account.password_hash):
         realm.Account.objects.using(realm.db).filter(pk=account.pk).update(password_hash=passwords.hash_password(password))
     stage = "password_ok" if _has_factor(realm, account) else "enroll_mfa"
@@ -93,15 +105,16 @@ def mfa_failed(realm: Realm, account, ip, method: str) -> None:
     audit.emit_platform(realm.db, ev(realm, "mfa.failed"), actor_id=account.id, result="denied",
                         actor_type="operator" if realm is OPERATOR else "user", reason_code="invalid_code",
                         details={"method": method})
-    if out.failures >= 10 and realm is CUSTOMER:
-        realm.Account.objects.using(realm.db).filter(pk=account.pk, status="active").update(status="recovery_required")
-        audit.emit_platform(realm.db, "auth.mfa.locked", actor_id=account.id, result="failure",
-                            reason_code="too_many_mfa_failures", details={"method": method})
+    # DEF-15 / D-P1-001: no account lock-out after repeated second-factor failures; the progressive MFA back-off applies instead.
+    if out.suspicious:
+        _suspicious(realm, account, out.suspicious, failures=out.failures, sources=out.distinct_sources, stage="mfa")
 
 
 def mfa_succeeded(realm: Realm, session, account, method: str) -> str:
     """Promote the session to ACTIVE (rotating the id) and return the new raw cookie value."""
-    throttle.record_success(realm, account.email, scope="mfa")
+    done = throttle.record_success(realm, account.email, scope="mfa")
+    if done.suspicious:
+        _suspicious(realm, account, done.suspicious, failures=done.prior_failures, sources=1, stage="mfa")
     policy_key = "operator" if realm is OPERATOR else "privileged"  # strict until a tenant (and its role) is selected
     with transaction.atomic(using=realm.db):
         raw = sessions.promote_active(realm, session, methods=["password", method], policy_key=policy_key)

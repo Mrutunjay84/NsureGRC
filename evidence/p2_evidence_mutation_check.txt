@@ -1,0 +1,52 @@
+== evidence + search
+E1 download: scan-state check removed: KILLED  (2 failed, 85 passed in 20.07s)
+      by test_quarantined_evidence_is_retained_but_never_served
+      by test_a_revision_whose_scan_has_not_completed_is_never_served
+E2 download: hash/size verification removed: KILLED  (2 failed, 85 passed in 19.47s)
+      by test_an_object_that_no_longer_matches_its_recorded_hash_is_refused_and_alerted
+      by test_a_missing_or_truncated_object_is_an_integrity_failure_not_a_partial_download
+E3 download: tenant storage-key check removed: KILLED  (1 failed, 86 passed in 19.41s)
+      by test_a_database_row_pointing_at_another_tenants_object_is_never_opened
+E4 download: audit event removed: KILLED  (2 failed, 85 passed in 19.12s)
+      by test_the_event_records_object_revision_hash_actor_and_result
+      by test_no_byte_is_released_when_the_download_event_cannot_be_written
+E5 visibility: Restricted check removed: KILLED  (1 failed, 86 passed in 18.76s)
+      by test_restricted_evidence_is_invisible_without_the_restricted_permission
+E6 search: SQL class predicate removed: KILLED  (1 failed, 86 passed in 18.68s)
+      by test_restricted_hits_are_reauthorised_per_item
+E7 search: control-character query guard removed: KILLED  (4 failed, 83 passed in 18.75s)
+      by test_invalid_queries_are_rejected_cleanly[bad\x00byte]
+      by test_invalid_queries_are_rejected_cleanly[line\nbreak]
+      by test_invalid_queries_are_rejected_cleanly[tab\there]
+      by test_invalid_queries_are_rejected_cleanly[\x7f]
+E8 create: upload permission check removed: KILLED  (1 failed, 86 passed in 19.02s)
+      by test_a_reader_without_the_upload_permission_can_read_but_not_create_or_upload
+E9 headers: nosniff removed: SURVIVED  (87 passed in 18.72s)
+E10 headers: Cache-Control removed: SURVIVED  (87 passed in 19.04s)
+E11 headers: octet-stream replaced by declared type: KILLED  (1 failed, 86 passed in 18.66s)
+      by test_download_streams_the_exact_bytes_with_hardened_headers_and_no_redirect
+E12 upload: executable-content check removed: KILLED  (3 failed, 84 passed in 18.90s)
+      by test_content_must_be_what_it_claims_to_be[pe-as-pdf]
+      by test_content_must_be_what_it_claims_to_be[elf-as-png]
+      by test_content_must_be_what_it_claims_to_be[shebang-as-text]
+E13 upload: archive bomb check removed: KILLED  (1 failed, 86 passed in 18.77s)
+      by test_office_packages_are_checked_for_bombs_path_escapes_and_real_structure[zip
+E14 upload: zip path-escape check removed: KILLED  (2 failed, 85 passed in 18.68s)
+      by test_office_packages_are_checked_for_bombs_path_escapes_and_real_structure[traversal
+      by test_office_packages_are_checked_for_bombs_path_escapes_and_real_structure[absolute
+E15 upload: allow-list check removed: SURVIVED  (87 passed in 18.92s)
+E16 store: key pattern weakened: KILLED  (6 failed, 81 passed in 18.74s)
+      by test_hostile_storage_keys_are_refused[tenants/..]
+      by test_hostile_storage_keys_are_refused[tenants/x/evidence/y]
+      by test_hostile_storage_keys_are_refused[tenants/3145b790-2d4c-4854-987d-574865f7b41c/evidence/ca4ef6b1-e7ca-4473-888a-f4d8d24fb32f/../x]
+      by test_hostile_storage_keys_are_refused[tenants/01df020f-96c0-46cd-9691-2c1061e396a3/evidence/06207d2b-4879-4c92-85c5-3b821c3b4fa5\\x]
+E17 store: exclusive create removed: KILLED  (1 failed, 86 passed in 19.26s)
+      by test_the_store_never_overwrites_and_keys_are_server_generated
+E18 scanner: signature detection removed: KILLED  (2 failed, 85 passed in 18.86s)
+      by test_quarantined_evidence_is_retained_but_never_served
+      by test_eicar_is_quarantined_at_upload_with_a_critical_event
+E19 filename: reserved characters kept: KILLED  (1 failed, 86 passed in 18.48s)
+      by test_the_original_filename_is_metadata_only_and_sanitised
+E20 not-found: audit trail removed: KILLED  (1 failed, 86 passed in 19.27s)
+      by test_cross_tenant_download_is_an_identical_audited_404
+survivors: ['E9 headers: nosniff removed', 'E10 headers: Cache-Control removed', 'E15 upload: allow-list check removed']

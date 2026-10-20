@@ -140,3 +140,50 @@ class Invitation(_Idn):
 
     class Meta:
         db_table = "idn_invitation"
+
+
+class RecoveryRequest(_Idn):
+    """Lost-factor recovery request (D-P0-008 s7.4, control F-ATH-015). IDN class: every state change goes through SECURITY DEFINER
+    functions (see migration 0005) - no runtime role has INSERT/UPDATE here, and a trigger enforces the state machine, the approver's
+    independence and the cooling-off even against the owner role. `subject_tenant_id` is the tenant whose Owner/Admin (kind admin_assisted)
+    approves; a sole Owner (kind last_owner) needs Platform Security. Only the HASH of the cancel token is stored."""
+
+    class Kind(models.TextChoices):
+        ADMIN_ASSISTED = "admin_assisted"
+        LAST_OWNER = "last_owner"
+
+    class State(models.TextChoices):
+        REQUESTED = "requested"
+        APPROVED = "approved"
+        CANCELLED = "cancelled"
+        COMPLETED = "completed"
+        EXPIRED = "expired"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="recovery_requests")
+    subject_tenant_id = models.UUIDField()
+    kind = models.CharField(max_length=20, choices=Kind.choices)
+    state = models.CharField(max_length=12, choices=State.choices, default=State.REQUESTED)
+    created_at = models.DateTimeField()
+    expires_at = models.DateTimeField()
+    cooling_seconds = models.IntegerField()
+    approver_id = models.UUIDField(null=True)
+    approver_realm = models.CharField(max_length=10, null=True)
+    approved_at = models.DateTimeField(null=True)
+    cooling_until = models.DateTimeField(null=True)
+    cancel_token_hash = models.CharField(max_length=64, unique=True)
+    ended_at = models.DateTimeField(null=True)
+    ended_reason = models.CharField(max_length=40, null=True)
+    request_ip = models.GenericIPAddressField(null=True)
+
+    class Meta:
+        db_table = "idn_recovery_request"
+        constraints = [
+            models.UniqueConstraint(fields=["account"], condition=models.Q(state__in=["requested", "approved"]), name="idn_recovery_one_open"),
+            models.CheckConstraint(condition=models.Q(kind__in=["admin_assisted", "last_owner"]), name="idn_recovery_kind"),
+            models.CheckConstraint(condition=models.Q(state__in=["requested", "approved", "cancelled", "completed", "expired"]), name="idn_recovery_state"),
+            models.CheckConstraint(condition=models.Q(cooling_seconds__gte=3600), name="idn_recovery_cooling_floor"),
+            models.CheckConstraint(condition=models.Q(expires_at__gt=models.F("created_at")), name="idn_recovery_expiry_after_creation"),
+            models.CheckConstraint(condition=models.Q(approver_realm__isnull=True) | models.Q(approver_realm__in=["tenant", "platform"]),
+                                   name="idn_recovery_approver_realm"),
+        ]

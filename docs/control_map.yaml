@@ -10,6 +10,10 @@
 #   blocked:     tests that cannot run until infrastructure exists (see docs/BLOCKED_TESTS.md)
 #   not_implemented: true => no implementation exists in Phase 1
 #   standards:   INDICATIVE mapping only. Not a statement that any standard requirement is met.
+#   phase2_required: owner decision 2026-10-21 - must be implemented and tested before Phase 2 can be called security-ready
+#   production_gate: owner decision 2026-10-21 - NOT a Phase 2 development blocker, but a gate before any production use
+#   pending_specs: executable specifications reported as XFAIL (never a pass)
+#   dynamic: status comes from a human/CI-supplied record (review | ci)
 version: 1
 controls:
   # ------------------------------------------------------------------------------------------------ tenancy / data isolation
@@ -83,8 +87,8 @@ controls:
     audit_events: [authz.denied]
     evidence: [evidence/junit.xml]
     standards: "OWASP API1 BOLA; ISO 27001:2022 A.8.3; SOC 2 CC6.1"
-    gaps: ["Cross-tenant SEARCH (F-AUZ-005), DOWNLOAD (F-DAT-004), REPORT, NOTIFICATION and JOB tests are BLOCKED: those features do not exist in Phase 1 (test_endpoint_inventory_is_reviewed fails the build if such an endpoint appears without extending the suite)"]
-    blocked: ["cross-tenant search", "cross-tenant download", "cross-tenant report/job/notification"]
+    gaps: ["Cross-tenant SEARCH (F-AUZ-005) and DOWNLOAD (F-DAT-004) are now tested; REPORT, EXPORT, NOTIFICATION and JOB tests remain BLOCKED: those features do not exist (test_endpoint_inventory_is_reviewed fails the build if such an endpoint appears without extending the suite)"]
+    blocked: ["cross-tenant report/export/job/notification"]
   - id: F-AUZ-003
     feature: Privilege-escalation prevention in tenant role management
     requirement: No one can grant permissions they do not hold, modify themselves, outrank-modify, create platform rights, or alter system roles
@@ -190,11 +194,12 @@ controls:
     tests:
       - {file: tests/test_audit_integrity.py, match: [append_chains, tampered, deleted, reordered, truncated, signed_checkpoint, full_chain_recompute, forged_checkpoint, checkpoint_by_unknown_key, sealer_checkpoints]}
       - {file: tests/test_evidence_artifacts.py, match: [audit_chain_verification]}
+      - {file: tests/test_audit_completeness.py}
     audit_events: [audit.integrity_violation]
-    evidence: [evidence/junit.xml, evidence/audit_chain_verification.json]
+    evidence: [evidence/junit.xml, evidence/audit_chain_verification.json, evidence/h11_mutation_check.txt]
     standards: "ISO 27001:2022 A.8.15; SOC 2 CC7.2"
     dev_only: true
-    gaps: ["Signing key is a DEV-ONLY file on the database host: NOT a production control", "Checkpoint export sink is a local directory, NOT WORM/immutable storage (see F-AUD-006)", "Production KMS signer is NOT IMPLEMENTED (F-DAT-006, open item O-4)", "Cryptographic construction has NOT had an independent review: BLOCKED, no reviewer (F-GOV-004)"]
+    gaps: ["H-11 (D-P1-003): checkpoints are chained, heartbeat-sealed and verified against anchors, but COMPLETENESS cannot exceed 'consistent' until an immutable sink exists - every anchor is currently rewritable by a schema-owner attacker; events after the newest honest checkpoint are covered by chain consistency only", "Signing key is a DEV-ONLY file on the database host: NOT a production control", "Checkpoint export sink is a local directory, NOT WORM/immutable storage (see F-AUD-006)", "Production KMS signer is NOT IMPLEMENTED (F-DAT-006, open item O-4)", "Cryptographic construction has NOT had an independent review: BLOCKED, no reviewer (F-GOV-004)"]
   - id: F-AUD-003
     feature: Audit verification library (on demand; independent recomputation)
     requirement: Independent recomputation of chains and checkpoints, violation recorded and written to the platform stream
@@ -205,29 +210,32 @@ controls:
     audit_events: [audit.integrity_violation]
     evidence: [evidence/junit.xml]
     standards: "ISO 27001:2022 A.8.15, A.8.16; SOC 2 CC7.2, CC7.3"
-    gaps: ["On-demand only: the SCHEDULED job, alert routing, freshness alert and incremental mode are a separate, NOT IMPLEMENTED control - F-AUD-007", "Does not require every database checkpoint to have an external copy (demonstrated by a gap demo; plan item W-3, see F-AUD-006)"]
+    gaps: ["The scheduled job, watchdog and incremental mode are the separate control F-AUD-007", "Completeness against anchors is covered by F-AUD-002 (D-P1-003)"]
   - id: F-AUD-007
-    feature: Scheduled continuous audit verification with alerting
-    requirement: Verification job under the verifier identity runs on a schedule and incrementally, a violation raises an alert, and a missing/overdue run is itself an alert
-    source: D-P0-006 s6
-    implementation: []
-    tests: []
-    pending_specs:
-      - {file: tests/test_pending_controls.py, match: [test_scheduled_run, test_an_overdue_verification, test_incremental_verification, test_the_verification_job_runs_only, test_missing_external_checkpoint_copy]}
-    not_implemented: true
-    gaps: ["Plan: docs/plans/P2-3_IMPLEMENTATION_PLANS.md s3. Needs a scheduler (deployment choice, O-4) and an alert channel (SIEM/pager, O-4)"]
-    blocked: ["scheduled verification and alert delivery"]
+    phase2_required: true
+    feature: Scheduled continuous audit verification with alerting and watchdog
+    requirement: Verification job under the verifier identity runs on a schedule and incrementally; a violation raises an alert; an overdue run is itself an alert; production requires the external copy and an independent anchor
+    source: D-P0-006 s6, D-P1-003
+    implementation: [ngrc/audit/scheduler.py, ngrc/audit/alerts.py, ngrc/audit/management/commands/audit_verify.py, ngrc/audit/management/commands/audit_seal.py, config/settings/base.py, config/settings/prod.py]
+    tests:
+      - {file: tests/test_scheduled_verification.py}
+    audit_events: [audit.verification.completed, audit.verification.overdue, audit.integrity_violation]
+    evidence: [evidence/junit.xml, evidence/h11_mutation_check.txt]
+    standards: "ISO 27001:2022 A.8.15, A.8.16; SOC 2 CC7.2, CC7.3"
+    gaps: ["Alert DELIVERY (pager/SIEM/e-mail) is NOT IMPLEMENTED: alerts reach the log pipeline only (O-4)", "The scheduler is a command / worker loop; WHERE it runs (cron, CronJob, a separate host for the watchdog) is a deployment decision (O-4)", "Incremental runs do not recompute already-verified events; a periodic FULL run is required (tested, documented)", "Thresholds are BASELINE pending approval", "Not independently reviewed (F-GOV-004 BLOCKED)"]
+    blocked: ["alert delivery to a real channel"]
   - id: F-AUD-006
     feature: Immutable (WORM) audit checkpoint storage and external anchoring
-    requirement: Signed checkpoints published to write-once storage in a separate failure domain; the verifier requires a sink copy of every database checkpoint
-    source: D-P0-006 s5
+    requirement: Signed checkpoints published to write-once storage in a separate failure domain; completeness can only be 'established' against such a sink
+    source: D-P0-006 s5, D-P1-003
     implementation: []
     tests: []
     pending_specs:
-      - {file: tests/test_pending_controls.py, match: [test_worm_sink, test_sink_uses_credentials, test_sealer_does_not_report, test_verifier_compares_database, test_gap_demo_dropping_the_latest, test_gap_demo_the_dev_export]}
+      - {file: tests/test_pending_controls.py, match: [test_worm_sink, test_sink_uses_credentials, test_sealer_does_not_report, test_verifier_compares_database, test_gap_demo_the_dev_export]}
     not_implemented: true
-    gaps: ["Hosting/KMS/WORM provider not selected (open item O-4); retention lock periods depend on O-2", "Two gap demos run today against the dev sink and are expected to fail their assertions (XFAIL): the dev export is a rewritable plain file, and removing the newest exported checkpoint goes undetected"]
+    gaps: ["Hosting/KMS/WORM provider not selected (open item O-4); retention lock periods depend on O-2", "The verifier's two-way external-copy comparison and the `AUDIT_SINK_IMMUTABLE` gate EXIST (F-AUD-002) but the sink itself is a rewritable dev file: completeness cannot exceed 'consistent' until a WORM sink exists", "A gap demo runs today and is expected to fail its assertion (XFAIL): the dev export file is rewritable by the application process"]
     blocked: ["WORM semantics, account separation and retention lock need the real provider"]
+    production_gate: true
   - id: F-AUD-004
     feature: Audit retention and purge procedure
     requirement: Retention periods, legal hold, purge only with export/anchor/second approval
@@ -286,24 +294,30 @@ controls:
     standards: "ISO 27001:2022 A.8.24, A.5.17; OWASP ASVS V2, V3"
     gaps: ["The recovery-code pepper is an environment value (production: KMS-held, O-4)"]
   - id: F-DAT-004
+    phase2_required: true
     feature: Authorization-checked evidence download (C-6)
-    requirement: Application-streamed, authorization-checked evidence downloads
-    source: D-P0-007 s5
-    implementation: []
-    tests: []
-    pending_specs:
-      - {file: tests/test_pending_controls.py, match: [test_download_, test_cross_tenant_download, test_unscanned_or_quarantined, test_stored_object_that, test_a_support_session_cannot_download, test_restricted_class_evidence, test_object_keys_are_tenant_prefixed]}
-    not_implemented: true
-    gaps: ["Evidence handling is Phase 3. Cross-tenant download tests are BLOCKED until it exists", "Plan: docs/plans/P2-3_IMPLEMENTATION_PLANS.md s1; decision D-EV-1 (integrity verification mode) and the object store (O-4) are open"]
-    blocked: ["cross-tenant download"]
+    requirement: Application-streamed, authorization-checked evidence downloads; no signed storage URLs; audited before release; integrity-verified; clean-scan gate
+    source: D-P0-007 s5, D-P1-002
+    implementation: [ngrc/evidence/views.py, ngrc/evidence/storage.py, ngrc/evidence/models.py, ngrc/evidence/migrations/0002_security.py]
+    tests:
+      - {file: tests/test_evidence_download.py}
+    audit_events: [evidence.downloaded, evidence.hash_mismatch, authz.denied]
+    evidence: [evidence/junit.xml, evidence/p2_evidence_mutation_check.txt]
+    standards: "ISO 27001:2022 A.5.15, A.8.3, A.8.15; SOC 2 CC6.1, CC6.7; OWASP API1"
+    dev_only: true
+    gaps: ["The object store is a DEV-ONLY local directory: no private object store exists (open item O-4); production start-up refuses it", "D-EV-1 (pre-verification into a bounded spool) is an INTERIM decision awaiting owner approval", "Orphaned objects (stored, request failed before COMMIT) need a sweep: NOT IMPLEMENTED", "Bulk/Restricted export, retention, legal hold and deletion do not exist", "Not independently reviewed"]
   - id: F-DAT-005
-    feature: Evidence scan lifecycle and immutable revisions
-    requirement: scan_pending/quarantined states; clean-scan gate
-    source: D-P0-007
-    implementation: []
-    tests: []
-    not_implemented: true
-    gaps: ["Phase 3; malware engine choice is open item O-11"]
+    feature: Evidence upload validation, scan lifecycle and immutable revisions
+    requirement: Allow-listed types that match their content; no executables; archive-bomb checks; scan_pending / quarantined states; clean-scan gate; immutable revisions; no deletion
+    source: D-P0-007 s5, A5, D-P1-002
+    implementation: [ngrc/evidence/service.py, ngrc/evidence/sniff.py, ngrc/evidence/scanner.py, ngrc/evidence/storage.py, ngrc/evidence/migrations/0002_security.py]
+    tests:
+      - {file: tests/test_evidence_lifecycle.py}
+    audit_events: [evidence.created, evidence.revision.added, evidence.scan.clean, evidence.scan.quarantined, evidence.scan.error, evidence.upload_rejected]
+    evidence: [evidence/junit.xml, evidence/p2_evidence_mutation_check.txt]
+    standards: "ISO 27001:2022 A.8.7, A.8.24; OWASP ASVS V12"
+    dev_only: true
+    gaps: ["The scanner is a DEV-ONLY EICAR stand-in: MALWARE DETECTION IS NOT PROVIDED, only the quarantine mechanics (open item O-11); production start-up refuses it", "Nested archives inside OOXML packages are not inspected", "Legal hold / retention / purge are later workflows (O-2, O-8)"]
   # ------------------------------------------------------------------------------------------------ authentication
   - id: F-ATH-001
     feature: Password policy and Argon2id hashing
@@ -318,17 +332,18 @@ controls:
     standards: "NIST SP 800-63B-4; OWASP ASVS V2; ISO 27001:2022 A.5.17"
     gaps: ["Blocklist is a SEED file, not a breach corpus (open item O-12)", "Production Argon2 parameters must be benchmarked on production hardware"]
   - id: F-ATH-002
-    feature: Login throttling and recovery-required state
-    requirement: Progressive back-off per account and per IP evaluated before hashing; automatic recovery-required after repeated failure
-    source: D-P0-008 s4
-    implementation: [ngrc/authn/throttle.py, ngrc/authn/flow.py]
+    feature: Login and second-factor throttling (progressive back-off, suspicious-login detection) - TEMPORARY baseline D-P1-001
+    requirement: Progressive back-off per account and per IP evaluated before hashing; counted failures; audit; suspicious-pattern detection with alerts; stricter parameters for operator accounts; NO automatic lock state (DEF-15 decision)
+    source: D-P0-008 s4, amended by D-P1-001
+    implementation: [ngrc/authn/throttle.py, ngrc/authn/flow.py, ngrc/audit/alerts.py, ngrc/core/net.py]
     tests:
-      - {file: tests/test_authentication.py, match: [progressive_throttling, ip_throttling, account_recovery_required, login_errors_do_not_reveal, password_reset_request_is_uniform, login_failure_audit]}
+      - {file: tests/test_authentication.py, match: [progressive_throttling, ip_throttling, login_errors_do_not_reveal, password_reset_request_is_uniform, login_failure_audit]}
       - {file: tests/test_support_access.py, match: [operator_login_is_throttled, operator_login_does_not_enumerate]}
-    audit_events: [auth.login.failure, auth.throttle.triggered, auth.account.locked, platform.operator.throttle.triggered]
+      - {file: tests/test_auth_backoff_policy.py}
+    audit_events: [auth.login.failure, auth.throttle.triggered, auth.login.suspicious, platform.operator.login.suspicious, platform.operator.throttle.triggered]
     evidence: [evidence/junit.xml]
     standards: "OWASP ASVS V2.2; ISO 27001:2022 A.8.5; SOC 2 CC6.1"
-    gaps: ["Counters are DB-backed only; Redis / distributed throttling and its failure-mode test are NOT IMPLEMENTED (no cache infrastructure)"]
+    gaps: ["TEMPORARY (DEF-15 mitigated-temporary): the D-P0-008 hard stop is suspended; an attacker can still keep a victim waiting up to the delay cap; no cross-account distributed-attack detection; alert delivery beyond the log pipeline is NOT IMPLEMENTED (O-4)", "Counters are DB-backed only; Redis / distributed throttling and its failure-mode test are NOT IMPLEMENTED (no cache infrastructure)", "Numeric values are BASELINE pending approval"]
     blocked: ["Redis-down throttling behaviour"]
   - id: F-ATH-003
     feature: Password reset
@@ -386,7 +401,7 @@ controls:
     audit_events: [auth.recovery_codes.generated, auth.recovery_codes.used, auth.recovery_codes.failed]
     evidence: [evidence/junit.xml]
     standards: "NIST SP 800-63B-4; OWASP ASVS V2.5"
-    gaps: ["Factor removal (F-ATH-014), admin-assisted recovery, the lost-factor cooling-off and the lock-out exit (F-ATH-015) are NOT IMPLEMENTED; the recovery-code regeneration endpoint is also missing", "A credential flagged as cloned currently leaves the user to recovery codes / out-of-band recovery (no workflow)"]
+    gaps: ["Factor removal (F-ATH-014) and lost-factor recovery (F-ATH-015) are implemented as separate controls; the recovery-code REGENERATION endpoint is still missing", "A credential flagged as cloned leaves the user to recovery codes or the F-ATH-015 workflow"]
   - id: F-ATH-008
     feature: Server-side sessions
     requirement: Opaque 256-bit id, hash-only storage, rotation on privilege change, idle + absolute timeouts, immediate revocation on every trigger
@@ -458,17 +473,17 @@ controls:
     standards: "OWASP ASVS V5, V14; OWASP Top 10 A03; ISO 27001:2022 A.8.26, A.8.28"
     gaps: ["No browser-rendered UI exists yet: XSS is tested at the API/response-header level only (output encoding for a future UI is out of scope)", "No dynamic scanner (DAST) has been run"]
   - id: F-AUZ-005
-    feature: Cross-tenant search isolation
-    requirement: Search results, snippets, facets, counts and suggestions never include another tenant's data; every index document and query carries tenant_id; hits are re-authorised
-    source: D-P0-003 testing req. 5
-    implementation: []
-    tests: []
-    pending_specs:
-      - {file: tests/test_pending_controls.py, match: [test_search_]}
-      - {file: tests/test_pending_controls.py, match: [test_every_indexed_document]}
-    not_implemented: true
-    gaps: ["No search feature exists (B-01). Plan: docs/plans/P2-3_IMPLEMENTATION_PLANS.md s2; decision D-SR-1 (PostgreSQL FTS under RLS vs external index) is open"]
-    blocked: ["cross-tenant search"]
+    phase2_required: true
+    feature: Cross-tenant search isolation (PostgreSQL full-text search under RLS)
+    requirement: Search results, snippets, counts never include another tenant's data; the query language cannot widen the tenant filter; Restricted hits re-authorised per item; query text never audited
+    source: D-P0-003 testing req. 5, D-P1-002
+    implementation: [ngrc/evidence/views.py, ngrc/evidence/migrations/0002_security.py]
+    tests:
+      - {file: tests/test_cross_tenant_search.py}
+    audit_events: [search.executed, authz.denied]
+    evidence: [evidence/junit.xml, evidence/p2_evidence_mutation_check.txt]
+    standards: "OWASP API1 BOLA; ISO 27001:2022 A.8.3; SOC 2 CC6.1"
+    gaps: ["Searches evidence METADATA only (title, description) with the 'simple' configuration; no content indexing, no language handling", "Applies only to the one searchable resource that exists; every future searchable resource needs the same tests (the endpoint inventory test fails the build for new search routes)", "Not independently reviewed"]
   - id: F-DAT-006
     feature: Production key management (KMS) for data encryption and audit signing
     requirement: KMS-held, non-exportable keys; sign-only audit key; key versions with rotation that keeps old ciphertext readable; production refuses dev providers
@@ -480,26 +495,32 @@ controls:
     not_implemented: true
     gaps: ["Provider not selected (open item O-4); independent cryptographic review is mandatory before use (F-GOV-004)", "Two gap demos run today against the dev stand-ins and are expected to fail their assertions (XFAIL): no key versions/rotation; dev signing key readable by the signing process", "IAM separation, non-exportability, KMS audit trail and rotation under load can only be tested with the real provider account"]
     blocked: ["any test requiring the real KMS account"]
+    production_gate: true
   - id: F-ATH-014
+    phase2_required: true
     feature: MFA factor removal
-    requirement: Step-up required; last factor cannot be removed; two recovery options remain; other sessions revoked; audited; platform credentials not self-removable
-    source: D-P0-008 s7
-    implementation: []
-    tests: []
-    pending_specs:
-      - {file: tests/test_pending_controls.py, match: [test_factor_removal, test_the_last_factor, test_removal_, test_a_factor_belonging, test_an_operator_cannot_remove]}
-    not_implemented: true
-    gaps: ["No factor listing or removal endpoint exists. Plan: docs/plans/P2-3_IMPLEMENTATION_PLANS.md s4"]
+    requirement: Step-up required; last usable factor cannot be removed (also in the database); two recovery options remain; other sessions revoked; audited; platform credentials not self-removable
+    source: D-P0-008 s7, D-P1-004
+    implementation: [ngrc/iam/views.py, ngrc/iam/migrations/0006_recovery_security.py]
+    tests:
+      - {file: tests/test_factor_removal.py}
+    audit_events: [auth.mfa.removed, authz.denied]
+    evidence: [evidence/junit.xml, evidence/p2_factor_mutation_check.txt]
+    standards: "NIST SP 800-63B-4; OWASP ASVS V2.8; ISO 27001:2022 A.8.5"
+    gaps: ["Tenant-Owner 'WebAuthn-only' tightening needs a tenant policy feature that does not exist", "E-mail change flow NOT IMPLEMENTED", "Not independently reviewed (F-GOV-004 BLOCKED)"]
   - id: F-ATH-015
-    feature: Lost-factor recovery and lock-out exit
-    requirement: Recovery codes; admin-assisted reset by a different approver with step-up; cooling-off with cancel link; last-Owner via Platform Security; support can never reset MFA; verified-e-mail unlock from recovery_required
-    source: D-P0-008 s4, s7.4
-    implementation: []
-    tests: []
-    pending_specs:
-      - {file: tests/test_pending_controls.py, match: [test_recovery_code_flow, test_an_account_locked, test_admin_assisted, test_the_new_factor, test_the_legitimate_user_can_cancel, test_platform_support_can_never, test_the_last_owner, test_recovery_endpoints]}
-    not_implemented: true
-    gaps: ["OPEN DEFECT DEF-15: accounts reach recovery_required after repeated failures but have no unlock path (lock-out DoS) - decision needed from the project owner", "Needs real e-mail delivery (O-7) for notifications; platform-approver staffing (O-5). Plan: docs/plans/P2-3_IMPLEMENTATION_PLANS.md s5"]
+    phase2_required: true
+    feature: Lost-factor recovery (admin-assisted, last-Owner via Platform Security, cooling-off, cancel)
+    requirement: Admin-assisted reset by a DIFFERENT Owner/Admin with step-up; cooling-off with cancel link; all other sessions revoked; sole Owner via Platform Security; support can never reset MFA; DB-enforced state machine
+    source: D-P0-008 s7.4, D-P1-004
+    implementation: [ngrc/iam/recovery_service.py, ngrc/iam/views.py, ngrc/iam/models.py, ngrc/iam/migrations/0005_recovery_request.py, ngrc/iam/migrations/0006_recovery_security.py, ngrc/tenancy/views.py, ngrc/control_plane/views.py, ngrc/authn/sessions.py]
+    tests:
+      - {file: tests/test_lost_factor_recovery.py}
+      - {file: tests/test_auth_backoff_policy.py, match: [recovery_required_account_still_has_an_exit]}
+    audit_events: [auth.recovery.requested, auth.recovery.approved, auth.recovery.denied, auth.recovery.cancelled, auth.recovery.completed]
+    evidence: [evidence/junit.xml, evidence/p2_recovery_mutation_check.txt]
+    standards: "NIST SP 800-63B-4 (recovery); OWASP ASVS V2.5; ISO 27001:2022 A.5.17, A.8.5"
+    gaps: ["Real notification delivery needs an e-mail provider (O-7); notifications are only as good as the user's mailbox", "Platform Security's identity verification of a sole Owner is an organisational procedure that does not exist (O-5, O-8)", "Operator-realm MFA recovery is NOT IMPLEMENTED (organisational procedure)", "Tenant-plane approval trusts app.principal_id (runtime-role-settable): see review concern 19", "Post-recovery enrolment is protected only by a short window (see D-P1-004)", "Not independently reviewed (F-GOV-004 BLOCKED)"]
   - id: F-GOV-004
     feature: Independent cryptographic / AppSec review (audit hash, checkpoints, AEAD helper, authentication/session/MFA)
     requirement: Review by a reviewer independent of the implementers; reviewer, scope, findings, severity, remediation and final disposition recorded; no self-approval

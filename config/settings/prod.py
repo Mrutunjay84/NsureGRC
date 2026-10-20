@@ -9,6 +9,9 @@ from .base import *  # noqa: F403
 from .validators import validate_settings
 
 KEY_PROVIDER = "kms"  # NOT IMPLEMENTED (O-4)
+AUDIT_REQUIRE_EXTERNAL_COPY = True   # scheduled verification must compare with the external checkpoint copy
+AUDIT_REQUIRE_COMPLETENESS = True    # ... and fail when no independent anchor exists
+# AUDIT_SINK_IMMUTABLE stays False (base): there is no WORM sink yet, so production refuses to start (O-4)
 _violations = validate_settings({k: v for k, v in globals().items() if k.isupper() or k.startswith("NGRC")})
 if _violations:
     raise ImproperlyConfigured("Insecure production configuration: " + "; ".join(_violations))

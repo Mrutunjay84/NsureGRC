@@ -46,6 +46,10 @@ for _k, _priv in [
     ("tenant.support.read", False),
     ("tenant.support.consent", True),
     ("tenant.settings.manage", True),
+    ("tenant.recovery.approve", True),
+    ("evidence.read", False),
+    ("evidence.upload", False),
+    ("evidence.read_restricted", True),
     ("audit.read", True),
     ("audit.export", True),
 ]:
@@ -64,6 +68,7 @@ for _k, _priv in [
     ("platform.breakglass.approve", True),
     ("platform.audit.read", True),
     ("platform.catalogue.curate", True),
+    ("platform.recovery.approve", True),
 ]:
     register(_k, privileged=True, realm="platform")
 
@@ -75,7 +80,7 @@ SYSTEM_ROLES: dict[str, dict] = {
     "admin": {
         "name": "Administrator",
         "permissions": ["tenant.view", "tenant.members.read", "tenant.members.manage", "tenant.roles.read",
-                        "tenant.roles.manage", "tenant.invitations.manage", "tenant.support.read", "audit.read"],
+                        "tenant.roles.manage", "tenant.invitations.manage", "tenant.support.read", "tenant.recovery.approve", "evidence.read", "evidence.upload", "audit.read"],
     },
     "member": {"name": "Member", "permissions": ["tenant.view", "tenant.members.read"]},
 }
@@ -85,7 +90,8 @@ PLATFORM_ROLES: dict[str, frozenset[str]] = {
     # Admin co-approves break-glass but cannot REQUEST support/break-glass access (D-P0-005 s2/s4: requester != approvers).
     "platform_admin": frozenset({"platform.tenants.provision", "platform.tenants.suspend", "platform.operators.manage", "platform.support.read",
                                  "platform.breakglass.approve"}),
-    "platform_security": frozenset({"platform.audit.read", "platform.support.read", "platform.support.approve", "platform.breakglass.approve"}),
+    "platform_security": frozenset({"platform.audit.read", "platform.support.read", "platform.support.approve", "platform.breakglass.approve",
+                                    "platform.recovery.approve"}),
     "platform_curator": frozenset({"platform.catalogue.curate"}),
     "platform_support": frozenset({"platform.support.read", "platform.support.request", "platform.support.use",
                                    "platform.breakglass.request"}),

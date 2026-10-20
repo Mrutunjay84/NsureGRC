@@ -44,3 +44,26 @@ def event_hash(*, stream_key: str, seq: int, prev_hash: bytes, event_id: str, oc
 
 def checkpoint_message(stream_key: str, seq: int, head_hash: bytes, issued_at: datetime, key_id: str) -> bytes:
     return "|".join(["NGRC-CHECKPOINT-v1", stream_key, str(seq), head_hash.hex(), ts_text(issued_at), key_id]).encode("utf-8")
+
+
+# ---------------------------------------------------------------------------------------------------- checkpoint format v2 (H-11)
+# v2 adds a per-stream checkpoint index and the digest of the PREVIOUS checkpoint, and uses the same length-prefixed encoding as events
+# (no delimiter ambiguity). Together they make deletion of a MIDDLE checkpoint, reordering and insertion detectable from the checkpoints
+# alone; deletion of the NEWEST checkpoint needs an independent anchor (see docs/AUDIT_COMPLETENESS.md).
+CHECKPOINT_V2_TAG = "NGRC-CHECKPOINT-v2"
+
+
+def checkpoint_genesis_digest(stream_key: str) -> bytes:
+    """`prev` of checkpoint index 1 of a stream."""
+    return hashlib.sha256(f"NGRC-CHECKPOINT-v2-genesis|{stream_key}".encode()).digest()
+
+
+def checkpoint_message_v2(stream_key: str, cp_index: int, seq: int, head_hash: bytes, issued_at: datetime, key_id: str,
+                          prev_digest: bytes) -> bytes:
+    return (t(CHECKPOINT_V2_TAG) + t(stream_key) + t(str(cp_index)) + t(str(seq)) + lp(head_hash) + t(ts_text(issued_at))
+            + t(key_id) + lp(prev_digest))
+
+
+def checkpoint_digest(message: bytes, signature: bytes) -> bytes:
+    """Identity of a signed checkpoint: what the next checkpoint commits to, and what a high-water mark / external copy records."""
+    return hashlib.sha256(lp(message) + lp(signature)).digest()

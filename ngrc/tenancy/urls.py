@@ -14,6 +14,9 @@ urlpatterns = [
     path("support/grants/<uuid:pk>/consent/", v.SupportConsentView.as_view()),
     path("support/grants/<uuid:pk>/deny/", v.SupportDenyView.as_view()),
     path("support/grants/<uuid:pk>/revoke/", v.SupportRevokeView.as_view()),
+    path("recovery/", v.RecoveryListView.as_view()),
+    path("recovery/<uuid:pk>/approve/", v.RecoveryApproveView.as_view()),
+    path("recovery/<uuid:pk>/deny/", v.RecoveryDenyView.as_view()),
     path("audit/events/", v.AuditEventsView.as_view()),
     path("audit/export/", v.AuditExportView.as_view()),
 ]

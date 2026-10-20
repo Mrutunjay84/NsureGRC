@@ -22,8 +22,8 @@ def validate_settings(cfg: Mapping) -> list[str]:
         v.append("NGRC_ENV must be 'prod'")
     if cfg.get("DEBUG"):
         v.append("DEBUG must be False")
-    if cfg.get("NGRC_PLANE") not in {"customer", "operator", "migrate"}:
-        v.append("NGRC_PLANE must be customer, operator or migrate (not 'all')")
+    if cfg.get("NGRC_PLANE") not in {"customer", "operator", "migrate", "audit_verify", "audit_seal"}:
+        v.append("NGRC_PLANE must be customer, operator, migrate, audit_verify or audit_seal (not 'all')")
     hosts = cfg.get("ALLOWED_HOSTS") or []
     if not hosts or "*" in hosts:
         v.append("ALLOWED_HOSTS must be an explicit non-empty list without '*'")
@@ -64,6 +64,15 @@ def validate_settings(cfg: Mapping) -> list[str]:
         v.append("AUDIT_SIGNER_BACKEND 'dev_file' is DEV-ONLY (production KMS signer is open item O-4)")
     if cfg.get("KEY_PROVIDER") == "local":
         v.append("KEY_PROVIDER 'local' is DEV-ONLY (production KMS is open item O-4)")
+    for flag, why in (("AUDIT_REQUIRE_EXTERNAL_COPY", "scheduled verification must compare against the external checkpoint copy"),
+                      ("AUDIT_REQUIRE_COMPLETENESS", "a verification run without any independent anchor must fail, not pass silently"),
+                      ("AUDIT_SINK_IMMUTABLE", "completeness can only be 'established' against an immutable (WORM) sink (open item O-4)")):
+        if cfg.get(flag) is not True:
+            v.append(f"{flag} must be True ({why})")
+    if cfg.get("EVIDENCE_STORE_BACKEND") in {"local_dev", "", None}:
+        v.append("EVIDENCE_STORE_BACKEND must be a private object store; 'local_dev' is DEV-ONLY (open item O-4)")
+    if cfg.get("EVIDENCE_SCANNER_BACKEND") in {"dev_eicar", "", None}:
+        v.append("EVIDENCE_SCANNER_BACKEND 'dev_eicar' is DEV-ONLY: it is not a malware engine (open item O-11)")
     if "django.contrib.admin" in (cfg.get("INSTALLED_APPS") or []):
         v.append("django.contrib.admin must not be installed")
     return v

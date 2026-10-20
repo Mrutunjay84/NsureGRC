@@ -3,7 +3,7 @@
 Rules:
 * No secret has a default value. Missing required secrets raise ImproperlyConfigured.
 * Production-grade flags are the DEFAULT here; dev/test relax only what they must, explicitly.
-* One Django project, three "planes" selected by NGRC_PLANE (customer | operator | migrate | all[test only]).
+* One Django project, "planes" selected by NGRC_PLANE (customer | operator | migrate | audit_verify | audit_seal | all[test only]).
   A process only receives the DB credentials of the roles its plane needs (D-P0-009 s3).
 """
 from __future__ import annotations
@@ -32,9 +32,9 @@ def env_int(name: str, default: int) -> int:
 
 
 NGRC_ENV = env("NGRC_ENV", "prod")  # prod | dev | test  (unknown => treated as prod by validators)
-NGRC_PLANE = env("NGRC_PLANE", "customer")  # customer | operator | migrate | all
-if NGRC_PLANE not in {"customer", "operator", "migrate", "all"}:
-    raise ImproperlyConfigured("NGRC_PLANE must be customer, operator, migrate or all")
+NGRC_PLANE = env("NGRC_PLANE", "customer")  # customer | operator | migrate | audit_verify | audit_seal | all
+if NGRC_PLANE not in {"customer", "operator", "migrate", "audit_verify", "audit_seal", "all"}:
+    raise ImproperlyConfigured("NGRC_PLANE must be customer, operator, migrate, audit_verify, audit_seal or all")
 
 DEBUG = False  # never read from the environment in base; dev may opt in explicitly in dev.py
 SECRET_KEY = env("NGRC_SECRET_KEY", required=True)
@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "ngrc.control_plane",
     "ngrc.iam",
     "ngrc.tenancy",
+    "ngrc.evidence",
     "ngrc.authz",
     "ngrc.audit",
 ]
@@ -95,6 +96,9 @@ _PLANE_ALIASES = {
     # The operator plane also serves support-session reads through ngrc_app, only after a grant check (D-P0-005 s3).
     "operator": ["default", "autonomous", "ops", "audit_reader"],
     "migrate": ["owner"],
+    # audit worker processes: exactly ONE database role each (verifier: read-only + run records; sealer: head read + checkpoint insert)
+    "audit_verify": ["audit_verifier"],
+    "audit_seal": ["audit_sealer"],
     "all": list(_DB_ROLES),
 }
 DB_NAME = env("NGRC_DB_NAME", "ngrc_dev")
@@ -118,6 +122,9 @@ def _db_config(alias: str) -> dict:
 
 if NGRC_PLANE == "migrate":
     DATABASES = {"default": _db_config("owner"), "owner": _db_config("owner")}
+elif NGRC_PLANE in {"audit_verify", "audit_seal"}:
+    _w = _PLANE_ALIASES[NGRC_PLANE][0]  # Django needs a `default`; here it IS the worker role (nothing routes models to it)
+    DATABASES = {"default": _db_config(_w), _w: _db_config(_w)}
 else:
     DATABASES = {alias: _db_config(alias) for alias in _PLANE_ALIASES[NGRC_PLANE]}
 
@@ -138,14 +145,21 @@ PASSWORD_POLICY = {
     "blocklist_path": env("NGRC_PASSWORD_BLOCKLIST", str(BASE_DIR / "ngrc" / "authn" / "data" / "blocklist_seed.txt")),
 }
 AUTH_THROTTLE = {
-    "account_free_failures": 5,  # backoff starts at the 5th consecutive failure
+    # D-P0-008 s4 as amended by D-P1-001 (DEF-15): progressive back-off only. There is NO hard-stop to `recovery_required` while the
+    # unlock/recovery workflow (F-ATH-015) does not exist. Values are NsureGRC baseline numbers pending approval, not standard-derived.
+    "account_free_failures": 5,  # back-off starts at the 5th consecutive failure
     "account_base_delay_s": 60,
     "account_max_delay_s": 900,
-    "account_recovery_required_at": 20,
     "ip_window_s": 60,
     "ip_max_attempts": 20,
+    "suspicious_distinct_sources": 3,  # distinct source addresses failing against ONE account within the window => alert
+    "suspicious_window_s": 3600,
+    # stricter parameters for privileged operator accounts (platform realm)
     "operator_account_free_failures": 3,
-    "operator_recovery_required_at": 10,
+    "operator_account_base_delay_s": 120,
+    "operator_account_max_delay_s": 3600,
+    "operator_suspicious_distinct_sources": 2,
+    "operator_suspicious_window_s": 7200,
 }
 SESSION_POLICY = {
     # (idle seconds, absolute seconds)  -- NsureGRC baseline, not NIST-derived (ADR s8)
@@ -172,6 +186,7 @@ BREAK_GLASS_MAX_MINUTES = 120
 # Cryptographic material: injected, never defaulted (D-P0-007 s3). KMS integration is open item O-4.
 FIELD_ENCRYPTION_KEY = env("NGRC_FIELD_ENCRYPTION_KEY", required=True)  # base64 32 bytes; DEV-ONLY local key provider
 TOKEN_PEPPER = env("NGRC_TOKEN_PEPPER", required=True)  # HMAC key for recovery-code hashing
+ALERT_SINKS = ["log"]  # delivery to a pager/SIEM is NOT IMPLEMENTED (O-4); see ngrc/audit/alerts.py
 AUDIT_SIGNER_BACKEND = env("NGRC_AUDIT_SIGNER", "dev_file")  # dev_file is DEV-ONLY; prod requires 'kms' (NOT IMPLEMENTED, O-4)
 AUDIT_SIGNER_KEY_PATH = env("NGRC_AUDIT_SIGNER_KEY_PATH", "")
 AUDIT_CHECKPOINT_EXPORT_DIR = env("NGRC_AUDIT_EXPORT_DIR", "")  # dev: local dir. prod: WORM sink (NOT IMPLEMENTED, O-4)
@@ -235,3 +250,29 @@ LOGGING = {
     "loggers": {"django.db.backends": {"level": "WARNING"}},
 }
 
+
+# Audit checkpoint continuity / completeness (H-11, docs/AUDIT_COMPLETENESS.md). NsureGRC BASELINE values pending approval; the interval
+# follows the D-P0-006 s5 proposal (<= 5 minutes). Max age = three missed heartbeats.
+AUDIT_CHECKPOINT_INTERVAL_S = env_int("NGRC_AUDIT_CHECKPOINT_INTERVAL_S", 300)
+AUDIT_CHECKPOINT_MAX_AGE_S = env_int("NGRC_AUDIT_CHECKPOINT_MAX_AGE_S", 900)
+AUDIT_EXPORT_GRACE_S = 120                 # a fresh DB checkpoint may legitimately lack its external copy for this long
+AUDIT_CLOCK_SKEW_TOLERANCE_S = 300         # checkpoints of one stream may not be dated earlier than their predecessor by more than this
+AUDIT_SINK_IMMUTABLE = False               # True only when the external sink is a WORM store (NOT IMPLEMENTED, open item O-4)
+AUDIT_VERIFY_MAX_AGE_HOURS = env_int("NGRC_AUDIT_VERIFY_MAX_AGE_HOURS", 6)   # BASELINE pending Platform Security approval; watchdog threshold
+AUDIT_REQUIRE_EXTERNAL_COPY = False        # prod: True (validated). Dev has only a local, rewritable sink
+AUDIT_REQUIRE_COMPLETENESS = False         # prod: True (validated): a run without any independent anchor then FAILS instead of passing silently
+AUDIT_PUBLIC_KEYS = {}                     # key id -> hex raw Ed25519 public key; the verifier never needs a private key
+
+# Lost-factor recovery (D-P0-008 s7.4, F-ATH-015). BASELINE values pending approval, not standard-derived.
+RECOVERY_COOLING_OFF_S = env_int("NGRC_RECOVERY_COOLING_OFF_S", 24 * 3600)   # ADR BASELINE: 24 h between approval and completion (DB floor: 1 h)
+RECOVERY_ENROLMENT_WINDOW_S = env_int("NGRC_RECOVERY_ENROLMENT_WINDOW_S", 1800)  # after a completed recovery only the completing session may enrol (BASELINE)
+RECOVERY_REQUEST_TTL_S = 7 * 24 * 3600                                       # an unfinished request expires
+
+# Evidence (D-P0-007 s5, decision C-6). The local store and the EICAR scanner are DEV-ONLY stand-ins: production refuses to start with them
+# (hosting/object store = open item O-4, malware engine = O-11). The size limit is a BASELINE pending approval.
+EVIDENCE_STORE_BACKEND = env("NGRC_EVIDENCE_STORE", "local_dev" if NGRC_ENV in {"dev", "test"} else "")
+EVIDENCE_STORE_DIR = env("NGRC_EVIDENCE_STORE_DIR", str(BASE_DIR / "var" / "evidence"))
+EVIDENCE_SCANNER_BACKEND = env("NGRC_EVIDENCE_SCANNER", "dev_eicar" if NGRC_ENV in {"dev", "test"} else "")
+EVIDENCE_MAX_BYTES = env_int("NGRC_EVIDENCE_MAX_BYTES", 25 * 1024 * 1024)
+SEARCH_MAX_QUERY_CHARS = 200
+SEARCH_MAX_RESULTS = 25

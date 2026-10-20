@@ -117,10 +117,26 @@ defects:
     status: fixed
     note: 25 of the 26 new tests fail against the Phase 1 trigger (evidence/p2_4_mutation_check_phase1_trigger.txt); the 26th guards a rule that already existed.
   - id: DEF-15
-    title: Account lock-out without an exit path - 20 failed logins for an e-mail address (10 for operators; 10 MFA failures for customers) set the account to recovery_required, but the ADR's "verified-email unlock + MFA, owner/admin notified, never a silent permanent lock" is not implemented
-    severity: high (availability / lock-out denial of service by anyone who knows an e-mail address; contradicts D-P0-008 s4)
-    found_by: preparing the P2-2 review package (reading throttle.py against the ADR)
-    detail: The progressive back-off alone would not lock an account permanently; the hard stop does, and there is no unlock flow or notification. Existing test test_account_recovery_required_after_many_failures asserts the lock (the intended ADR behaviour) but nothing asserts the exit.
-    fix: NOT FIXED. Decision needed from the project owner (keep the hard stop and accept the availability risk until F-ATH-008 exists, or remove the hard stop - back-off only - as an interim). Not changed unilaterally because either choice alters a security control. Tracked by the pending spec below and by plan section 5.
-    tests: [tests/test_pending_controls.py::test_an_account_locked_by_failed_logins_has_an_email_unlock_path_and_the_owner_is_notified]
-    status: open
+    title: "Failure-triggered lock-out was exploitable by a stranger: repeated failed logins (20; operators 10) or second-factor failures (10) set the account to recovery_required, and the ADR's dedicated unlock flow and owner/admin notification did not exist"
+    severity: "medium-high (availability: repeatable lock-out denial of service; operator accounts had no self-service exit). First recorded as 'high, no exit path' - CORRECTED: customer accounts could leave the state via password reset"
+    found_by: "preparing the P2-2 review package (reading throttle.py against the ADR); corrected while building F-ATH-015"
+    detail: "The progressive back-off alone would not lock an account; the hard stop did. Customer exit existed (password-reset confirmation sets status back to active, revokes sessions, MFA still required; proven by test) but forced a disruptive password change on anyone a stranger chose, produced no owner/admin notification, and operator accounts (no e-mail reset) had no self-service exit. The old test asserted the lock (intended ADR behaviour) but nothing asserted the exit."
+    fix: "TEMPORARY, by project-owner decision 2026-10-21 (ADR 00_CONTROL/PHASE1/D-P1-001): the automatic transition to recovery_required was removed for the customer and operator realms and for second-factor failures; replaced by counted, progressive, pre-hash delays, per-IP limiting, audit events, suspicious-login detection (many sources against one account; success after a failure burst) with alerts (log sink only; delivery is open item O-4), and STRICTER operator parameters (free 3, 120 s doubling to 3600 s). Found and fixed on the way: a malformed client address made the audit append fail (HTTP 500) - addresses are now normalised (ngrc/core/net.py)."
+    tests: [tests/test_auth_backoff_policy.py::test_no_number_of_failures_ever_locks_the_account, tests/test_auth_backoff_policy.py::test_delays_grow_progressively_to_the_cap_and_are_enforced_before_the_password_check, tests/test_auth_backoff_policy.py::test_attempts_from_several_sources_against_one_account_raise_one_alert, tests/test_auth_backoff_policy.py::test_operator_accounts_are_throttled_harder_and_alert_at_critical_severity, tests/test_auth_backoff_policy.py::test_hostile_source_addresses_cannot_break_the_counters, tests/test_auth_backoff_policy.py::test_a_recovery_required_account_still_has_an_exit_through_password_reset_with_mailbox_proof]
+    status: mitigated-temporary
+    note: "NOT closed. Residual risks are written into D-P1-001 (an attacker can keep a victim waiting up to the delay cap; no cross-account distributed-attack detection; alert delivery missing). Closes only when the permanent recovery mechanism F-ATH-015 is implemented, tested and reviewed. The owner is asked to re-confirm the decision given the correction."
+  - id: DEF-16
+    title: DevFileSigner key-creation race - two processes (sealer and verifier/scheduler) using the dev signer for the first time concurrently could each create a different key file, one signing with a key the other then overwrote or failed to load
+    severity: low (DEV-ONLY signer; would produce spurious verification failures, not a bypass)
+    found_by: writing the concurrent-sealer test for H-11 (tests/test_audit_completeness.py)
+    fix: ngrc/audit/signer.py creates the key file exclusively and, on FileExistsError, loads the key that won the race.
+    tests: [tests/test_audit_completeness.py::test_concurrent_sealers_publish_each_checkpoint_exactly_once]
+    status: fixed
+  - id: DEF-17
+    title: Malformed REMOTE_ADDR / X-forwarded values reached the audit append as an ip column value and raised DataError, turning a login attempt into HTTP 500
+    severity: low-medium (availability / error handling on an unauthenticated path)
+    found_by: writing tests/test_auth_backoff_policy.py
+    fix: ngrc/core/net.py normalize_ip(); unparseable values share one throttle bucket ('unknown') and are stored as NULL.
+    tests: [tests/test_auth_backoff_policy.py::test_hostile_source_addresses_cannot_break_the_counters]
+    status: fixed
+    note: residual - one shared bucket can be filled by an attacker controlling REMOTE_ADDR; production gets the address from a trusted proxy configuration that does not yet exist (review concern 23).

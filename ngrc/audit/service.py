@@ -21,6 +21,7 @@ from django.db import connections, transaction
 
 from ngrc.core.context import _bind
 from ngrc.core.errors import AuditWriteFailed
+from ngrc.core.net import normalize_ip
 
 log = logging.getLogger("ngrc.audit")
 
@@ -70,7 +71,7 @@ def _params(ev: Event) -> list:
     m = ev.meta or get_meta()
     return [
         ev.actor_type, str(ev.actor_id) if ev.actor_id else None, str(ev.grant_id) if ev.grant_id else None,
-        ev.action, ev.object_type, ev.object_id, ev.result, ev.reason_code, m.ip, (m.user_agent or "")[:256] or None,
+        ev.action, ev.object_type, ev.object_id, ev.result, ev.reason_code, normalize_ip(m.ip), (m.user_agent or "")[:256] or None,
         m.session_ref, m.request_id, json.dumps(ev.details, separators=(",", ":"), sort_keys=True), ev.data_class,
     ]
 
@@ -153,6 +154,20 @@ def emit_platform(using: str, action: str, **kw) -> int:
 
 def emit_tenant(using: str, action: str, tenant_id, **kw) -> int:
     return append_tenant(using, Event(action=action, tenant_id=tenant_id, meta=kw.pop("meta", None), **kw))
+
+
+def emit_independent(action: str, tenant_id, *, actor_id=None, actor_type: str = "user", result: str = "success", reason_code: str | None = None,
+                     details: dict | None = None, object_type: str | None = None, object_id: str | None = None, using: str = "autonomous") -> None:
+    """Record a TENANT-stream event in its own transaction so it survives the rollback of a failing request (e.g. an integrity failure or a
+    rejected upload). Never raises: the failure is logged; callers must not rely on this for the primary business record."""
+    ev = Event(action=action, result=result, actor_type=actor_type, actor_id=actor_id, reason_code=reason_code, details=details or {},
+               object_type=object_type, object_id=object_id, tenant_id=tenant_id)
+    try:
+        with transaction.atomic(using=using):
+            _bind(using, tenant_id, actor_id)
+            append_tenant(using, ev)
+    except Exception as exc:  # noqa: BLE001
+        log.error("independent audit event %s could not be recorded: %s", action, type(exc).__name__)
 
 
 def emit_denied(*, permission: str, route: str, reason: str, tenant_id=None, actor_id=None, actor_type: str = "user",

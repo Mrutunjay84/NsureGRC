@@ -29,3 +29,4 @@ ALLOWED_HOSTS = ["testserver", "localhost"]
 PASSWORD_HASHING = {"time_cost": 2, "memory_cost_kib": 19456, "parallelism": 1}
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+ALERT_SINKS = ["log", "memory"]

@@ -420,3 +420,63 @@ class AuditExportView(NgrcAPIView):
 
 
 _ = perm  # catalogue import side effects (registration) must happen before urls are loaded
+
+
+# ------------------------------------------------------------------------------------ lost-factor recovery approvals (F-ATH-015)
+def _recovery_requests() -> list[dict]:
+    cols = ("id", "account_id", "display_name", "email", "kind", "state", "created_at", "expires_at", "approved_at", "cooling_until")
+    with connections["default"].cursor() as cur:
+        cur.execute("SELECT id, account_id, display_name, email, kind, state, created_at, expires_at, approved_at, cooling_until "
+                    "FROM idn_recovery_tenant_list()")
+        return [dict(zip(cols, r, strict=True)) for r in cur.fetchall()]
+
+
+class RecoveryListView(NgrcAPIView):
+    ngrc_policy = Policy("tenant", "tenant.recovery.approve")
+
+    def get(self, request):
+        return Response({"requests": [{"id": str(r["id"]), "member": r["display_name"] or r["email"], "email": r["email"], "kind": r["kind"],
+                                       "state": r["state"], "created_at": r["created_at"].isoformat(), "expires_at": r["expires_at"].isoformat(),
+                                       "cooling_until": r["cooling_until"].isoformat() if r["cooling_until"] else None}
+                                      for r in _recovery_requests()]})
+
+
+class _RecoveryDecisionView(NgrcAPIView):
+    ngrc_policy = Policy("tenant", "tenant.recovery.approve", step_up="T1")
+    action = ""
+
+    def post(self, request, pk):
+        from ngrc.iam import services as idn
+
+        req = next((r for r in _recovery_requests() if str(r["id"]) == str(pk)), None)
+        if req is None:
+            return _err("not_found", 404)
+        try:
+            with transaction.atomic(using="default"), connections["default"].cursor() as cur:
+                cur.execute("SELECT account_id, cooling_until FROM idn_recovery_tenant_decide(%s::uuid, %s)", [str(pk), self.action])
+                account_id, cooling_until = cur.fetchone()
+        except Exception as exc:  # noqa: BLE001 - the function raises 42501 for self-approval, wrong state, non-admins
+            if "own recovery" in str(exc):
+                self.deny(request, "tenant.recovery.approve", "self_approval")
+            return _err("illegal_transition", 409)
+        uid = request.user.account_id
+        name = "auth.recovery.approved" if self.action == "approve" else "auth.recovery.denied"
+        audit.record(name, actor_id=uid, object_type="recovery_request", object_id=str(pk), details={"kind": req["kind"]})
+        audit.record_platform(name, actor_id=uid, object_type="recovery_request", object_id=str(pk), details={"kind": req["kind"]})
+        target = idn.Account.objects.using("auth").filter(pk=account_id).first()
+        if target is not None:
+            if self.action == "approve":
+                idn.send_notice(target, "Your NsureGRC sign-in recovery was approved",
+                                f"A tenant administrator approved your recovery. You can complete it after {cooling_until.isoformat()}. "
+                                "If you did not ask for this, cancel it now with the link in the earlier e-mail, or sign in and cancel it from your account.")
+            else:
+                idn.send_notice(target, "Your NsureGRC sign-in recovery was declined", "A tenant administrator declined your recovery request.")
+        return Response({"status": "ok", "cooling_until": cooling_until.isoformat() if self.action == "approve" else None})
+
+
+class RecoveryApproveView(_RecoveryDecisionView):
+    action = "approve"
+
+
+class RecoveryDenyView(_RecoveryDecisionView):
+    action = "deny"

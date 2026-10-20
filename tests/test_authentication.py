@@ -78,16 +78,6 @@ def test_ip_throttling_blocks_distributed_account_guessing():
     assert seen[-1] == 429
 
 
-def test_account_recovery_required_after_many_failures(account, clock_ctl):
-    for _ in range(settings.AUTH_THROTTLE["account_recovery_required_at"]):
-        clock_ctl.advance(seconds=settings.AUTH_THROTTLE["account_max_delay_s"] + 1)
-        Api().post("/auth/login/", {"email": account.email, "password": "wrong-password-xyz"})
-    status = Account.objects.using("auth").get(pk=account.pk).status
-    assert status == "recovery_required"
-    clock_ctl.advance(seconds=settings.AUTH_THROTTLE["account_max_delay_s"] + 1)  # throttle expired: now it is the status that blocks
-    assert Api().post("/auth/login/", {"email": account.email, "password": TEST_PASSWORD}).status_code == 401
-
-
 def test_login_failure_audit_has_no_password_or_raw_email(account):
     _login(account.email, "hunter2-secret-attempt")
     for e in audit_events(platform=True, action="auth.login.failure"):

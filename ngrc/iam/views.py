@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from django.conf import settings
 from django.db import transaction
 from django.middleware.csrf import get_token
 from rest_framework import serializers
@@ -14,7 +15,9 @@ from ngrc.authn.realms import CUSTOMER
 from ngrc.authz.drf import NgrcAPIView, Policy
 from ngrc.core import clock
 from ngrc.core.crypto import keyed_identifier_hash
+from ngrc.core.net import normalize_ip
 
+from . import recovery_service as rs
 from . import services
 from .models import Session
 
@@ -23,7 +26,7 @@ ANY_STAGE = ("password_ok", "enroll_mfa", "active")
 
 
 def _ip(request):
-    return request.META.get("REMOTE_ADDR")
+    return normalize_ip(request.META.get("REMOTE_ADDR"))
 
 
 def _ua(request):
@@ -58,6 +61,26 @@ def _audit_both(account, action: str, session=None, **kw):
     audit.emit_platform("auth", action, actor_id=account.id, **kw)
     if session is not None and getattr(session, "active_tenant_id", None):
         audit.emit_tenant("auth", action, session.active_tenant_id, actor_id=account.id, **kw)
+
+
+def _enrolment_reserved(s, a) -> bool:
+    """After a COMPLETED lost-factor recovery the account has no factor; for a short window only the session that completed it may enrol one, so that
+    someone who merely knows the password cannot log in and enrol first. (A partial mitigation: after the window, or for a user who loses that session,
+    enrolment is again possible with the password alone - the same as for any brand-new account.)"""
+    from datetime import timedelta
+
+    from django.db.models import DateTimeField, ExpressionWrapper
+    from django.db.models.functions import Now
+
+    from .models import RecoveryRequest
+
+    if s.stage != "enroll_mfa" or "recovery_enrolment" in (s.auth_methods or []):
+        return False
+    since = ExpressionWrapper(Now() - timedelta(seconds=int(settings.RECOVERY_ENROLMENT_WINDOW_S)), output_field=DateTimeField())
+    return RecoveryRequest.objects.using("auth").filter(account=a, state="completed", ended_at__gte=since).exists()
+
+
+_RESERVED = {"error": "recovery_enrolment_reserved"}
 
 
 # --------------------------------------------------------------------------------------------- public
@@ -319,6 +342,8 @@ class TotpEnrollBeginView(NgrcAPIView):
 
     def post(self, request):
         s, a = _session_account(request)
+        if _enrolment_reserved(s, a):
+            return Response(_RESERVED, status=403)
         if s.stage == "active":
             from ngrc.authz.policy import Denied, require_recent_step_up
             try:
@@ -336,6 +361,8 @@ class TotpEnrollConfirmView(NgrcAPIView):
         d = CodeSerializer(data=request.data)
         d.is_valid(raise_exception=True)
         s, a = _session_account(request)
+        if _enrolment_reserved(s, a):
+            return Response(_RESERVED, status=403)
         wait = flow.mfa_retry_after(CUSTOMER, a, _ip(request))
         if wait:
             return _throttled(wait)
@@ -361,6 +388,8 @@ class WebAuthnRegisterBeginView(NgrcAPIView):
 
     def post(self, request):
         s, a = _session_account(request)
+        if _enrolment_reserved(s, a):
+            return Response(_RESERVED, status=403)
         if s.stage == "active":
             from ngrc.authz.policy import Denied, require_recent_step_up
             try:
@@ -377,6 +406,8 @@ class WebAuthnRegisterCompleteView(NgrcAPIView):
         d = WebAuthnCredentialSerializer(data=request.data)
         d.is_valid(raise_exception=True)
         s, a = _session_account(request)
+        if _enrolment_reserved(s, a):
+            return Response(_RESERVED, status=403)
         try:
             webauthn_.complete_registration(CUSTOMER, s, a, d.validated_data["credential"], require_uv=_uv(a),
                                             nickname=d.validated_data.get("nickname", ""))
@@ -509,3 +540,199 @@ class PasswordChangeView(NgrcAPIView):
         _audit_both(a, "auth.password.changed", session=s)
         services.send_notice(a, "Your NsureGRC password was changed", "Your password was changed. If this was not you, contact your administrator.")
         return Response({"status": "ok"})
+
+
+# ----------------------------------------------------------------------------------------- MFA factors (F-ATH-014)
+def _factor_rows(account) -> list[dict]:
+    from .models import TotpFactor, WebAuthnCredential
+
+    rows = [{"id": str(f.id), "method": "totp", "nickname": "", "created_at": f.created_at.isoformat(), "last_used_at": None, "usable": True}
+            for f in TotpFactor.objects.using("auth").filter(account=account, confirmed_at__isnull=False).order_by("created_at")]
+    rows += [{"id": str(w.id), "method": "webauthn", "nickname": w.nickname, "created_at": w.created_at.isoformat(),
+              "last_used_at": w.last_used_at.isoformat() if w.last_used_at else None, "usable": not w.flagged_clone}
+             for w in WebAuthnCredential.objects.using("auth").filter(account=account).order_by("created_at")]
+    return rows
+
+
+class FactorListView(NgrcAPIView):
+    ngrc_policy = Policy("session")
+
+    def get(self, request):
+        _s, a = _session_account(request)
+        return Response({"factors": _factor_rows(a), "recovery_codes_remaining": recovery.remaining(a)})
+
+
+class FactorDetailView(NgrcAPIView):
+    """Remove one of MY OWN factors (D-P0-008 s7): step-up, never the last usable factor, always >= 2 recovery options afterwards, every other
+    session revoked, the caller's session id rotated, the user notified. The database refuses to delete the last usable factor even if this
+    code were bypassed (trigger idn_factor_guard)."""
+
+    ngrc_policy = Policy("session", step_up="T1")
+
+    def delete(self, request, pk):
+        from django.db import DatabaseError
+
+        from .models import Account, TotpFactor, WebAuthnCredential
+
+        s, a = _session_account(request)
+        with transaction.atomic(using="auth"):
+            Account.objects.using("auth").select_for_update().get(pk=a.pk)  # serialise concurrent removals for this account
+            target, method = TotpFactor.objects.using("auth").filter(pk=pk, account=a, confirmed_at__isnull=False).first(), "totp"
+            if target is None:
+                target, method = WebAuthnCredential.objects.using("auth").filter(pk=pk, account=a).first(), "webauthn"
+            if target is None:
+                audit.emit_denied(permission="auth.mfa.remove", route=request.path, reason="factor_not_found", actor_id=a.id, using="autonomous")
+                return Response({"error": "not_found"}, status=404)
+            if method == "totp" or not target.flagged_clone:  # removing an UNUSABLE (cloned) credential never reduces what the user can do
+                left = [f for f in _factor_rows(a) if f["usable"] and f["id"] != str(pk)]
+                if not left:
+                    return Response({"error": "last_factor"}, status=409)
+                if len(left) + (1 if recovery.remaining(a) > 0 else 0) < 2:
+                    return Response({"error": "recovery_options"}, status=409)
+            try:
+                with transaction.atomic(using="auth"):
+                    target.delete()
+            except DatabaseError:  # the trigger idn_factor_guard is the last line of defence
+                return Response({"error": "last_factor"}, status=409)
+        sessions.revoke_all(CUSTOMER, a.id, except_id=s.id, reason="mfa_factor_removed")
+        raw = sessions.rotate(CUSTOMER, s)
+        _audit_both(a, "auth.mfa.removed", session=s, details={"method": method})
+        services.send_notice(a, "An authentication factor was removed from your NsureGRC account",
+                             f"A {method} factor was removed and all your other sessions were signed out. If this was not you, contact your administrator.")
+        return _with_cookie(Response({"status": "ok"}), raw)
+
+
+# ----------------------------------------------------------------------------------------- lost-factor recovery (F-ATH-015)
+class RecoveryStartSerializer(serializers.Serializer):
+    tenant_id = serializers.UUIDField(required=False)
+
+
+def _recovery_json(r) -> dict:
+    return {"id": str(r.id), "kind": r.kind, "state": r.state, "expires_at": r.expires_at.isoformat(),
+            "approved_at": r.approved_at.isoformat() if r.approved_at else None,
+            "cooling_until": r.cooling_until.isoformat() if r.cooling_until else None, "can_complete": rs.can_complete(r)}
+
+
+def _recovery_audit(a, action: str, tenant_id, kind: str, **extra):
+    audit.emit_platform("auth", action, actor_id=a.id, tenant_id=tenant_id, details={"kind": kind, **extra})
+    audit.emit_tenant("auth", action, tenant_id, actor_id=a.id, details={"kind": kind, **extra})
+
+
+class RecoveryRequestView(NgrcAPIView):
+    ngrc_policy = Policy("session", stages=("password_ok",))   # the PASSWORD was proven; the lost second factor is what is being replaced
+
+    def post(self, request):
+        d = RecoveryStartSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        s, a = _session_account(request)
+        wait = throttle.retry_after(CUSTOMER, a.email, _ip(request), scope="recovery")
+        if wait:
+            return _throttled(wait)
+        throttle.record_failure(CUSTOMER, a.email, _ip(request), scope="recovery")   # counts requests, not failures
+        mems = services.list_memberships(a.id)
+        wanted = d.validated_data.get("tenant_id")
+        if wanted is not None:
+            m = next((x for x in mems if x["tenant_id"] == wanted), None)
+        elif len(mems) == 1:
+            m = mems[0]
+        else:
+            return Response({"error": "tenant_required" if mems else "no_tenant"}, status=400)
+        if m is None:
+            audit.emit_denied(permission="auth.recovery.request", route=request.path, reason="not_a_member", actor_id=a.id, using="autonomous")
+            return Response({"error": "forbidden"}, status=403)
+        try:
+            res = rs.start(a, m["tenant_id"], _ip(request))
+        except rs.RecoveryError as exc:
+            return Response({"error": exc.code}, status=409 if exc.code == "request_already_open" else 403)
+        _recovery_audit(a, "auth.recovery.requested", m["tenant_id"], res["kind"])
+        who = "A tenant Owner or Administrator" if res["kind"] == "admin_assisted" else "NsureGRC Platform Security"
+        services.send_notice(a, "A recovery of your NsureGRC sign-in factors was requested",
+                             f"Someone with your password asked to replace your lost second factor. {who} must approve it, followed by a "
+                             f"{settings.RECOVERY_COOLING_OFF_S // 3600}-hour waiting period. If this was NOT you, cancel it now: "
+                             f"{rs.cancel_link(res['cancel_token'])}")
+        if res["kind"] == "admin_assisted":
+            for addr in rs.approver_emails(res["id"]):
+                services.send_mail_notice(addr, "A colleague needs a sign-in recovery approved",
+                                          f"{a.display_name or a.email} asked to replace their second factor. Review and approve or deny it in NsureGRC "
+                                          "(approval needs a fresh second-factor check). Approve only if you have confirmed it is really them.")
+        return Response({"id": str(res["id"]), "kind": res["kind"], "expires_at": res["expires_at"].isoformat()}, status=201)
+
+
+class RecoveryStatusView(NgrcAPIView):
+    ngrc_policy = Policy("session", stages=("password_ok", "active"))
+
+    def get(self, request):
+        _s, a = _session_account(request)
+        r = rs.latest(a)
+        return Response({"request": _recovery_json(r) if r else None})
+
+
+class RecoveryCompleteSerializer(serializers.Serializer):
+    request_id = serializers.UUIDField()
+
+
+class RecoveryCompleteView(NgrcAPIView):
+    ngrc_policy = Policy("session", stages=("password_ok",))
+
+    def post(self, request):
+        d = RecoveryCompleteSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        s, a = _session_account(request)
+        wait = throttle.retry_after(CUSTOMER, a.email, _ip(request), scope="recovery")
+        if wait:
+            return _throttled(wait)
+        from .models import RecoveryRequest
+
+        r = RecoveryRequest.objects.using("auth").filter(pk=d.validated_data["request_id"], account=a).first()
+        if r is None:
+            return Response({"error": "not_found"}, status=404)
+        try:
+            rs.complete(a, r.id)   # the database enforces: approved, cooling-off elapsed, not expired
+        except rs.RecoveryError:
+            throttle.record_failure(CUSTOMER, a.email, _ip(request), scope="recovery")
+            return Response({"error": "not_ready"}, status=409)
+        sessions.revoke_all(CUSTOMER, a.id, except_id=s.id, reason="recovery_completed")
+        raw = sessions.demote_to_enrollment(CUSTOMER, s)
+        _recovery_audit(a, "auth.recovery.completed", r.subject_tenant_id, r.kind)
+        services.send_notice(a, "Your NsureGRC sign-in factors were reset",
+                             "Your recovery was completed: your old factors and recovery codes were removed and all other sessions signed out. "
+                             "Enrol a new factor now. If this was not you, contact your administrator immediately.")
+        return _with_cookie(Response({"stage": "enroll_mfa"}), raw)
+
+
+class RecoveryCancelSerializer(serializers.Serializer):
+    token = serializers.CharField(max_length=128)
+
+
+class RecoveryCancelView(NgrcAPIView):
+    ngrc_policy = Policy("public", reason="cancel link from the notification e-mail; possession of the single-use 256-bit token is the authorisation")
+
+    def post(self, request):
+        d = RecoveryCancelSerializer(data=request.data)
+        d.is_valid(raise_exception=True)
+        ip = _ip(request) or "unknown"
+        wait = throttle.retry_after(CUSTOMER, ip, ip, scope="rcancel")
+        if wait:
+            return _throttled(wait)
+        found = rs.cancel_with_token(d.validated_data["token"])
+        if found is None:
+            throttle.record_failure(CUSTOMER, ip, ip, scope="rcancel")
+            return Response({"error": "invalid_token"}, status=400)
+        account_id, tenant_id, kind = found
+        a = services.Account.objects.using("auth").get(pk=account_id)
+        _recovery_audit(a, "auth.recovery.cancelled", tenant_id, kind, by="email_link")
+        services.send_notice(a, "Your NsureGRC recovery request was cancelled", "The recovery request on your account was cancelled.")
+        return Response({"status": "cancelled"})
+
+
+class RecoveryCancelSessionView(NgrcAPIView):
+    ngrc_policy = Policy("session", stages=("password_ok", "active"))
+
+    def post(self, request, pk):
+        s, a = _session_account(request)
+        found = rs.cancel_for_account(pk, a.id)
+        if found is None:
+            return Response({"error": "not_found"}, status=404)
+        tenant_id, kind = found
+        _recovery_audit(a, "auth.recovery.cancelled", tenant_id, kind, by="session")
+        return Response({"status": "cancelled"})

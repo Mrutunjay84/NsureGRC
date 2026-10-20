@@ -23,6 +23,7 @@ pytestmark = pytest.mark.security
 PUBLIC_PATHS = {
     "api/v1/auth/csrf/", "api/v1/auth/login/", "api/v1/auth/password/reset/request/", "api/v1/auth/password/reset/confirm/",
     "api/v1/auth/email/verify/", "api/v1/auth/invitations/accept/", "ops/api/v1/auth/csrf/", "ops/api/v1/auth/login/",
+    "api/v1/auth/recovery/cancel/",  # single-use cancel link from the recovery notification e-mail (F-ATH-015)
 }
 
 
@@ -43,7 +44,9 @@ def _routes():
 
 
 def _fill(path: str) -> str:
-    return "/" + path.replace("<uuid:pk>", str(uuid.uuid4()))
+    import re
+
+    return "/" + re.sub(r"<uuid:\w+>", lambda _m: str(uuid.uuid4()), path)
 
 
 # ------------------------------------------------------------------------------------------------ default deny
@@ -103,10 +106,12 @@ def test_drf_defaults_fail_closed():
 
 def test_endpoint_inventory_is_reviewed():
     """Any new route fails this test until the inventory (and therefore its authz/IDOR tests) is consciously extended.
-    Phase 1 has NO search, download or file endpoints: those cross-tenant tests are BLOCKED until such features exist."""
+    Search and download exist since the P2 gate work (F-AUZ-005, F-DAT-004) and are listed explicitly; their cross-tenant tests live in
+    tests/test_cross_tenant_search.py and tests/test_evidence_download.py. Report/export/job/notification endpoints still do not exist."""
     names = {p for p, _ in _routes()}
-    assert not [p for p in names if any(w in p for w in ("search", "download", "upload", "file", "attachment"))]
-    assert len(names) == 1 + 22 + 13 + 20  # healthz + customer auth + tenant admin + operator plane
+    sensitive = {p for p in names if any(w in p for w in ("search", "download", "upload", "file", "attachment", "export", "report"))}
+    assert sensitive == {"api/v1/tenant/search/", "api/v1/tenant/evidence/<uuid:pk>/revisions/<uuid:rid>/download/", "api/v1/tenant/audit/export/"}, sensitive
+    assert len(names) == 1 + 29 + 21 + 24  # healthz + customer auth (+factors, +recovery) + tenant (+recovery, +evidence, +search) + operator plane (+recovery)
 
 
 # ------------------------------------------------------------------------------------------------ privilege escalation

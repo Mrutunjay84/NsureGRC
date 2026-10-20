@@ -1,8 +1,8 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-20T19:50:38+00:00",
+  "generated_at": "2026-10-20T21:22:03+00:00",
   "generator": "tests/test_evidence_artifacts.py::route_policy_inventory.json",
-  "route_count": 56,
+  "route_count": 75,
   "routes": [
     {
       "methods": [
@@ -75,6 +75,34 @@
       ],
       "step_up": null,
       "view": "ngrc.iam.views.LogoutView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/mfa/factors/",
+      "scope": "session",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.FactorListView"
+    },
+    {
+      "methods": [
+        "DELETE"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/mfa/factors/<uuid:pk>/",
+      "scope": "session",
+      "stages": [
+        "active"
+      ],
+      "step_up": "T1",
+      "view": "ngrc.iam.views.FactorDetailView"
     },
     {
       "methods": [
@@ -236,6 +264,78 @@
     },
     {
       "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/recovery/<uuid:pk>/cancel/",
+      "scope": "session",
+      "stages": [
+        "password_ok",
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.RecoveryCancelSessionView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": "cancel link from the notification e-mail; possession of the single-use 256-bit token is the authorisation",
+      "route": "/api/v1/auth/recovery/cancel/",
+      "scope": "public",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.RecoveryCancelView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/recovery/complete/",
+      "scope": "session",
+      "stages": [
+        "password_ok"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.RecoveryCompleteView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/recovery/request/",
+      "scope": "session",
+      "stages": [
+        "password_ok"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.RecoveryRequestView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": null,
+      "public_reason": null,
+      "route": "/api/v1/auth/recovery/status/",
+      "scope": "session",
+      "stages": [
+        "password_ok",
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.iam.views.RecoveryStatusView"
+    },
+    {
+      "methods": [
         "GET"
       ],
       "permission": null,
@@ -353,6 +453,63 @@
         "GET",
         "POST"
       ],
+      "permission": "evidence.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/evidence/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.evidence.views.EvidenceListView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "evidence.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/evidence/<uuid:pk>/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.evidence.views.EvidenceDetailView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "evidence.upload",
+      "public_reason": null,
+      "route": "/api/v1/tenant/evidence/<uuid:pk>/revisions/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.evidence.views.RevisionUploadView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "evidence.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/evidence/<uuid:pk>/revisions/<uuid:rid>/download/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.evidence.views.RevisionDownloadView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
       "permission": "tenant.invitations.manage",
       "public_reason": null,
       "route": "/api/v1/tenant/invitations/",
@@ -422,6 +579,48 @@
     },
     {
       "methods": [
+        "GET"
+      ],
+      "permission": "tenant.recovery.approve",
+      "public_reason": null,
+      "route": "/api/v1/tenant/recovery/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.tenancy.views.RecoveryListView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "tenant.recovery.approve",
+      "public_reason": null,
+      "route": "/api/v1/tenant/recovery/<uuid:pk>/approve/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": "T1",
+      "view": "ngrc.tenancy.views.RecoveryApproveView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "tenant.recovery.approve",
+      "public_reason": null,
+      "route": "/api/v1/tenant/recovery/<uuid:pk>/deny/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": "T1",
+      "view": "ngrc.tenancy.views.RecoveryDenyView"
+    },
+    {
+      "methods": [
         "GET",
         "POST"
       ],
@@ -450,6 +649,20 @@
       ],
       "step_up": null,
       "view": "ngrc.tenancy.views.RoleDetailView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "evidence.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/search/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.evidence.views.SearchView"
     },
     {
       "methods": [
@@ -678,6 +891,62 @@
       ],
       "step_up": null,
       "view": "ngrc.control_plane.views.StepUpCompleteView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "platform.recovery.approve",
+      "public_reason": null,
+      "route": "/ops/api/v1/recovery/",
+      "scope": "operator",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.RecoveryListView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "platform.recovery.approve",
+      "public_reason": null,
+      "route": "/ops/api/v1/recovery/<uuid:pk>/approve/",
+      "scope": "operator",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.RecoveryApproveView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "platform.recovery.approve",
+      "public_reason": null,
+      "route": "/ops/api/v1/recovery/<uuid:pk>/approve/begin/",
+      "scope": "operator",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.control_plane.views.RecoveryApproveBeginView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "platform.recovery.approve",
+      "public_reason": null,
+      "route": "/ops/api/v1/recovery/<uuid:pk>/deny/",
+      "scope": "operator",
+      "stages": [
+        "active"
+      ],
+      "step_up": "T1",
+      "view": "ngrc.control_plane.views.RecoveryDenyView"
     },
     {
       "methods": [

@@ -1,0 +1,15 @@
+M1 high-water-mark check removed: 2 failed, 14 passed in 1.93s
+    killed by: ['test_deleting_the_newest_checkpoint_everywhere_is_caught_by_the_high_water_mark', 'test_concurrent_sealers_publish_each_checkpoint_exactly_once']
+M2 external-copy-presence check removed: 1 failed, 15 passed in 1.85s
+    killed by: ['test_removing_the_newest_external_copy_is_caught']
+M3 sink-record-missing-from-db check removed: 1 failed, 15 passed in 1.82s
+    killed by: ['test_deleting_the_newest_checkpoint_is_caught_by_the_external_copy']
+M4 checkpoint index-gap check removed: 1 failed, 15 passed in 1.73s
+    killed by: ['test_middle_checkpoint_deletion_and_insertion_are_detected_without_any_anchor']
+M5 previous-digest linkage check removed: 2 failed, 14 passed in 1.78s
+    killed by: ['test_middle_checkpoint_deletion_and_insertion_are_detected_without_any_anchor', 'test_a_forged_checkpoint_with_a_wrong_previous_digest_is_rejected']
+M6 freshness check removed: 1 failed, 15 passed in 1.77s
+    killed by: ['test_deleting_the_newest_checkpoints_and_silencing_the_sealer_is_caught_by_staleness']
+M7 completeness-required check removed: 1 failed, 15 passed in 1.73s
+    killed by: ['test_a_valid_chain_alone_never_proves_completeness']
+verifier restored: True
