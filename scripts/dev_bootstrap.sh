@@ -28,6 +28,7 @@ NGRC_DB_OPS_PASSWORD=$(gen)
 NGRC_DB_AUDIT_READER_PASSWORD=$(gen)
 NGRC_DB_AUDIT_SEALER_PASSWORD=$(gen)
 NGRC_DB_AUDIT_VERIFIER_PASSWORD=$(gen)
+NGRC_DB_CATALOG_PASSWORD=$(gen)
 NGRC_DB_TESTADMIN_PASSWORD=$(gen)
 NGRC_SECRET_KEY=$(openssl rand -base64 48 | tr -d '\n')
 NGRC_FIELD_ENCRYPTION_KEY=$(openssl rand -base64 32 | tr -d '\n')
@@ -47,6 +48,7 @@ if ! run_su "psql -tAc \"SELECT 1 FROM pg_roles WHERE rolname='ngrc_owner'\"" | 
     -v owner_pw='$NGRC_DB_OWNER_PASSWORD' -v app_pw='$NGRC_DB_APP_PASSWORD' -v auth_pw='$NGRC_DB_AUTH_PASSWORD' \
     -v ops_pw='$NGRC_DB_OPS_PASSWORD' -v auditreader_pw='$NGRC_DB_AUDIT_READER_PASSWORD' \
     -v sealer_pw='$NGRC_DB_AUDIT_SEALER_PASSWORD' -v verifier_pw='$NGRC_DB_AUDIT_VERIFIER_PASSWORD' \
+    -v catalog_pw='$NGRC_DB_CATALOG_PASSWORD' \
     -f '$REPO_DIR/db/bootstrap/00_roles.sql'"
   run_su "psql -v ON_ERROR_STOP=1 -v testadmin_pw='$NGRC_DB_TESTADMIN_PASSWORD' -f '$REPO_DIR/db/bootstrap/01_dev_test_admin.sql'"
   echo "roles created"

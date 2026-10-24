@@ -70,6 +70,19 @@ def tenant_table_reverse(table: str) -> list[str]:
     ]
 
 
+def catalog_table_grants(table: str, reader: str = "SELECT", writer: str = "SELECT, INSERT, UPDATE") -> list[str]:
+    """CAT/PLT class template (D-P0-009): no RLS (not tenant data), default-deny grants - ngrc_app reads,
+    ngrc_catalog_publisher writes. No DELETE for the writer by default: published/locked rows are frozen by
+    a table-specific trigger, and drafts are discarded via UPDATE (status) rather than deletion where a
+    history needs to be kept; pass writer="SELECT, INSERT, UPDATE, DELETE" for tables without that concern."""
+    t = _check(table)
+    return [
+        f"REVOKE ALL ON {t} FROM PUBLIC",
+        f"GRANT {reader} ON {t} TO ngrc_app",
+        f"GRANT {writer} ON {t} TO ngrc_catalog_publisher",
+    ]
+
+
 def grant(table: str, role: str, privileges: str, columns: str | None = None) -> str:
     t, r = _check(table), _check(role)
     if columns:

@@ -1,6 +1,6 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-20T21:27:45+00:00",
+  "generated_at": "2026-10-25T22:43:38+00:00",
   "generator": "tests/test_evidence_artifacts.py::privilege_matrix.json",
   "role_attributes": [
     {
@@ -63,6 +63,15 @@
       "createdb": false,
       "createrole": false,
       "replication": false,
+      "role": "ngrc_catalog_publisher",
+      "superuser": false
+    },
+    {
+      "bypassrls": false,
+      "can_login": true,
+      "createdb": false,
+      "createrole": false,
+      "replication": false,
       "role": "ngrc_ops",
       "superuser": false
     },
@@ -93,6 +102,24 @@
       "audit.tenant_event": [
         "SELECT"
       ],
+      "cat_framework": [
+        "SELECT"
+      ],
+      "cat_framework_version": [
+        "SELECT"
+      ],
+      "cat_mapping": [
+        "SELECT"
+      ],
+      "cat_requirement": [
+        "SELECT"
+      ],
+      "plt_framework_change_set": [
+        "SELECT"
+      ],
+      "plt_framework_source_registry": [
+        "SELECT"
+      ],
       "plt_tenant": [
         "SELECT"
       ],
@@ -102,6 +129,20 @@
         "UPDATE"
       ],
       "ten_evidence_revision": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_framework_activation": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_framework_changeset_decision": [
+        "INSERT",
+        "SELECT"
+      ],
+      "ten_mapping_override": [
         "INSERT",
         "SELECT",
         "UPDATE"
@@ -214,6 +255,38 @@
       ],
       "ten_role": [
         "SELECT"
+      ]
+    },
+    "ngrc_catalog_publisher": {
+      "cat_framework": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "cat_framework_version": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "cat_mapping": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "cat_requirement": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "plt_framework_change_set": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "plt_framework_source_registry": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
       ]
     },
     "ngrc_ops": {

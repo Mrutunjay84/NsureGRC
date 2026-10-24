@@ -132,7 +132,22 @@ ACTIONS_P2: tuple[Action, ...] = (
     _a("audit.verification.overdue", "audit", "critical", "platform", [VERIFIER], ["max_age_h", "last_run"]),
 )
 
-ACTIONS: tuple[Action, ...] = ACTIONS_P1 + ACTIONS_P2
+ACTIONS_FRAMEWORK: tuple[Action, ...] = (
+    # ---- D-P2-001: Framework Engine. Curator/operator actions (platform stream, writer OPS); tenant
+    # activation/override actions (tenant stream, writer APP).
+    _a("framework.version.drafted", "framework", "info", "platform", [OPS], ["framework_urn", "version_label"]),
+    _a("framework.version.published", "framework", "notice", "platform", [OPS],
+       ["framework_urn", "version_label", "requirement_count"]),
+    _a("framework.changeset.recorded", "framework", "info", "platform", [OPS],
+       ["framework_urn", "from_version_label", "to_version_label", "added", "removed", "changed"]),
+    _a("framework.activation.created", "framework", "notice", "tenant", [APP], ["framework_urn", "version_label"]),
+    _a("framework.activation.migrated", "framework", "notice", "tenant", [APP],
+       ["framework_urn", "from_version_label", "to_version_label"]),
+    _a("framework.mapping_override.created", "framework", "info", "tenant", [APP],
+       ["framework_urn", "source_requirement_urn", "target_requirement_urn", "relationship"]),
+)
+
+ACTIONS: tuple[Action, ...] = ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK
 
 BY_NAME = {a.name: a for a in ACTIONS}
 if len(BY_NAME) != len(ACTIONS):  # explicit raise: asserts vanish under `python -O`

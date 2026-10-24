@@ -51,6 +51,28 @@ tables:
   - {table: ten_evidence_revision, class: TEN, data_class: R, domain: evidence, owner_module: ngrc.evidence, rls: required, tenant_column: tenant_id,
      notes: "Immutable file revisions (hash, size, scan state). No DELETE for any runtime role; scan outcome recordable once."}
 
+  - {table: ten_framework_activation, class: TEN, data_class: C, domain: framework, owner_module: ngrc.framework, rls: required, tenant_column: tenant_id,
+     notes: "D-P2-001: tenant's pinned framework version. Stores framework_urn/pinned_version_label (stable keys), not an FK into cat_*."}
+  - {table: ten_mapping_override, class: TEN, data_class: C, domain: framework, owner_module: ngrc.framework, rls: required, tenant_column: tenant_id,
+     notes: "D-P2-001: tenant mapping override, never touched by catalogue publishes. Stable-key reference, not an FK into cat_*."}
+  - {table: ten_framework_changeset_decision, class: TEN, data_class: C, domain: framework, owner_module: ngrc.framework, rls: required, tenant_column: tenant_id,
+     notes: "D-P2-001: append-only migration decision (migrate|stay|reject) against a plt_framework_change_set, referenced by plain UUID (no FK, PLT class)."}
+
+  # ------------------------------------------------------------------ CAT (global catalogue; ngrc_catalog_publisher writes, ngrc_app reads)
+  - {table: cat_framework, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none}
+  - {table: cat_framework_version, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none,
+     notes: "Immutable once published_at is set (trigger-enforced); requirement snapshot per version."}
+  - {table: cat_requirement, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none,
+     notes: "Immutable once its framework_version is published (trigger checks the parent version's status)."}
+  - {table: cat_mapping, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none,
+     notes: "Immutable once locked=true (one-way; trigger-enforced)."}
+
+  # ------------------------------------------------------------------ PLT (curator/operator plane; ngrc_catalog_publisher writes, ngrc_app reads)
+  - {table: plt_framework_change_set, class: PLT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none,
+     notes: "Append-only from creation (trigger-enforced): persists every framework version transition's diff."}
+  - {table: plt_framework_source_registry, class: PLT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none,
+     notes: "Metadata-only stub (D-P2-001): no live fetcher reads or writes this in this increment."}
+
   # ------------------------------------------------------------------ AUD (audit schema; append functions only)
   - {table: audit.action_registry, class: AUD, data_class: I, domain: audit, owner_module: ngrc.audit, rls: none}
   - {table: audit.chain_head, class: AUD, data_class: R, domain: audit, owner_module: ngrc.audit, rls: none}
