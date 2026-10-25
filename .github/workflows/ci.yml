@@ -125,9 +125,13 @@ jobs:
         run: docker build -t nsuregrc:${{ github.sha }} .
       - name: Trivy image scan (HIGH/CRITICAL with an available fix fail the build)
         uses: aquasecurity/trivy-action@v0.33.1
-        env: {GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"}
         with:
           image-ref: nsuregrc:${{ github.sha }}
+          version: v0.74.0   # trivy-action's own default (v0.65.0) fails to install here: contrib/install.sh resolves
+                              # the tag then exits 1 with no error text, same result with or without a token on this
+                              # step - that env never reaches the nested aquasecurity/setup-trivy step anyway (it
+                              # already defaults its own token input to github.token). v0.74.0 is a current, widely-used
+                              # release, not the stale v0.65.0 default.
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: "1"
@@ -135,8 +139,7 @@ jobs:
           output: trivy-image.sarif
       - name: Trivy Dockerfile / configuration scan
         uses: aquasecurity/trivy-action@v0.33.1
-        env: {GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"}
-        with: {scan-type: config, scan-ref: ., severity: "MEDIUM,HIGH,CRITICAL", exit-code: "1"}
+        with: {scan-type: config, scan-ref: ., severity: "MEDIUM,HIGH,CRITICAL", exit-code: "1", version: v0.74.0}
       - name: Image runs as the unprivileged uid
         run: test "$(docker run --rm --entrypoint id nsuregrc:${{ github.sha }} -u)" = "10001"
       - uses: actions/upload-artifact@v4
