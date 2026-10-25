@@ -124,7 +124,7 @@ jobs:
       - name: Build
         run: docker build -t nsuregrc:${{ github.sha }} .
       - name: Trivy image scan (HIGH/CRITICAL with an available fix fail the build)
-        uses: aquasecurity/trivy-action@v0.33.1
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: nsuregrc:${{ github.sha }}
           version: v0.74.0   # trivy-action's own default (v0.65.0) fails to install here: contrib/install.sh resolves
@@ -142,7 +142,7 @@ jobs:
                                                  # failed on 6 MEDIUM/LOW pip CVEs and an UNKNOWN-severity tzdata
                                                  # note, none HIGH/CRITICAL, exactly what "all severities" causes
       - name: Trivy Dockerfile / configuration scan
-        uses: aquasecurity/trivy-action@v0.33.1
+        uses: aquasecurity/trivy-action@0.35.0
         with: {scan-type: config, scan-ref: ., severity: "MEDIUM,HIGH,CRITICAL", exit-code: "1", version: v0.74.0}
       - name: Image runs as the unprivileged uid
         run: test "$(docker run --rm --entrypoint id nsuregrc:${{ github.sha }} -u)" = "10001"
