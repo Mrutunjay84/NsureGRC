@@ -1,6 +1,6 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-25T22:43:37+00:00",
+  "generated_at": "2026-10-25T07:53:32+00:00",
   "generator": "tests/test_evidence_artifacts.py::rls_coverage.json",
   "tables": {
     "audit.action_registry": {
@@ -256,9 +256,53 @@
       "rls_expected": "required",
       "rls_forced": true
     },
+    "ten_common_control": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_control_assertion": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
     "ten_evidence": {
       "class": "TEN",
       "data_class": "R",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_evidence_link": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_evidence_requirement": {
+      "class": "TEN",
+      "data_class": "C",
       "policies": [
         "owner_context",
         "tenant_isolation"
@@ -290,6 +334,50 @@
       "rls_forced": true
     },
     "ten_framework_changeset_decision": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_framework_custom": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_framework_custom_requirement": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_framework_custom_version": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_implementation_control": {
       "class": "TEN",
       "data_class": "C",
       "policies": [

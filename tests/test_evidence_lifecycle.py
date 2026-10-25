@@ -230,7 +230,10 @@ def test_nothing_can_delete_or_truncate_evidence_and_restricted_cannot_be_downgr
             c.execute("DELETE FROM ten_evidence_revision WHERE id = %s", [m.rev])
         c.rollback()
         c.execute("SELECT set_config('app.tenant_id', %s, true)", [str(tenant_a.id)])
-        with pytest.raises(psycopg.errors.InsufficientPrivilege, match="never truncated"):
+        # D-P3-002 added ten_evidence_link, which carries a real FK into this table - Postgres now refuses
+        # the bare TRUNCATE outright (FeatureNotSupported) before the no_truncate trigger even fires. Either
+        # way truncation is impossible; which guard catches it first is an implementation detail.
+        with pytest.raises((psycopg.errors.InsufficientPrivilege, psycopg.errors.FeatureNotSupported)):
             c.execute("TRUNCATE ten_evidence_revision")
     with app(tenant_a) as c, pytest.raises(psycopg.errors.InsufficientPrivilege, match="cannot be downgraded"):
         c.execute("UPDATE ten_evidence SET data_class = 'C' WHERE id = %s", [m.id])

@@ -1,6 +1,6 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-25T22:43:38+00:00",
+  "generated_at": "2026-10-25T07:53:33+00:00",
   "generator": "tests/test_evidence_artifacts.py::privilege_matrix.json",
   "role_attributes": [
     {
@@ -123,7 +123,27 @@
       "plt_tenant": [
         "SELECT"
       ],
+      "ten_common_control": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_control_assertion": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
       "ten_evidence": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_evidence_link": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_evidence_requirement": [
         "INSERT",
         "SELECT",
         "UPDATE"
@@ -141,6 +161,26 @@
       "ten_framework_changeset_decision": [
         "INSERT",
         "SELECT"
+      ],
+      "ten_framework_custom": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_framework_custom_requirement": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_framework_custom_version": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_implementation_control": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
       ],
       "ten_mapping_override": [
         "INSERT",

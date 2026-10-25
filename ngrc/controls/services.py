@@ -8,9 +8,18 @@ have checked `control.manage` - services trust an already-authorized caller, sam
 from __future__ import annotations
 
 from ngrc.audit import service as audit
+from ngrc.core import clock
+from ngrc.evidence.models import EvidenceRevision
 from ngrc.framework import services as framework_services
 
-from .models import CommonControl, ControlAssertion, ImplementationControl
+from .models import (
+    CommonControl,
+    ControlAssertion,
+    EvidenceLink,
+    EvidenceRequirement,
+    Frequency,
+    ImplementationControl,
+)
 
 
 class ControlError(Exception):
@@ -58,3 +67,58 @@ def assert_control(implementation_control: ImplementationControl, framework_urn:
     audit.record("control.assertion.created", actor_id=created_by, object_type="control_assertion",
                  object_id=str(assertion.id), details={"framework_urn": framework_urn, "requirement_urn": requirement_urn})
     return assertion
+
+
+def create_evidence_requirement(implementation_control: ImplementationControl, evidence_type: str, *, created_by,
+                                 source_system: str = "", frequency: str = Frequency.ON_DEMAND,
+                                 freshness_days: int | None = None, acceptance_criteria: str = "",
+                                 owner=None, reviewer=None) -> EvidenceRequirement:
+    req = EvidenceRequirement.objects.create(
+        implementation_control=implementation_control, evidence_type=evidence_type, source_system=source_system,
+        frequency=frequency, freshness_days=freshness_days, acceptance_criteria=acceptance_criteria, owner=owner,
+        reviewer=reviewer, created_by=created_by,
+    )
+    audit.record("control.evidence_requirement.created", actor_id=created_by, object_type="evidence_requirement",
+                 object_id=str(req.id), details={"evidence_type": evidence_type})
+    return req
+
+
+def link_evidence(control_assertion: ControlAssertion, evidence_revision: EvidenceRevision, *, created_by,
+                   evidence_requirement: EvidenceRequirement | None = None) -> EvidenceLink:
+    """Fails closed: the revision must already be `collected` (clean scan) - scan_pending or quarantined
+    evidence can never be attached to a control assertion. If an EvidenceRequirement is given, it must
+    belong to the same ImplementationControl as the assertion being linked (D-P3-002)."""
+    if evidence_revision.state != EvidenceRevision.State.COLLECTED:
+        raise ControlError(f"evidence_not_collected:{evidence_revision.state}")
+    if evidence_requirement is not None and (
+        evidence_requirement.implementation_control_id != control_assertion.implementation_control_id
+    ):
+        raise ControlError("evidence_requirement_mismatch")
+    link = EvidenceLink.objects.create(
+        control_assertion=control_assertion, evidence_requirement=evidence_requirement,
+        evidence_revision_id=evidence_revision.id, created_by=created_by,
+    )
+    audit.record("control.evidence_link.created", actor_id=created_by, object_type="evidence_link",
+                 object_id=str(link.id), details={"review_state": link.review_state})
+    return link
+
+
+_ALLOWED_REVIEW_TRANSITIONS: dict[str, set[str]] = {
+    EvidenceLink.ReviewState.COLLECTED: {EvidenceLink.ReviewState.IN_REVIEW},
+    EvidenceLink.ReviewState.IN_REVIEW: {EvidenceLink.ReviewState.ACCEPTED, EvidenceLink.ReviewState.REJECTED},
+    EvidenceLink.ReviewState.ACCEPTED: {EvidenceLink.ReviewState.EXPIRED, EvidenceLink.ReviewState.SUPERSEDED},
+    EvidenceLink.ReviewState.REJECTED: {EvidenceLink.ReviewState.EXPIRED},
+}
+
+
+def review_evidence_link(link: EvidenceLink, new_state: str, *, reviewed_by) -> EvidenceLink:
+    """Fails closed: only transitions in `_ALLOWED_REVIEW_TRANSITIONS` are accepted (D-P3-002)."""
+    allowed = _ALLOWED_REVIEW_TRANSITIONS.get(link.review_state, set())
+    if new_state not in allowed:
+        raise ControlError(f"invalid_transition:{link.review_state}->{new_state}")
+    from_state = link.review_state
+    link.review_state, link.reviewed_by, link.reviewed_at = new_state, reviewed_by, clock.now()
+    link.save(update_fields=["review_state", "reviewed_by", "reviewed_at"])
+    audit.record("control.evidence_link.reviewed", actor_id=reviewed_by, object_type="evidence_link",
+                 object_id=str(link.id), details={"from_state": from_state, "to_state": new_state})
+    return link
