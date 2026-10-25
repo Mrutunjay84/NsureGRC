@@ -75,6 +75,10 @@ class Requirement(ClassifiedModel):
     title = models.CharField(max_length=300)
     text_hash = models.CharField(max_length=64, blank=True)
     parent = models.ForeignKey("self", on_delete=models.PROTECT, null=True, related_name="children")
+    # Curator-authored informative guidance (e.g. [{"catalog": "NIST SP 800-53", "ref": "AC-2", "note": "..."}]).
+    # Not validated against any real external catalog - none is integrated (D-P2-001 addendum). Frozen by the
+    # same cat_requirement_guard trigger once the version is published - no trigger change needed.
+    reference_controls = models.JSONField(default=list)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
