@@ -93,3 +93,111 @@ export interface DashboardResponse {
   evidence_coverage: Record<string, MetricRow>;
   framework_coverage: Record<string, MetricRow>;
 }
+
+// ---- ngrc.controls (CommonControl/ImplementationControl/ControlAssertion/Finding/Task)
+export interface CommonControl {
+  id: string;
+  key: string;
+  name: string;
+  objective: string;
+  category: string;
+  lifecycle: string;
+  owner: string | null;
+  created_at: string;
+}
+
+export interface ImplementationControl {
+  id: string;
+  common_control_id: string;
+  common_control_name: string;
+  name: string;
+  description: string;
+  owner: string | null;
+  reviewer: string | null;
+  due_date: string | null;
+  lifecycle: string;
+  created_at: string;
+}
+
+export interface ControlAssertion {
+  id: string;
+  framework_urn: string;
+  requirement_urn: string;
+  coverage: number | null;
+  satisfaction_state: string;
+  review_state: string;
+}
+
+export interface Finding {
+  id: string;
+  implementation_control_id: string;
+  title: string;
+  description: string;
+  source: string;
+  severity: "low" | "medium" | "high" | "critical";
+  status: "open" | "in_remediation" | "pending_verification" | "closed";
+  remediation_notes: string;
+  owner: string | null;
+  created_at: string;
+}
+
+export interface Task {
+  id: string;
+  implementation_control_id: string;
+  title: string;
+  description: string;
+  assigned_to: string | null;
+  due_date: string | null;
+  status: "open" | "in_progress" | "done";
+  created_at: string;
+}
+
+export interface ImplementationControlDetail extends ImplementationControl {
+  assertions: ControlAssertion[];
+  findings: Finding[];
+  tasks: Task[];
+}
+
+// ---- ngrc.evidence
+export interface EvidenceItem {
+  id: string;
+  title: string;
+  description: string;
+  data_class: "C" | "R";
+  created_at: string;
+}
+
+export interface EvidenceRevisionItem {
+  id: string;
+  revision_no: number;
+  filename: string;
+  detected_type: string;
+  size_bytes: number;
+  sha256: string;
+  state: "scan_pending" | "collected" | "quarantined";
+  created_at: string;
+}
+
+export interface EvidenceDetail extends EvidenceItem {
+  revisions: EvidenceRevisionItem[];
+}
+
+export async function uploadEvidenceRevision(evidenceId: string, file: File): Promise<EvidenceRevisionItem> {
+  const token = await (async () => {
+    const res = await fetch(`${BASE}/auth/csrf/`, { credentials: "same-origin" });
+    return (await res.json()).csrfToken as string;
+  })();
+  const res = await fetch(`${BASE}/tenant/evidence/${evidenceId}/revisions/`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "X-CSRFToken": token,
+      "Content-Type": file.type || "application/octet-stream",
+      "X-Filename": encodeURIComponent(file.name),
+    },
+    body: file,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new ApiError(res.status, data);
+  return data as EvidenceRevisionItem;
+}

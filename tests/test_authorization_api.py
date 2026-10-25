@@ -114,7 +114,7 @@ def test_endpoint_inventory_is_reviewed():
     sensitive = {p for p in names if any(w in p for w in ("search", "download", "upload", "file", "attachment", "export", "report"))}
     assert sensitive == {"api/v1/tenant/search/", "api/v1/tenant/evidence/<uuid:pk>/revisions/<uuid:rid>/download/",
                          "api/v1/tenant/audit/export/", "api/v1/tenant/reporting/dashboard/"}, sensitive
-    assert len(names) == 1 + 29 + 21 + 25  # healthz + customer auth (+factors, +recovery) + tenant (+recovery, +evidence, +search, +reporting) + operator plane (+recovery)
+    assert len(names) == 1 + 29 + 21 + 49  # healthz + customer auth (+factors, +recovery) + tenant (+recovery, +evidence, +search, +reporting, +controls/findings/tasks, +risk, +governance, +compliance_audit, +privacy) + operator plane (+recovery)
 
 
 # ------------------------------------------------------------------------------------------------ privilege escalation
