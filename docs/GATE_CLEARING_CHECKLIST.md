@@ -97,12 +97,16 @@ This is the item with real calendar time and cost, so start sourcing a reviewer 
 
 | | |
 |---|---|
-| Package | `evidence/review_package/nsuregrc_review_package_fe008f356068.zip` (317 KB) |
-| `package_sha256` | `fe008f35606831692394aefd16507eb4aba25b7fc17ec68fdb495535540bccfa` |
-| Contents | 63 reviewed source files + 9 context documents, generated 2026-10-20 |
+| Package | `evidence/review_package/nsuregrc_review_package_33bd252cec84.zip` (320 KB) |
+| `package_sha256` | `33bd252cec84155912301fd36e9a7a066dfedce0d7092c711412cea999ca0d9b` |
+| Contents | 63 reviewed source files + 9 context documents, regenerated 2026-10-25 |
 | Brief | [`review/INDEPENDENT_REVIEW_PACKAGE.md`](review/INDEPENDENT_REVIEW_PACKAGE.md) — includes **25 known concerns** written up for them |
 
-This package **supersedes** the earlier 44-file one; a review of that digest will be rejected as stale.
+This package **supersedes two earlier ones**: the original 44-file package, and the 63-file `fe008f35…` package from
+2026-10-20 — regenerated because `ngrc/audit/sealer.py`, which is in the `audit_integrity_checkpoint` scope, changed on
+2026-10-25 (`DEF-18`, a concurrency fix). A review of either earlier digest will be rejected as stale. **Always
+regenerate with `uv run python scripts/build_review_package.py` before sending to a reviewer** if any scoped file has
+changed since the package's `generated_at` — check `evidence/review_package/review_package_manifest.json`.
 
 ### The four scopes they must cover ([`review/review_scope.yaml`](review/review_scope.yaml))
 
@@ -123,7 +127,7 @@ different package digest. The reviewer's report must supply, **in their own word
 
 - Name, organisation, relevant qualifications
 - An **independence statement** — only the reviewer can assert this; no involvement in design, implementation or testing
-- `reviewed_manifest_sha256` matching `fe008f35…bccfa`
+- `reviewed_manifest_sha256` matching `33bd252c…9ca0d9b`
 - A disposition per scope: `approved` / `approved_with_conditions` / `rejected`
 - Findings with the reviewer's own severity ratings, each later marked `remediated` (with retest evidence) or
   `accepted_risk` (with a named approver)

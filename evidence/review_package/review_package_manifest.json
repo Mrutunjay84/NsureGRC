@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-10-20T21:23:13+00:00",
-  "package_sha256": "fe008f35606831692394aefd16507eb4aba25b7fc17ec68fdb495535540bccfa",
+  "generated_at": "2026-10-25T10:28:15+00:00",
+  "package_sha256": "33bd252cec84155912301fd36e9a7a066dfedce0d7092c711412cea999ca0d9b",
   "digest_covers": "files in group 'reviewed' (scope files, tests, Phase 0 ADRs): sha256 over sorted '<sha256>  <path>' lines",
-  "git_commit": "8c4f60ccdab2f23b4daa5bd01d11ec438883f099",
-  "git_dirty": true,
+  "git_commit": "91eaac23e37651b4a005febeaae91b6fe9b1b27a",
+  "git_dirty": false,
   "uv_lock_sha256": "d5f70c80a53ddd67b8a85c7ac2cdb62a7edf89b33df01c874cc899b72eab5f71",
   "python": "3.12.13",
   "scopes": [
@@ -252,9 +252,9 @@
     {
       "path": "03_APP/nsuregrc/ngrc/audit/sealer.py",
       "group": "reviewed",
-      "sha256": "b548516e3a708a7f939c193e6f37cf97a05ef0f3fadb38597859c33189d53c40",
-      "bytes": 4998,
-      "lines": 81
+      "sha256": "6bff58ac578e4b461ecf01b857ec413e9137e89ab69ff60d22a47731bf17855d",
+      "bytes": 6755,
+      "lines": 100
     },
     {
       "path": "03_APP/nsuregrc/ngrc/audit/service.py",
@@ -581,23 +581,23 @@
     {
       "path": "03_APP/nsuregrc/docs/SECURITY_CONTROL_MATRIX.md",
       "group": "context",
-      "sha256": "243b034c17d2d96bbe8f80fd7e378448dddeded49881354850cf59e65e586c6d",
-      "bytes": 28558,
-      "lines": 238
+      "sha256": "5461c7fafd4626c3270af9686cda2c2539c7cc89cdcf9c6b0a506ae4f919ccf5",
+      "bytes": 33983,
+      "lines": 276
     },
     {
       "path": "03_APP/nsuregrc/docs/SECURITY_TEST_REPORT.md",
       "group": "context",
-      "sha256": "cd3a9f03be2234174ab96f04d3ca2476fa4059f1326dafba69197d20a9a03b32",
-      "bytes": 73404,
-      "lines": 405
+      "sha256": "999c6a9822d76c4261404b11a9270639573bfeaa5ec8ec4175b3f4df67d20e2d",
+      "bytes": 92358,
+      "lines": 491
     },
     {
       "path": "03_APP/nsuregrc/docs/defects_found.yaml",
       "group": "context",
-      "sha256": "b9e8907176a662519acebfb56fb583117034faf106225697393c8c7281cc39a9",
-      "bytes": 15345,
-      "lines": 142
+      "sha256": "01c5f40094c82a517bb56a869fd005a17003d88ba379c5f10d6cbc67d17eeabc",
+      "bytes": 21930,
+      "lines": 160
     },
     {
       "path": "03_APP/nsuregrc/docs/review/INDEPENDENT_REVIEW_PACKAGE.md",
