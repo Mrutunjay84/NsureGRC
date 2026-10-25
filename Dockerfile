@@ -26,12 +26,15 @@ COPY db/table_classification.yaml ./db/table_classification.yaml
 FROM python:3.12-slim-bookworm AS runtime
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PYTHONHASHSEED=random PATH="/app/.venv/bin:$PATH" \
     DJANGO_SETTINGS_MODULE=config.settings.prod NGRC_ENV=prod
-# Patch the base image's own bundled pip and tzdata (CVE-2025-8869, CVE-2026-13346/3219/6357/8643/1703, DLA-4854-1:
-# all found by the real CI image scan, none HIGH/CRITICAL). The application never invokes this global pip - uv
-# built /app/.venv in the build stage - this only closes findings against what the base image ships.
+# Patch tzdata (DLA-4854-1) and remove pip/setuptools/wheel entirely, not just upgrade: pip vendors frozen,
+# pinned-for-life copies of msgpack/urllib3/setuptools inside itself (pip 26.2.2's own vendor.txt still pins
+# msgpack==1.1.2, urllib3==2.7.0, setuptools==70.3.0 - CVE-2025-47273, CVE-2026-97687, CVE-2026-97689,
+# GHSA-6v7p-g79w-8964, all HIGH), so upgrading pip's own version never clears these; only removing it does.
+# The application never invokes any of this - uv built /app/.venv in the build stage - and the header comment
+# above has always said "no build tools or package managers in the runtime layer"; this makes that true.
 RUN apt-get update && apt-get install --no-install-recommends --only-upgrade -y tzdata=2026e-0+deb12u1 \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && python -m pip install --no-cache-dir --upgrade pip==26.2.2
+    && python -m pip uninstall --yes pip setuptools wheel
 # fixed unprivileged uid/gid, no login shell, no home directory contents
 RUN groupadd --system --gid 10001 ngrc && useradd --system --uid 10001 --gid ngrc --no-create-home --shell /usr/sbin/nologin ngrc
 WORKDIR /app
