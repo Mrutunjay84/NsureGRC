@@ -31,8 +31,9 @@ accepted:
     residual_risk: low
 
   - id: ACCEPT-GH-FREE-TIER-001
-    package: "GitHub repository Mrutunjay84/NsureGRC (private, free plan)"
+    package: "GitHub repository Mrutunjay84/NsureGRC (free plan)"
     scope: "Branch protection rules and repository rulesets on `main`; GitHub Advanced Security (secret scanning, push protection) on a private repo"
+    status: "RESOLVED 2026-10-26 (D-P1-005) — the repository was made public (owner decision, unrelated to this entry: to possibly get free scrutiny during development, intending to re-privatize later). Both gaps below are a private-plan limitation only; all three protections are free on a public repo and are now actually enabled and verified live: branch protection on `main` (required status checks: all five CI jobs; enforce_admins: true; force-push and deletion blocked), secret_scanning: enabled, secret_scanning_push_protection: enabled. This entry is kept, not deleted, as the record of why it was accepted while private and what re-opens it: if the repository is made private again (D-P1-005 states that as the owner's intent), these three protections silently revert to blocked/disabled, exactly as described below, and this acceptance becomes live again without anyone having to rediscover it."
     justification: >
       Owner decision (2026-10-25): will not pay for GitHub Pro or GitHub Advanced Security. Verified directly against the
       GitHub API, not assumed: PUT .../branches/main/protection and POST .../rulesets both return 403
