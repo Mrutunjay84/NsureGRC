@@ -147,7 +147,15 @@ ACTIONS_FRAMEWORK: tuple[Action, ...] = (
        ["framework_urn", "source_requirement_urn", "target_requirement_urn", "relationship"]),
 )
 
-ACTIONS: tuple[Action, ...] = ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK
+# ACTIONS_FRAMEWORK was already seeded by migration 0005 - frozen, same convention as ACTIONS_P1/ACTIONS_P2.
+# D-P2-003: tenant-authored custom frameworks get their own new batch + migration (0006).
+ACTIONS_CUSTOM_FRAMEWORK: tuple[Action, ...] = (
+    _a("framework.custom_framework.created", "framework", "info", "tenant", [APP], ["framework_urn"]),
+    _a("framework.custom_version.published", "framework", "notice", "tenant", [APP],
+       ["framework_urn", "version_label"]),
+)
+
+ACTIONS: tuple[Action, ...] = ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK
 
 BY_NAME = {a.name: a for a in ACTIONS}
 if len(BY_NAME) != len(ACTIONS):  # explicit raise: asserts vanish under `python -O`

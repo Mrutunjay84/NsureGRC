@@ -34,7 +34,10 @@ EXPECTED = {
                  **{t: {"SELECT"} for t in CAT_PLT_FRAMEWORK_TABLES},  # D-P2-001: read-only, never writes the catalogue
                  "ten_framework_activation": {"SELECT", "INSERT", "UPDATE"},
                  "ten_mapping_override": {"SELECT", "INSERT", "UPDATE"},
-                 "ten_framework_changeset_decision": {"SELECT", "INSERT"}},
+                 "ten_framework_changeset_decision": {"SELECT", "INSERT"},
+                 "ten_framework_custom": {"SELECT", "INSERT", "UPDATE"},
+                 "ten_framework_custom_version": {"SELECT", "INSERT", "UPDATE"},
+                 "ten_framework_custom_requirement": {"SELECT", "INSERT", "UPDATE"}},
     "ngrc_auth": {**{t: CRUD for t in IDN_TABLES}, "plt_tenant": {"SELECT"}, "ten_membership": {"SELECT"},
                   "ten_role": {"SELECT"}, "idn_recovery_request": {"SELECT"}},  # recovery: read-only, every write via SECURITY DEFINER fns
     "ngrc_ops": {**{t: CRUD for t in OPERATOR_TABLES}, "plt_tenant": {"SELECT", "INSERT", "UPDATE"},

@@ -165,8 +165,13 @@ class FrameworkActivation(TenantOwnedModel):
         ACTIVE = "active"
         SUPERSEDED = "superseded"
 
+    class Kind(models.TextChoices):
+        CATALOG = "catalog"  # resolves against cat_framework / cat_framework_version
+        CUSTOM = "custom"    # resolves against this tenant's ten_framework_custom*
+
     framework_urn = models.SlugField(max_length=200)
     pinned_version_label = models.CharField(max_length=64)
+    kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.CATALOG)
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.ACTIVE)
     activated_by = models.UUIDField(null=True)
     activated_at = models.DateTimeField(auto_now_add=True)
@@ -215,4 +220,66 @@ class FrameworkChangesetDecision(TenantOwnedModel):
             models.UniqueConstraint(
                 fields=["tenant", "id"], name="ten_framework_changeset_decision_tenant_id_uniq"
             ),
+        ]
+
+
+# -------------------------------------------------------------------------------------- custom frameworks (D-P2-003)
+# Tenant-authored, parallel in shape to the CAT catalog (Framework/FrameworkVersion/Requirement) so
+# FrameworkActivation.kind="custom" lets the resolver treat either source the same way. No ChangeSet/diff
+# tracking here - see D-P2-003 for why that's a deliberate simplification, not an oversight.
+class CustomFramework(TenantOwnedModel):
+    urn = models.SlugField(max_length=200)
+    name = models.CharField(max_length=200)
+    created_by = models.UUIDField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ten_framework_custom"
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="ten_framework_custom_tenant_id_uniq"),
+            models.UniqueConstraint(fields=["tenant", "urn"], name="ten_framework_custom_tenant_urn_uniq"),
+        ]
+
+
+class CustomFrameworkVersion(TenantOwnedModel):
+    class Status(models.TextChoices):
+        DRAFT = "draft"
+        PUBLISHED = "published"
+        DEPRECATED = "deprecated"
+
+    framework = models.ForeignKey(CustomFramework, on_delete=models.PROTECT, related_name="versions")
+    version_label = models.CharField(max_length=64)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.DRAFT)
+    effective_date = models.DateField(null=True)
+    published_at = models.DateTimeField(null=True)
+    checksum = models.CharField(max_length=64, blank=True)
+    source_metadata = models.JSONField(default=dict)
+    created_by = models.UUIDField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ten_framework_custom_version"
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="ten_framework_custom_version_tenant_id_uniq"),
+            models.UniqueConstraint(fields=["tenant", "framework", "version_label"],
+                                     name="ten_framework_custom_version_label_uniq"),
+        ]
+
+
+class CustomRequirement(TenantOwnedModel):
+    framework_version = models.ForeignKey(CustomFrameworkVersion, on_delete=models.PROTECT, related_name="requirements")
+    urn = models.SlugField(max_length=250)
+    ref_id = models.CharField(max_length=64)
+    title = models.CharField(max_length=300)
+    text_hash = models.CharField(max_length=64, blank=True)
+    parent = models.ForeignKey("self", on_delete=models.PROTECT, null=True, related_name="children")
+    reference_controls = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ten_framework_custom_requirement"
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="ten_framework_custom_requirement_tenant_id_uniq"),
+            models.UniqueConstraint(fields=["tenant", "framework_version", "urn"],
+                                     name="ten_framework_custom_requirement_urn_uniq"),
         ]

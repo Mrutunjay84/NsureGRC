@@ -17,6 +17,9 @@ from ngrc.audit import service as audit
 from ngrc.core import clock
 
 from .models import (
+    CustomFramework,
+    CustomFrameworkVersion,
+    CustomRequirement,
     Framework,
     FrameworkActivation,
     FrameworkChangeSet,
@@ -131,7 +134,71 @@ def activate_framework(framework: Framework, version: FrameworkVersion, *, activ
         existing.status = FrameworkActivation.Status.SUPERSEDED
         existing.save()
     activation = FrameworkActivation.objects.create(
-        framework_urn=framework.urn, pinned_version_label=version.version_label, activated_by=activated_by,
+        framework_urn=framework.urn, pinned_version_label=version.version_label,
+        kind=FrameworkActivation.Kind.CATALOG, activated_by=activated_by,
+    )
+    audit.record("framework.activation.created", actor_id=activated_by, object_type="framework_activation",
+                 object_id=str(activation.id),
+                 details={"framework_urn": framework.urn, "version_label": version.version_label})
+    return activation
+
+
+# ------------------------------------------------------------------------------------------- custom frameworks
+def draft_custom_framework(urn: str, name: str, *, created_by) -> CustomFramework:
+    """Caller must already be inside the target tenant's `tenant_context()` (see `activate_framework`)."""
+    fw = CustomFramework.objects.create(urn=urn, name=name, created_by=created_by)
+    audit.record("framework.custom_framework.created", actor_id=created_by, object_type="custom_framework",
+                 object_id=str(fw.id), details={"framework_urn": urn})
+    return fw
+
+
+def draft_custom_version(framework: CustomFramework, version_label: str, *, created_by,
+                          effective_date=None, source_metadata: dict | None = None) -> CustomFrameworkVersion:
+    return CustomFrameworkVersion.objects.create(
+        framework=framework, version_label=version_label, effective_date=effective_date,
+        source_metadata=source_metadata or {}, created_by=created_by,
+    )
+
+
+def add_custom_requirement(version: CustomFrameworkVersion, urn: str, ref_id: str, title: str, *, text_hash: str = "",
+                            parent: CustomRequirement | None = None, reference_controls: list | None = None) -> CustomRequirement:
+    if version.status != CustomFrameworkVersion.Status.DRAFT:
+        raise FrameworkError("version_not_draft")
+    return CustomRequirement.objects.create(
+        framework_version=version, urn=urn, ref_id=ref_id, title=title, text_hash=text_hash, parent=parent,
+        reference_controls=reference_controls or [],
+    )
+
+
+def publish_custom_version(version: CustomFrameworkVersion, *, published_by) -> CustomFrameworkVersion:
+    """No ChangeSet/diff tracking for custom frameworks this increment (D-P2-003) - a tenant's own version
+    history is queryable directly; the curated diff workflow is for the shared catalogue."""
+    if version.status != CustomFrameworkVersion.Status.DRAFT:
+        raise FrameworkError("version_not_draft")
+    version.status = CustomFrameworkVersion.Status.PUBLISHED
+    version.published_at = clock.now()
+    version.save()
+    audit.record("framework.custom_version.published", actor_id=published_by, object_type="custom_framework_version",
+                 object_id=str(version.id),
+                 details={"framework_urn": version.framework.urn, "version_label": version.version_label})
+    return version
+
+
+def activate_custom_framework(framework: CustomFramework, version: CustomFrameworkVersion, *, activated_by) -> FrameworkActivation:
+    """Fail-closed, same contract as `activate_framework`: refuses an unpublished version."""
+    if version.framework_id != framework.id:
+        raise FrameworkError("version_framework_mismatch")
+    if version.status != CustomFrameworkVersion.Status.PUBLISHED:
+        raise FrameworkError("version_not_published")
+    existing = FrameworkActivation.objects.filter(
+        framework_urn=framework.urn, kind=FrameworkActivation.Kind.CUSTOM, status=FrameworkActivation.Status.ACTIVE
+    ).first()
+    if existing is not None:
+        existing.status = FrameworkActivation.Status.SUPERSEDED
+        existing.save()
+    activation = FrameworkActivation.objects.create(
+        framework_urn=framework.urn, pinned_version_label=version.version_label,
+        kind=FrameworkActivation.Kind.CUSTOM, activated_by=activated_by,
     )
     audit.record("framework.activation.created", actor_id=activated_by, object_type="framework_activation",
                  object_id=str(activation.id),
@@ -187,35 +254,56 @@ def override_mapping(framework: Framework, source_requirement: Requirement, targ
 
 
 # ------------------------------------------------------------------------------------------------------- resolver
-def resolve_active_version(framework_urn: str) -> FrameworkVersion:
+# D-P0-009's "single resolver that unions CAT and TEN sources": the branch on `activation.kind` lives here,
+# once, so no caller has to know whether a given framework_urn is catalog- or tenant-authored (D-P2-003).
+def resolve_active_activation(framework_urn: str) -> FrameworkActivation:
     """Fail-closed (P0 non-negotiable #7): no active pin => raises, never silently falls back to "latest"."""
     activation = FrameworkActivation.objects.filter(
         framework_urn=framework_urn, status=FrameworkActivation.Status.ACTIVE
     ).first()
     if activation is None:
         raise FrameworkError("no_active_pin")
-    version = FrameworkVersion.objects.using("default").filter(
-        framework__urn=framework_urn, version_label=activation.pinned_version_label,
-    ).first()
+    return activation
+
+
+def resolve_active_version(framework_urn: str):
+    """Returns a `FrameworkVersion` (kind=catalog) or `CustomFrameworkVersion` (kind=custom) - both expose
+    the same `.requirements` related manager and `.version_label`, which is all `resolve_requirements`
+    needs; callers that need CAT-only behaviour (the official `Mapping` table) check `.kind` themselves,
+    as `resolve_mapping` does below."""
+    activation = resolve_active_activation(framework_urn)
+    if activation.kind == FrameworkActivation.Kind.CUSTOM:
+        version = CustomFrameworkVersion.objects.using("default").filter(
+            framework__urn=framework_urn, version_label=activation.pinned_version_label,
+        ).first()
+    else:
+        version = FrameworkVersion.objects.using("default").filter(
+            framework__urn=framework_urn, version_label=activation.pinned_version_label,
+        ).first()
     if version is None:
         raise FrameworkError("pinned_version_missing")
     return version
 
 
 def resolve_requirements(framework_urn: str):
-    return Requirement.objects.using("default").filter(framework_version=resolve_active_version(framework_urn))
+    return resolve_active_version(framework_urn).requirements.all()
 
 
 def resolve_mapping(framework_urn: str, source_requirement_urn: str) -> list[dict]:
     """Tenant override wins (if any, for this exact source urn); otherwise the official catalogue mapping
-    at the tenant's pinned version. Never a merge of both - D-P0-009's "custom-vs-catalogue union",
-    resolved here by substitution, not merging rows (see the ADR)."""
+    at the tenant's pinned version - only meaningful for kind=catalog, since a custom framework has no
+    separate "official" mapping catalogue distinct from what the tenant itself wrote (an override, or
+    nothing). Never a merge of both - D-P0-009's "custom-vs-catalogue union", resolved here by
+    substitution, not merging rows (see the ADR)."""
     overrides = list(MappingOverride.objects.filter(
         framework_urn=framework_urn, source_requirement_urn=source_requirement_urn, superseded_at__isnull=True,
     ).values("target_requirement_urn", "relationship", "coverage", "rationale"))
     if overrides:
         return [{"source_requirement_urn": source_requirement_urn, "target_requirement_urn": o["target_requirement_urn"],
                  "relationship": o["relationship"], "coverage": o["coverage"], "origin": "override"} for o in overrides]
+    activation = resolve_active_activation(framework_urn)
+    if activation.kind == FrameworkActivation.Kind.CUSTOM:
+        return []
     version = resolve_active_version(framework_urn)
     rows = Mapping.objects.using("default").filter(
         source_requirement__framework_version=version, source_requirement__urn=source_requirement_urn,
