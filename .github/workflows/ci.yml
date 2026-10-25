@@ -137,6 +137,10 @@ jobs:
           exit-code: "1"
           format: sarif
           output: trivy-image.sarif
+          limit-severities-for-sarif: "true"   # trivy-action's entrypoint.sh unsets TRIVY_SEVERITY entirely for
+                                                 # sarif output unless this is set - confirmed by the real run: it
+                                                 # failed on 6 MEDIUM/LOW pip CVEs and an UNKNOWN-severity tzdata
+                                                 # note, none HIGH/CRITICAL, exactly what "all severities" causes
       - name: Trivy Dockerfile / configuration scan
         uses: aquasecurity/trivy-action@v0.33.1
         with: {scan-type: config, scan-ref: ., severity: "MEDIUM,HIGH,CRITICAL", exit-code: "1", version: v0.74.0}

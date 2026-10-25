@@ -26,6 +26,11 @@ COPY db/table_classification.yaml ./db/table_classification.yaml
 FROM python:3.12-slim-bookworm AS runtime
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PYTHONHASHSEED=random PATH="/app/.venv/bin:$PATH" \
     DJANGO_SETTINGS_MODULE=config.settings.prod NGRC_ENV=prod
+# Patch the base image's own bundled pip and tzdata (CVE-2025-8869, CVE-2026-13346/3219/6357/8643/1703, DLA-4854-1:
+# all found by the real CI image scan, none HIGH/CRITICAL). The application never invokes this global pip - uv
+# built /app/.venv in the build stage - this only closes findings against what the base image ships.
+RUN apt-get update && apt-get install --only-upgrade -y tzdata && apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && python -m pip install --no-cache-dir --upgrade pip
 # fixed unprivileged uid/gid, no login shell, no home directory contents
 RUN groupadd --system --gid 10001 ngrc && useradd --system --uid 10001 --gid ngrc --no-create-home --shell /usr/sbin/nologin ngrc
 WORKDIR /app
