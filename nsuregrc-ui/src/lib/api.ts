@@ -225,6 +225,7 @@ export interface RiskScenario {
   treatment: "mitigate" | "avoid" | "transfer" | "accept" | null;
   status: "open" | "treating" | "accepted" | "closed";
   owner: string | null;
+  asset_id: string | null;
   created_at: string;
 }
 
@@ -371,5 +372,50 @@ export interface ThirdPartyAssessment {
   assessor: string | null;
   started_at: string | null;
   completed_at: string | null;
+  created_at: string;
+}
+
+// ---- D-P7-002: Assets + BIA
+export interface Asset {
+  id: string;
+  name: string;
+  asset_type: "hardware" | "software" | "data" | "facility" | "personnel" | "service" | "other";
+  criticality: ThirdPartyCriticality;
+  owner: string | null;
+  description: string;
+  created_at: string;
+}
+
+export interface AssetDetail extends Asset {
+  bias: AssetBia[];
+  risk_scenarios: RiskScenario[];
+  incidents: Incident[];
+}
+
+export interface AssetBia {
+  id: string;
+  asset_id: string;
+  recovery_time_objective_hours: number | null;
+  recovery_point_objective_hours: number | null;
+  impact_rating: ThirdPartyCriticality;
+  notes: string;
+  assessor: string | null;
+  assessed_at: string | null;
+  created_at: string;
+}
+
+export interface Incident {
+  id: string;
+  title: string;
+  description: string;
+  severity: ThirdPartyCriticality;
+  status: "detected" | "investigating" | "contained" | "resolved" | "closed";
+  detected_at: string;
+  resolved_at: string | null;
+  closed_at: string | null;
+  owner: string | null;
+  risk_scenario_id: string | null;
+  implementation_control_id: string | null;
+  asset_id: string | null;
   created_at: string;
 }

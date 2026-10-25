@@ -66,6 +66,8 @@ for _k, _priv in [
     ("privacy.manage", True),  # D-P4-006: create/edit processing activities, rights requests, breaches
     ("third_party.read", False),
     ("third_party.manage", True),  # D-P7-001: create/edit third-party entities, representatives, solutions, assessments
+    ("asset.read", False),
+    ("asset.manage", True),  # D-P7-002: create/edit assets and record BIAs
     ("notification.read", False),
     ("notification.manage", False),  # D-P5-007: mark own notifications read - not privileged, same as read
 ]:
@@ -100,11 +102,11 @@ SYSTEM_ROLES: dict[str, dict] = {
                         "framework.read", "framework.manage", "control.read", "control.manage", "risk.read", "risk.manage",
                         "governance.read", "governance.manage", "compliance_audit.read", "compliance_audit.manage",
                         "privacy.read", "privacy.manage", "third_party.read", "third_party.manage",
-                        "notification.read", "notification.manage"],
+                        "asset.read", "asset.manage", "notification.read", "notification.manage"],
     },
     "member": {"name": "Member", "permissions": ["tenant.view", "tenant.members.read", "framework.read", "control.read",
                                                   "risk.read", "governance.read", "compliance_audit.read", "privacy.read",
-                                                  "third_party.read", "notification.read", "notification.manage"]},
+                                                  "third_party.read", "asset.read", "notification.read", "notification.manage"]},
 }
 
 # Platform role -> permissions. Deliberately no role has standing access to tenant content (D-P0-005 s2).

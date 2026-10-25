@@ -1,4 +1,4 @@
-"""Risk assessments, scenarios and acceptances (D-P4-002); incidents (D-P4-003).
+"""Risk assessments, scenarios and acceptances (D-P4-002); incidents (D-P4-003); assets + BIA (D-P7-002).
 
 All plain TEN writes (no new DB role - D-P0-009's risk/bia/asset/incident domain has no CAT/PLT content
 beyond the P1-deferred threat/CWE catalogues). Callers must already be inside the target tenant's
@@ -10,7 +10,7 @@ from __future__ import annotations
 from ngrc.audit import service as audit
 from ngrc.core import clock
 
-from .models import Incident, RiskAcceptance, RiskAssessment, RiskScenario
+from .models import Asset, AssetBIA, Incident, RiskAcceptance, RiskAssessment, RiskScenario
 
 
 class RiskError(Exception):
@@ -48,12 +48,14 @@ def create_risk_assessment(name: str, *, created_by, description: str = "", owne
 
 
 def create_risk_scenario(risk_assessment: RiskAssessment, name: str, *, likelihood: int, impact: int, created_by,
-                          description: str = "", threat: str = "", vulnerability: str = "", owner=None) -> RiskScenario:
+                          description: str = "", threat: str = "", vulnerability: str = "", owner=None,
+                          asset: Asset | None = None) -> RiskScenario:
     if not (1 <= likelihood <= 5) or not (1 <= impact <= 5):
         raise RiskError("likelihood_and_impact_must_be_1_to_5")
     scenario = RiskScenario.objects.create(
         risk_assessment=risk_assessment, name=name, description=description, threat=threat,
         vulnerability=vulnerability, likelihood=likelihood, impact=impact, created_by=created_by, owner=owner,
+        asset=asset,
     )
     audit.record("risk.scenario.created", actor_id=created_by, object_type="risk_scenario",
                  object_id=str(scenario.id), details={"risk_level": risk_level(likelihood, impact)})
@@ -114,11 +116,11 @@ def accept_risk_scenario(scenario: RiskScenario, justification: str, *, approver
 
 def raise_incident(title: str, *, severity: str, created_by, description: str = "", owner=None,
                     detected_at=None, risk_scenario: RiskScenario | None = None,
-                    implementation_control=None) -> Incident:
+                    implementation_control=None, asset: Asset | None = None) -> Incident:
     incident = Incident.objects.create(
         title=title, description=description, severity=severity, owner=owner,
         detected_at=detected_at or clock.now(), risk_scenario=risk_scenario,
-        implementation_control=implementation_control, created_by=created_by,
+        implementation_control=implementation_control, asset=asset, created_by=created_by,
     )
     audit.record("risk.incident.raised", actor_id=created_by, object_type="incident", object_id=str(incident.id),
                  details={"severity": severity})
@@ -157,3 +159,27 @@ def transition_incident(incident: Incident, new_status: str, *, actor_id) -> Inc
     audit.record("risk.incident.transitioned", actor_id=actor_id, object_type="incident", object_id=str(incident.id),
                  details={"from_status": from_status, "to_status": new_status})
     return incident
+
+
+def create_asset(name: str, *, asset_type: str, criticality: str, created_by, owner=None,
+                  description: str = "") -> Asset:
+    asset = Asset.objects.create(
+        name=name, asset_type=asset_type, criticality=criticality, owner=owner, description=description,
+        created_by=created_by,
+    )
+    audit.record("asset.created", actor_id=created_by, object_type="asset", object_id=str(asset.id), details={})
+    return asset
+
+
+def record_bia(asset: Asset, *, impact_rating: str, created_by, recovery_time_objective_hours=None,
+               recovery_point_objective_hours=None, notes: str = "", assessor=None, assessed_at=None) -> AssetBIA:
+    """A new BIA is a new row, never an edit to a prior one (D-P7-002) - same "point-in-time assessment is
+    immutable history" reasoning as EvidenceRevision/ControlAssertion review history."""
+    bia = AssetBIA.objects.create(
+        asset=asset, impact_rating=impact_rating, recovery_time_objective_hours=recovery_time_objective_hours,
+        recovery_point_objective_hours=recovery_point_objective_hours, notes=notes, assessor=assessor,
+        assessed_at=assessed_at, created_by=created_by,
+    )
+    audit.record("asset.bia.recorded", actor_id=created_by, object_type="asset_bia", object_id=str(bia.id),
+                 details={"impact_rating": impact_rating})
+    return bia

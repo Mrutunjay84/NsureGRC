@@ -110,12 +110,15 @@ def test_endpoint_inventory_is_reviewed():
     tests/test_cross_tenant_search.py and tests/test_evidence_download.py. The reporting dashboard (D-P6-001, Phase 6) is the first
     "report" route - its tenant-isolation test lives in tests/test_reporting_api.py::test_dashboard_tenant_isolation. Export/job/
     notification endpoints still do not exist. D-P7-001 (Third Parties) added 6 routes - none sensitive by this test's keyword
-    list; tenant isolation reviewed in tests/test_third_party_api.py::test_third_party_entity_tenant_isolation."""
+    list; tenant isolation reviewed in tests/test_third_party_api.py::test_third_party_entity_tenant_isolation.
+    D-P7-002 (Assets + BIA) added 5 more: assets list/detail/bia (none sensitive) and Incident's first-ever
+    HTTP exposure (list + transition, built D-P4-003, never wired to the web until this increment needed it
+    to test the asset link) - tenant isolation reviewed in tests/test_assets_api.py::test_asset_tenant_isolation."""
     names = {p for p, _ in _routes()}
     sensitive = {p for p in names if any(w in p for w in ("search", "download", "upload", "file", "attachment", "export", "report"))}
     assert sensitive == {"api/v1/tenant/search/", "api/v1/tenant/evidence/<uuid:pk>/revisions/<uuid:rid>/download/",
                          "api/v1/tenant/audit/export/", "api/v1/tenant/reporting/dashboard/"}, sensitive
-    assert len(names) == 1 + 29 + 21 + 49 + 6  # healthz + customer auth (+factors, +recovery) + tenant (+recovery, +evidence, +search, +reporting, +controls/findings/tasks, +risk, +governance, +compliance_audit, +privacy) + operator plane (+recovery) + third parties (D-P7-001)
+    assert len(names) == 1 + 29 + 21 + 49 + 6 + 5  # healthz + customer auth (+factors, +recovery) + tenant (+recovery, +evidence, +search, +reporting, +controls/findings/tasks, +risk, +governance, +compliance_audit, +privacy) + operator plane (+recovery) + third parties (D-P7-001) + assets/incidents (D-P7-002)
 
 
 # ------------------------------------------------------------------------------------------------ privilege escalation

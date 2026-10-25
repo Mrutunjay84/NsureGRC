@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   Lock,
   Building2,
+  Server,
   type LucideIcon,
 } from "lucide-react";
 
@@ -46,7 +47,10 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     label: "Risk",
-    items: [{ label: "Risk Register", path: "/risk", icon: ShieldAlert }],
+    items: [
+      { label: "Risk Register", path: "/risk", icon: ShieldAlert },
+      { label: "Assets & Incidents", path: "/assets", icon: Server },
+    ],
   },
   {
     label: "Compliance",
