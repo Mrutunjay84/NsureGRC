@@ -1,35 +1,35 @@
 version: 1
 status: PASSED
-status_reason: "scripts/check_ci_record.py confirms PASSED (2026-10-26): commit 5cd872e exists in this repository and the workflow at that commit matches the recorded digest (0c11ba5c…634b64b); all five jobs succeeded with evidence; tests job reports 615 passed, 0 failed, 63 PostgreSQL/RLS tests among them; secrets job ran with full history available (fetch-depth: 0); container job built on Docker with a clean Trivy image scan (HIGH/CRITICAL, ignore-unfixed, the step's own exit-code=1-on-match made its success itself the proof); workflow unchanged since. Imported from run 40232416860 by scripts/import_ci_run.py."
+status_reason: "scripts/check_ci_record.py confirms PASSED (2026-10-26): commit de1f9ed exists in this repository and the workflow at that commit matches the recorded digest (672d6772…884d21); all five jobs succeeded with evidence; tests job reports 615 passed, 0 failed, 63 PostgreSQL/RLS tests among them; secrets job ran with full history available (fetch-depth: 0); container job built on Docker with a clean Trivy image scan (aquasecurity/trivy-action v0.36.0, past both CVEs Dependabot flagged on v0.33.1 - GHSA-69fq-xp46-6x23 critical, GHSA-9p44-j4g5-cfx5 medium); workflow unchanged since. Supersedes the 5cd872e record (same verdict, now against the trivy-action-upgraded workflow). Imported from run 40234519012 by scripts/import_ci_run.py."
 run:
   service: GitHub Actions
-  url: https://github.com/Mrutunjay84/NsureGRC/actions/runs/40232416860
-  commit_sha: 5cd872ec91a158fdccad980e051fe0e46d1734e6
-  completed_at: '2026-10-25T20:49:08Z'
+  url: https://github.com/Mrutunjay84/NsureGRC/actions/runs/40234519012
+  commit_sha: de1f9ed09d9acf56d3567bb4d6055c9eed7d7b1e
+  completed_at: '2026-10-25T21:15:57Z'
   workflow_path: .github/workflows/ci.yml
   workflow_name: ci
   repository_private: true
   runner_image: see run log
   jobs:
+    secrets:
+      conclusion: success
+      evidence: job log https://github.com/Mrutunjay84/NsureGRC/actions/runs/40234519012/job/121293114116
+      history_scanned: true  # actions/checkout ran with fetch-depth: 0 at this job (confirmed in the job log), making full history available to gitleaks
+    sca:
+      conclusion: success
+      evidence: artifact sca-evidence (id 12614122643, digest sha256:2501d2453ba6361e172ad279147fdeea861cdc2c4d29804095f739a10149b8f0)
+    container:
+      conclusion: success
+      evidence: artifact container-evidence (id 12614641482, digest sha256:8debb455f8d9f678c18d4c4b800717c330d77e011961127c969ec1c940c796d3)
+      docker_available: true
+      image_scan: clean  # the step's own exit-code=1-on-match behaviour (severity HIGH,CRITICAL, ignore-unfixed) makes a "success" conclusion itself the proof of zero qualifying findings
     tests:
       conclusion: success
-      evidence: artifact test-evidence (id 12613162526, digest sha256:d28cdf9e4302dd6629874feea543b9cebaac64c3ab55456ec346139651c23c74)
+      evidence: artifact test-evidence (id 12614232748, digest sha256:dc7ecb499850e0ac43d00143b5214ab608c4879c8d317e6ffd09e2d74fcaf0a4)
       tests_passed: 615
       tests_failed: 0
       rls_tests_passed: 63
     sast:
       conclusion: success
-      evidence: artifact sast-evidence (id 12613362144, digest sha256:5d6456e37ee8f77293b298c0d130eb4ac807f8c5d4c0f3e98667cc796b036163)
-    container:
-      conclusion: success
-      evidence: artifact container-evidence (id 12613926415, digest sha256:69b770b69a2f61acae1c70e3bdee172cbafd6ff729d599f0ae4718a9d2a427e7)
-      docker_available: true
-      image_scan: clean  # the step's own exit-code=1-on-match behaviour (severity HIGH,CRITICAL, ignore-unfixed) makes a "success" conclusion itself the proof of zero qualifying findings
-    secrets:
-      conclusion: success
-      evidence: job log https://github.com/Mrutunjay84/NsureGRC/actions/runs/40232416860/job/121286772312
-      history_scanned: true  # actions/checkout ran with fetch-depth: 0 at this job (confirmed in the job log), making full history available to gitleaks
-    sca:
-      conclusion: success
-      evidence: artifact sca-evidence (id 12612839291, digest sha256:f9d36a61fb65d4b0bb71607124098befbbfc6a902a4daedd1e797bd7b506452a)
-  workflow_sha256: '0c11ba5c1abeeae91732ac2fa6e014476c5d08cdaddea568373347f33634b64b'  # git show 5cd872e:.github/workflows/ci.yml | sha256sum
+      evidence: artifact sast-evidence (id 12613444809, digest sha256:6901233c98463add2831e44db7e77b2a8809d2e155a8e859de895131406c8b95)
+  workflow_sha256: '672d6772283d9edaf0144514d0be27f7261b9f18c6bc7c7d322ac55f75884d21'  # git show de1f9ed:.github/workflows/ci.yml | sha256sum
