@@ -36,9 +36,15 @@ def evaluate(rec, current=WF, at_commit=WF):
     return ccr.evaluate(rec, current, commit_workflow_sha=lambda _sha: at_commit)
 
 
-def test_the_real_record_says_ci_has_not_run():
+def test_the_real_record_reflects_a_genuinely_passed_run():
+    """P2-1 closed 2026-10-26 (run 40232416860): this asserts the checker's own verdict on the real record, not a
+    hardcoded belief about it - if the record is ever hand-edited into something the checker would not accept, this
+    fails. Before that date this test asserted the opposite (`real["run"] is None`, state "NOT_RUN") - CI had never
+    actually run; that assumption is now stale by design, not weakened."""
     real = yaml.safe_load((ROOT / "docs" / "ci" / "CI_RUN_RECORD.yaml").read_text(encoding="utf-8"))
-    assert real["run"] is None and ccr.evaluate(real, ccr.workflow_digest())["state"] == "NOT_RUN"
+    assert real["run"] is not None
+    result = ccr.evaluate(real, ccr.workflow_digest())  # same call main() makes; commit_workflow_sha defaults to the real git lookup
+    assert result["state"] == "PASSED", result
 
 
 def test_the_workflow_file_existing_is_not_a_result():
