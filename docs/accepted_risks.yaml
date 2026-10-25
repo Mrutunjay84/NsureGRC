@@ -12,3 +12,44 @@ accepted:
       be selected without changing/removing semgrep.
     review_by: "at the next semgrep upgrade and before the Phase 2 security gate"
     residual_risk: low
+
+  - id: CVE-2026-114603
+    package: opentelemetry-api 1.37.0
+    scope: dev-tooling only (transitive dependency of semgrep, dependency group `dev`)
+    justification: >
+      Not part of the production dependency export (verified: `uv export --no-hashes --no-dev` contains no `opentelemetry`
+      package). The advisory is a CPU-exhaustion (ReDoS) denial-of-service in `TraceState.from_header`'s W3C `tracestate`
+      header parser, reachable only by a server that extracts inbound trace-propagation headers with OpenTelemetry's
+      default propagators (e.g. via `opentelemetry-instrumentation-asgi`); availability-only impact, no data exposure, no
+      code execution. This project never calls OpenTelemetry's propagation/extraction code — it is pulled in solely as
+      semgrep's own tracing dependency for `uv sync --frozen` (dev dependency group), not exercised by the application or
+      its test suite. `semgrep==1.181.0` pins `opentelemetry-sdk==1.37.0` and `opentelemetry-exporter-otlp-proto-http==1.37.0`
+      exactly (confirmed: `uv lock --upgrade-package opentelemetry-api` makes no change while semgrep 1.181.0 is present,
+      same root cause as CVE-2026-59951 above); Dependabot's own auto-opened upgrade PRs for this chain (`#2`, `#3`) fail
+      CI for the same reason. The fixed version (1.45.1) cannot be selected without changing/removing semgrep.
+    review_by: "at the next semgrep upgrade and before the Phase 2 security gate"
+    residual_risk: low
+
+  - id: ACCEPT-GH-FREE-TIER-001
+    package: "GitHub repository Mrutunjay84/NsureGRC (private, free plan)"
+    scope: "Branch protection rules and repository rulesets on `main`; GitHub Advanced Security (secret scanning, push protection) on a private repo"
+    justification: >
+      Owner decision (2026-10-25): will not pay for GitHub Pro or GitHub Advanced Security. Verified directly against the
+      GitHub API, not assumed: PUT .../branches/main/protection and POST .../rulesets both return 403
+      "Upgrade to GitHub Pro or make this repository public to enable this feature"; PATCH .../security_and_analysis
+      accepts secret_scanning.status=enabled and secret_scanning_push_protection.status=enabled without error but the
+      resulting state stays "disabled" (GHAS gate, silent on private repos without a paid licence). ci.yml's own gates
+      (lint, security regression suite incl. PostgreSQL/RLS tests, bandit/semgrep SAST, pip-audit SCA, detect-secrets +
+      gitleaks full-history scan, hadolint/Trivy container scan) are unaffected by this and still run and must pass on
+      every push; `scripts/check_ci_record.py` does not require branch protection as a pass condition. What is lost:
+      (1) nothing stops a direct push to `main` bypassing CI, since there is no required-status-check gate; (2) GitHub's
+      own secret-scanning detectors do not run (project relies entirely on local detect-secrets + gitleaks, both already
+      wired into CI and pre-commit); (3) no server-side push protection blocking a secret before it lands in history.
+      Free, repo-owner-controllable mitigations applied instead: Actions restricted to GitHub-owned actions plus exactly
+      astral-sh/setup-uv, hadolint/hadolint-action, aquasecurity/trivy-action, gitleaks/gitleaks-action
+      (allowed_actions=selected); default_workflow_permissions=read and can_approve_pull_request_reviews=false, so a
+      compromised workflow cannot write to the repo or merge anything; Dependabot vulnerability alerts and automated
+      security fixes enabled (free on private repos). Solo-owner repository: the bypass risk is "I push directly and
+      skip CI", which is a workflow-discipline risk, not an external-attacker risk.
+    review_by: "before adding any second collaborator to the repository, and before any production-readiness claim"
+    residual_risk: low

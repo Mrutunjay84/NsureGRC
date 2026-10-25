@@ -49,7 +49,7 @@ Ruff with security-lint rules (`S`, `B`, `E`, `F`, `W`, `UP`, `I`): see `evidenc
 
 ## 3. Secret scanning
 
-`detect-secrets` with an audited baseline (`.secrets.baseline`). Twelve candidates were raised and each was inspected by hand; **all twelve are false positives**:
+`detect-secrets` with an audited baseline (`.secrets.baseline`). Sixteen candidates have been raised across local and CI runs and each was inspected by hand; **all sixteen are false positives**:
 
 | Location | Type | Triage |
 |---|---|---|
@@ -60,6 +60,7 @@ Ruff with security-lint rules (`S`, `B`, `E`, `F`, `W`, `UP`, `I`): see `evidenc
 | `tests/test_support_access.py:353` | keyword | a settings key name (`operator_account_free_failures`) |
 | `tests/test_evidence_artifacts.py:121` | keyword | a dictionary key containing the word PASSWORD in an explanatory note |
 | `tests/test_pending_controls.py` / `tests/test_auth_backoff_policy.py` | keyword | deliberately wrong passwords used to provoke failures |
+| `tests/test_authentication.py:67,317,360,361` | keyword | deliberately wrong/throwaway passwords exercising the password-change and -reset API flows (`"wrong-password-xyz"`, `"wrong-one-xxxxxx"`, `"An0ther-Long-Passphrase-77!"`, `"short"`, `"Brand-New-Passphrase-4242!"`); flagged by the real GitHub Actions `secret scanning` job (run `40227089460`), not reproducible on this Windows workstation — the `detect-secrets` "Secret Keyword" plugin does not raise them locally against the same byte-identical file (confirmed with a line-ending-normalized clone at the same commit); triaged from the CI run's own reported hashes, not fabricated |
 
 **Git history (local run, not CI):** `gitleaks 8.30.1` (release SHA-256 verified) scanned 6 commit(s) of the local repository (HEAD `5200e966c784`) and the working tree: **0 finding(s)**. The CI `secrets` job (full history on the runner) has **not** run.
 

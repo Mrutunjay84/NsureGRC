@@ -3,6 +3,11 @@
 **Created:** 2026-10-25 · **Decision it serves:** owner chose (2026-10-25) to clear the gate *before* Phase 2 feature development starts.
 **State at creation:** gate `CONDITIONAL PASS`, 12 PASS / 0 FAIL / 3 BLOCKED. HEAD `54e6826`, working tree clean, 7 local commits, no git remote.
 
+**Update 2026-10-25 (same day):** repo created and pushed — [`Mrutunjay84/NsureGRC`](https://github.com/Mrutunjay84/NsureGRC) (private).
+Section A's setup steps 1–4 and 7–8 are now done; see "Current state" under A. Owner declined GitHub Pro / Advanced Security
+(step 5's secret scanning + step 6's branch protection cannot run on this plan) — recorded as `ACCEPT-GH-FREE-TIER-001` in
+`accepted_risks.yaml`, not silently dropped. Step 1 of the CI run itself (triggering a workflow) has not happened yet.
+
 This file consolidates what only a human can do. It adds no new requirement — it collects the ones already recorded in
 [`PHASE1_SECURITY_GATE.md`](PHASE1_SECURITY_GATE.md), [`ci/GITHUB_SETUP_REQUIREMENTS.md`](ci/GITHUB_SETUP_REQUIREMENTS.md),
 [`review/`](review/INDEPENDENT_REVIEW_PACKAGE.md) and [`OPEN_ITEMS.md`](OPEN_ITEMS.md) into one list, with the digests you will need.
@@ -28,6 +33,21 @@ Full steps: [`ci/GITHUB_SETUP_REQUIREMENTS.md`](ci/GITHUB_SETUP_REQUIREMENTS.md)
 | 6 | Branch protection on `main`: require PR, require the five checks in §3 of the setup doc, block force-push and deletion | |
 | 7 | Runners: GitHub-hosted `ubuntu-24.04` | The `container` job needs Docker. No self-hosted runner unless separately reviewed |
 | 8 | `git remote add origin <url>` then `git push -u origin main` from `03_APP/nsuregrc` | |
+
+### Current state (verified against the live GitHub API, 2026-10-25)
+
+| Step | Status |
+|---|---|
+| 1. Private repo created | ✅ `Mrutunjay84/NsureGRC`, `visibility: PRIVATE` |
+| 2. Actions restricted to the 4 named + GitHub-owned | ✅ `allowed_actions=selected`; `patterns_allowed` = exactly the four. Workflow perms `default_workflow_permissions=read`, `can_approve_pull_request_reviews=false` |
+| 3. `CI_PG_SUPERUSER_PASSWORD` secret | ✅ set (random, never displayed) |
+| 4. `GITLEAKS_LICENSE` | n/a — personal account, not an organisation |
+| 5. Secret scanning + push protection | ❌ **Cannot enable on this plan.** `PATCH security_and_analysis` for both is silently ignored (stays `disabled`) — this is GitHub Advanced Security, gated on private repos without a paid licence. Dependabot vulnerability alerts + automated security fixes **are** enabled (free). Accepted risk `ACCEPT-GH-FREE-TIER-001`. |
+| 6. Branch protection on `main` | ❌ **Cannot enable on this plan.** Both the classic branch-protection API and the newer rulesets API return `403 Upgrade to GitHub Pro or make this repository public`. Same accepted-risk entry; mitigated by the Actions lockdown in step 2 (a compromised workflow still can't write to the repo) — but nothing stops a direct push to `main` bypassing CI. Revisit before any second collaborator joins. |
+| 7. Runner | n/a until a workflow actually runs — `ubuntu-24.04` is specified in `ci.yml` already |
+| 8. Push `main` | ✅ merged with GitHub's placeholder commit (kept this repo's real README) and pushed; remote `main` now has the full history |
+
+**Not yet done:** no workflow run exists (`gh run list` is empty) — nothing has triggered `ci.yml` on GitHub yet. That's section A's actual remaining step; everything above it is setup, not the test itself.
 
 ### Pre-push checks — already run for you (2026-10-25, HEAD `54e6826`)
 
