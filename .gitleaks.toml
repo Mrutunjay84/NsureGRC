@@ -1,19 +1,24 @@
 # gitleaks configuration (used by the local gate and, by convention, auto-discovered in CI from the repository root).
 # Extends the default rule set; only the paths below are allow-listed, each with the reason it is not a secret store.
 # Anything else - including every OTHER file in evidence/ - stays scanned.
+#
+# DEF-19: the global allowlist table is singular `[allowlist]`, not `[[allowlists]]`. The plural, repeatable
+# `[[allowlists]]` form only exists nested under a specific `[[rules]]` block (gitleaks README "Additional
+# Configuration"); at the top level it is not a recognised key, so a TOML decoder accepts it silently and gitleaks
+# never applies it - every path below was unprotected until this was found (first real run on real CI, run
+# 40228269549, 2026-10-25; not reproducible with a local gitleaks binary either, until that was tried deliberately).
+# One table, one `paths` list; multiple `[allowlist]` tables are not valid TOML (duplicate key) and the second would
+# silently replace the first, which is exactly the class of mistake this comment exists to prevent repeating.
 title = "NsureGRC gitleaks config"
 
 [extend]
 useDefault = true
 
-[[allowlists]]
-description = "Third-party packages in the local virtual environment (not project code, not tracked by git; scanning them only produces entropy noise)"
-paths = ['''(^|/)\.venv/''']
-
-[[allowlists]]
-description = "detect-secrets baseline and its raw scan output: these files contain SHA-1 digests of already-triaged false positives by design (hashed_secret), never the values"
-paths = ['''^\.secrets\.baseline$''', '''^evidence/detect_secrets_scan\.json$''']
-
-[[allowlists]]
-description = "Audit-chain verification evidence: contains a PUBLIC Ed25519 checkpoint signature and SHA-256 chain digests from a throw-away test database (no key material)"
-paths = ['''^evidence/audit_chain_verification\.json$''']
+[allowlist]
+description = "Paths that are not secret stores: see the inline reason for each"
+paths = [
+  '''(^|/)\.venv/''',                                  # third-party packages in the local virtual environment (not project code, not tracked by git)
+  '''^\.secrets\.baseline$''',                          # detect-secrets baseline: SHA-1 digests of already-triaged false positives (hashed_secret), never the values
+  '''^evidence/detect_secrets_scan\.json$''',            # raw detect-secrets scan output: same digests as above
+  '''^evidence/audit_chain_verification\.json$''',       # audit-chain verification evidence: a PUBLIC Ed25519 checkpoint signature and SHA-256 chain digests from a throw-away test database (no key material)
+]
