@@ -8,6 +8,17 @@ Section A's setup steps 1–4 and 7–8 are now done; see "Current state" under 
 (step 5's secret scanning + step 6's branch protection cannot run on this plan) — recorded as `ACCEPT-GH-FREE-TIER-001` in
 `accepted_risks.yaml`, not silently dropped. Step 1 of the CI run itself (triggering a workflow) has not happened yet.
 
+**Update 2026-10-26: P2-1 formally closed** (`check_ci_record.py` prints `PASSED`, run `40234519012`, commit `69bae27`) —
+four real defects found and fixed along the way (DEF-18 through DEF-20, `defects_found.yaml`). **Then the repository was
+made public** (owner decision **D-P1-005**, `00_CONTROL/PHASE1/`) — intent: possibly get free scrutiny during development,
+re-privatize once "finished". Consequence stated plainly in that ADR: the closed P2-1 record stays valid for its own
+commit, but the **next** CI run will fail `check_ci_record.py`'s private-repository check until that check or the
+repository's visibility is revisited — not done automatically. The free-tier gap from step 5/6 above is **resolved** now
+that the repo is public (secret scanning, push protection and branch protection on `main` are all live and verified) —
+see the updated `ACCEPT-GH-FREE-TIER-001` entry, which also states what happens if the repo goes private again.
+**P2-2 is unaffected and still at zero**: outreach drafted (`docs/review/OUTREACH_DRAFT.md`, including Upwork invite-only
+posts), nobody contacted yet.
+
 This file consolidates what only a human can do. It adds no new requirement — it collects the ones already recorded in
 [`PHASE1_SECURITY_GATE.md`](PHASE1_SECURITY_GATE.md), [`ci/GITHUB_SETUP_REQUIREMENTS.md`](ci/GITHUB_SETUP_REQUIREMENTS.md),
 [`review/`](review/INDEPENDENT_REVIEW_PACKAGE.md) and [`OPEN_ITEMS.md`](OPEN_ITEMS.md) into one list, with the digests you will need.
