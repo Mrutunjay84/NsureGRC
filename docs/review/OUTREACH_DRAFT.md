@@ -93,3 +93,86 @@ message for an initial feeler, and a fuller scoping email once they've expressed
   sending: `uv run python scripts/build_review_package.py`.
 - **When their report arrives**, don't transcribe it into `REVIEW_RECORD.yaml` yourself from a summary —
   use their own words/ratings for findings, severity, and disposition, per the file's own instructions.
+
+---
+
+## Upwork-specific posts
+
+Two separate job posts, not one — Upwork freelancers self-select heavily by title and skill tags, and
+"cryptography reviewer" and "Django security reviewer" are different pools of people. A combined post
+reads as unfocused to both. Post both; whoever's strongest across all four scopes will say so in their
+proposal, and you can always merge the engagement later.
+
+### Post 1 — the crypto scopes (1–3)
+
+**Title:** `Independent security code review: audit hash chain, signed checkpoints, AEAD crypto (Python)`
+
+**Category:** Web, Mobile & Software Dev → Cybersecurity & Data Protection → Pen Testing & Security Analysis
+*(or Cybersecurity & Compliance → Application Security, depending on what your Upwork account shows —
+pick whichever lists cryptography-adjacent skill tags)*
+
+**Skills to tag:** `Cryptography`, `Python`, `Code Review`, `Application Security`, `PostgreSQL`,
+`Vulnerability Assessment` — do **not** tag generic `Django`/`Web Development` here, that's what pulls in
+AppSec generalists without crypto depth; this post wants to filter them out.
+
+**Description** (paste the "Fuller scoping email" above, scopes 1–3 only, trimmed to this intro):
+
+> I need a focused, scoped independent security code review of three specific cryptographic/integrity
+> mechanisms in a Django/PostgreSQL application — not a penetration test, not a full-app audit.
+>
+> [paste scopes 1–3 from the fuller email above verbatim]
+>
+> This is a **source-level review of ~45–50 files** (the crypto-relevant subset of a ~63-file package),
+> with a written brief and 25 pre-identified concerns for you to confirm, refute, or expand on. I need a
+> **signed written report**: your own severity ratings per finding, a disposition per scope, and a written
+> independence statement. All code was written by an AI coding assistant under my direction — this review
+> is the independent check before I build on it.
+>
+> Full package (digest, manifest, brief) sent after we agree scope and price.
+
+**Budget:** Fixed-price. Don't guess a number from me — post it as a range once you've seen 2–3 proposals
+land, or use Upwork's "I'll finalize budget with freelancers" option if your account offers it. A tight,
+pre-scoped review like this (known file count, known concerns list, no discovery phase) is exactly the
+shape Upwork fixed-price does well.
+
+**Screening questions** (Upwork lets you attach these to the post):
+1. "Have you done a paid independent review of Ed25519 signing or AEAD/envelope encryption before? Briefly describe one (client names can stay anonymous)."
+2. "Can you provide a redacted writing sample from a past security review report?"
+3. "Do you have any prior involvement — design, implementation, informal review — with this project? (Expected answer: no; this is a hard requirement, not a formality.)"
+
+### Post 2 — the AppSec scope (4)
+
+**Title:** `Independent security review: Django authentication, sessions & MFA (TOTP/WebAuthn)`
+
+**Category:** Web, Mobile & Software Dev → Cybersecurity & Data Protection → Pen Testing & Security Analysis
+
+**Skills to tag:** `Django`, `Python`, `Application Security`, `Authentication`, `Code Review`, `OWASP`
+
+**Description:**
+
+> Independent source-code security review of authentication, session management and MFA in a Django/DRF
+> application — not a penetration test.
+>
+> [paste scope 4 from the fuller email above verbatim: password/TOTP/WebAuthn/recovery-code/throttling/
+> step-up state machines, session handling, CSRF, the platform-operator realm]
+>
+> ~15–18 files, a written brief with pre-identified concerns, same deliverable requirements as above
+> (signed report, your own severity ratings, written independence statement, confirmation of the package
+> digest you reviewed).
+
+**Budget:** Fixed-price, same approach as Post 1 — this scope is smaller, so expect (not a promise) a
+lower range than the crypto post.
+
+**Screening questions:**
+1. "Have you reviewed a Django or similar framework's custom authentication/session code before (not just run an automated scanner)? Briefly describe one."
+2. "Can you provide a redacted writing sample from a past security review report?"
+3. "Do you have any prior involvement with this project? (Expected answer: no.)"
+
+### Before you post either one
+
+- Don't attach the review package zip to the public post — it's a private repo's source code. Mention the
+  package exists (digest + file count, as above) and send it only after a contract starts or an NDA is in
+  place, whichever Upwork flow you use.
+- Upwork lets you invite specific freelancers directly instead of (or alongside) a public post — if you'd
+  rather not have this publicly listed at all, search `cryptography` + `security review` in Upwork's
+  freelancer directory and send invites instead of posting.
