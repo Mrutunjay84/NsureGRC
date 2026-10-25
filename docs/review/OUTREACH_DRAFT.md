@@ -176,3 +176,50 @@ lower range than the crypto post.
 - Upwork lets you invite specific freelancers directly instead of (or alongside) a public post — if you'd
   rather not have this publicly listed at all, search `cryptography` + `security review` in Upwork's
   freelancer directory and send invites instead of posting.
+
+---
+
+## Going invite-only (chosen approach)
+
+Upwork's mechanics: you still create the two job posts above, but set each one's **visibility to
+"Invite-only"** at creation (not "Public") — the post exists as the container the contract attaches to,
+but it never appears in search or the public job feed. You find and invite candidates yourself from
+Upwork's freelancer directory; nobody else can apply. Send multiple invites per post — most won't respond
+or won't be a fit, and you want 2–3 real quotes, not your first reply.
+
+### Finding candidates to invite
+
+**For the crypto post**, search Upwork's freelancer directory (not the job-post search) for:
+- `cryptography security review`, `applied cryptography consultant`, `cryptographic code audit`
+- Filter: "Expert" experience level; sort by Job Success Score and "Rising Talent"/Top Rated badges, not
+  just hourly rate
+- Check their portfolio/work history for anything naming cryptographic primitives, key management, or
+  protocol review specifically — generic "penetration tester" profiles usually aren't the right fit here,
+  same reasoning as the skill-tag filtering above
+
+**For the Django/AppSec post**, search:
+- `django security audit`, `web application security review`, `python application security`
+- The two Django-specific firms from the earlier search ([Imagescape](https://www.imagescape.com/django-security-review/), [Djangsters](https://www.djangsters.de/en/technology/django/django-security-audit/)) aren't Upwork profiles — if you want to loop them in, contact them directly outside Upwork rather than searching for them there
+
+**Shortlisting before you invite:** look past the star rating — check whether their work history shows
+actual security review deliverables (not just "fixed a bug" gigs), read 1–2 of their client reviews in
+full for specifics, and confirm they're not already flagged in their own profile as unavailable/booked out.
+Inviting 5–8 well-matched people per post and expecting 2–3 real responses is a reasonable rate to plan for.
+
+### Short invite message (send with the invite, not the full job post text)
+
+Upwork invites carry a short personal note alongside the job post link — keep it to a few sentences, not
+the full description (they'll read that from the post itself):
+
+> Subject line is auto-filled from the job post title.
+>
+> Hi [name] — I'm looking for a short, scoped independent security code review (not a pentest) of
+> [the audit-log hash chain, signed checkpoints and AEAD crypto in a Django/PostgreSQL app / the
+> authentication, session and MFA code in a Django/PostgreSQL app], and your profile looks like a strong
+> match. Full scope is in the job post. ~[45–50 / 15–18] files, a written brief with concerns already
+> identified for you to confirm or expand on, and I need a signed report in your own words — not an
+> automated scan. Would this be something you're available for, and could you give me a rough quote and
+> timeline?
+
+Swap the bracketed scope description per post. Keep both invites this short — the job post carries the
+real detail, and a long invite note reads as generic/copy-pasted even when it isn't.
