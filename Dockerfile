@@ -26,13 +26,15 @@ COPY db/table_classification.yaml ./db/table_classification.yaml
 FROM python:3.12-slim-bookworm AS runtime
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PYTHONHASHSEED=random PATH="/app/.venv/bin:$PATH" \
     DJANGO_SETTINGS_MODULE=config.settings.prod NGRC_ENV=prod
-# Patch tzdata (DLA-4854-1) and remove pip/setuptools/wheel entirely, not just upgrade: pip vendors frozen,
-# pinned-for-life copies of msgpack/urllib3/setuptools inside itself (pip 26.2.2's own vendor.txt still pins
-# msgpack==1.1.2, urllib3==2.7.0, setuptools==70.3.0 - CVE-2025-47273, CVE-2026-97687, CVE-2026-97689,
-# GHSA-6v7p-g79w-8964, all HIGH), so upgrading pip's own version never clears these; only removing it does.
-# The application never invokes any of this - uv built /app/.venv in the build stage - and the header comment
-# above has always said "no build tools or package managers in the runtime layer"; this makes that true.
+# Patch tzdata (DLA-4854-1), openssl/libssl3 (CVE-2026-84782, D-P3-002 CI finding), and remove pip/setuptools/
+# wheel entirely, not just upgrade: pip vendors frozen, pinned-for-life copies of msgpack/urllib3/setuptools
+# inside itself (pip 26.2.2's own vendor.txt still pins msgpack==1.1.2, urllib3==2.7.0, setuptools==70.3.0 -
+# CVE-2025-47273, CVE-2026-97687, CVE-2026-97689, GHSA-6v7p-g79w-8964, all HIGH), so upgrading pip's own
+# version never clears these; only removing it does. The application never invokes any of this - uv built
+# /app/.venv in the build stage - and the header comment above has always said "no build tools or package
+# managers in the runtime layer"; this makes that true.
 RUN apt-get update && apt-get install --no-install-recommends --only-upgrade -y tzdata=2026e-0+deb12u1 \
+    openssl=3.0.22-1~deb12u2 libssl3=3.0.22-1~deb12u2 \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && python -m pip uninstall --yes pip setuptools wheel
 # fixed unprivileged uid/gid, no login shell, no home directory contents
