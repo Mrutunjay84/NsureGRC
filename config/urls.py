@@ -20,6 +20,7 @@ if settings.NGRC_PLANE in {"customer", "all"}:
         path("api/v1/tenant/", include("ngrc.governance.urls")),
         path("api/v1/tenant/", include("ngrc.compliance_audit.urls")),
         path("api/v1/tenant/", include("ngrc.privacy.urls")),
+        path("api/v1/tenant/", include("ngrc.thirdparty.urls")),
     ]
 if settings.NGRC_PLANE in {"operator", "all"}:
     urlpatterns += [path("ops/api/v1/", include("ngrc.control_plane.urls"))]

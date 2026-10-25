@@ -322,3 +322,54 @@ export interface Breach {
   owner: string | null;
   created_at: string;
 }
+
+// ---- D-P7-001: Third Parties
+export type ThirdPartyCriticality = "low" | "medium" | "high" | "critical";
+
+export interface ThirdPartyEntity {
+  id: string;
+  name: string;
+  category: "vendor" | "processor" | "partner" | "other";
+  criticality: ThirdPartyCriticality;
+  status: "active" | "inactive";
+  description: string;
+  created_at: string;
+}
+
+export interface ThirdPartyEntityDetail extends ThirdPartyEntity {
+  representatives: ThirdPartyRepresentative[];
+  solutions: ThirdPartySolution[];
+  assessments: ThirdPartyAssessment[];
+}
+
+export interface ThirdPartyRepresentative {
+  id: string;
+  entity_id: string;
+  name: string;
+  email: string;
+  role: string;
+  phone: string;
+  created_at: string;
+}
+
+export interface ThirdPartySolution {
+  id: string;
+  entity_id: string;
+  name: string;
+  description: string;
+  data_classification_note: string;
+  created_at: string;
+}
+
+export interface ThirdPartyAssessment {
+  id: string;
+  entity_id: string;
+  solution_id: string | null;
+  scope: string;
+  risk_rating: ThirdPartyCriticality | "";
+  status: "draft" | "in_progress" | "completed";
+  assessor: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
