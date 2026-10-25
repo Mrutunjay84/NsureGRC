@@ -125,6 +125,8 @@ def g_secrets() -> dict:
     cleared = {(norm(f), s["hashed_secret"]) for f, items in base["results"].items() for s in items if s.get("is_secret") is False}
     found = [(norm(f), s["hashed_secret"], s["type"], s["line_number"]) for f, items in new["results"].items() for s in items]
     unreviewed = [x for x in found if (x[0], x[1]) not in cleared]
+    for f, h, t, ln in unreviewed:
+        print(f"  unreviewed: {f}:{ln} ({t}) hashed_secret={h}")
     return gate("secret scan (detect-secrets)", "PASS" if not unreviewed else "FAIL",
                 f"{len(found)} candidate(s), {len(found) - len(unreviewed)} triaged as false positives in .secrets.baseline, {len(unreviewed)} unreviewed",
                 ["evidence/detect_secrets_scan.json"])
