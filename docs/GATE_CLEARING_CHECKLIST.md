@@ -39,7 +39,7 @@ Full steps: [`ci/GITHUB_SETUP_REQUIREMENTS.md`](ci/GITHUB_SETUP_REQUIREMENTS.md)
 | Step | Status |
 |---|---|
 | 1. Private repo created | ✅ `Mrutunjay84/NsureGRC`, `visibility: PRIVATE` |
-| 2. Actions restricted to the 4 named + GitHub-owned | ✅ `allowed_actions=selected`; `patterns_allowed` = exactly the four. Workflow perms `default_workflow_permissions=read`, `can_approve_pull_request_reviews=false` |
+| 2. Actions restricted to the named third parties + GitHub-owned | ✅ `allowed_actions=selected`; `patterns_allowed` = `astral-sh/setup-uv@*`, `hadolint/hadolint-action@*`, `aquasecurity/trivy-action@*`, `aquasecurity/setup-trivy@*` (trivy-action v0.33.1's own dependency — the first real container-job run failed until this was added), `gitleaks/gitleaks-action@*`. Workflow perms `default_workflow_permissions=read`, `can_approve_pull_request_reviews=false` |
 | 3. `CI_PG_SUPERUSER_PASSWORD` secret | ✅ set (random, never displayed) |
 | 4. `GITLEAKS_LICENSE` | n/a — personal account, not an organisation |
 | 5. Secret scanning + push protection | ❌ **Cannot enable on this plan.** `PATCH security_and_analysis` for both is silently ignored (stays `disabled`) — this is GitHub Advanced Security, gated on private repos without a paid licence. Dependabot vulnerability alerts + automated security fixes **are** enabled (free). Accepted risk `ACCEPT-GH-FREE-TIER-001`. |

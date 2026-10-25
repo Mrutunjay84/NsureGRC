@@ -111,7 +111,7 @@ jobs:
       - name: detect-secrets against the audited baseline (fails on any unreviewed candidate)
         run: mkdir -p evidence && uv run python scripts/security_gate.py --only secrets
       - uses: gitleaks/gitleaks-action@v2
-        env: {GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"}
+        env: {GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}", GITLEAKS_CONFIG: ".gitleaks.toml"}
 
   container:
     name: container build + image scan + Dockerfile lint
