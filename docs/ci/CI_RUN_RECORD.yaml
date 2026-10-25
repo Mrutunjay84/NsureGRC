@@ -1,28 +1,35 @@
-# P2-1 CI run record.
-#
-# STATUS: NOT_RUN. The CI workflow (.github/workflows/ci.yml) has never executed on a CI runner. The approved CI approach (owner decision 2026-10-21) is a PRIVATE GitHub
-# repository with GitHub Actions; no repository, remote or credential exists on this workstation and none will be created from it (docs/ci/GITHUB_SETUP_REQUIREMENTS.md lists the
-# human steps). Local rehearsals (docs/ci/LOCAL_REHEARSAL.md) are NOT CI runs.
-# scripts/check_ci_record.py decides what this file may mean. Fill `run:` from the CI service's run page / scripts/import_ci_run.py, never from memory.
 version: 1
-status: NOT_RUN
-status_reason: "No repository/runner exists for this project yet. Needs a human to create the private GitHub repository, set the secrets and push (docs/ci/GITHUB_SETUP_REQUIREMENTS.md)."
-run: null
-
-# ------------------------------------------------------------------------------------------------------------------ template (do not use as-is)
-# run:
-#   service: "GitHub Actions"
-#   url: "https://github.com/<owner>/<repo>/actions/runs/<id>"
-#   commit_sha: "<40-hex commit that the run built>"                      # must exist in this repository (git fetch it)
-#   workflow_sha256: "<sha256 of .github/workflows/ci.yml AT THAT COMMIT>"   # from `git show`, not from the API
-#   workflow_path: ".github/workflows/ci.yml"
-#   workflow_name: "ci"
-#   repository_private: true
-#   completed_at: "<ISO-8601 time from the run page>"
-#   runner_image: "<e.g. ubuntu-24.04 + image version shown in the run log>"
-#   jobs:
-#     tests:     {conclusion: success, tests_passed: <N>, tests_failed: 0, rls_tests_passed: <M>, evidence: "artifact test-evidence (junit.xml)"}
-#     sast:      {conclusion: success, evidence: "artifact sast-evidence"}
-#     sca:       {conclusion: success, evidence: "artifact sca-evidence"}
-#     secrets:   {conclusion: success, history_scanned: true, evidence: "run log: detect-secrets + gitleaks over the full history"}
-#     container: {conclusion: success, docker_available: true, image_scan: clean, evidence: "artifact container-evidence (trivy-image.sarif) + hadolint output"}
+status: PASSED
+status_reason: "scripts/check_ci_record.py confirms PASSED (2026-10-26): commit 5cd872e exists in this repository and the workflow at that commit matches the recorded digest (0c11ba5c…634b64b); all five jobs succeeded with evidence; tests job reports 615 passed, 0 failed, 63 PostgreSQL/RLS tests among them; secrets job ran with full history available (fetch-depth: 0); container job built on Docker with a clean Trivy image scan (HIGH/CRITICAL, ignore-unfixed, the step's own exit-code=1-on-match made its success itself the proof); workflow unchanged since. Imported from run 40232416860 by scripts/import_ci_run.py."
+run:
+  service: GitHub Actions
+  url: https://github.com/Mrutunjay84/NsureGRC/actions/runs/40232416860
+  commit_sha: 5cd872ec91a158fdccad980e051fe0e46d1734e6
+  completed_at: '2026-10-25T20:49:08Z'
+  workflow_path: .github/workflows/ci.yml
+  workflow_name: ci
+  repository_private: true
+  runner_image: see run log
+  jobs:
+    tests:
+      conclusion: success
+      evidence: artifact test-evidence (id 12613162526, digest sha256:d28cdf9e4302dd6629874feea543b9cebaac64c3ab55456ec346139651c23c74)
+      tests_passed: 615
+      tests_failed: 0
+      rls_tests_passed: 63
+    sast:
+      conclusion: success
+      evidence: artifact sast-evidence (id 12613362144, digest sha256:5d6456e37ee8f77293b298c0d130eb4ac807f8c5d4c0f3e98667cc796b036163)
+    container:
+      conclusion: success
+      evidence: artifact container-evidence (id 12613926415, digest sha256:69b770b69a2f61acae1c70e3bdee172cbafd6ff729d599f0ae4718a9d2a427e7)
+      docker_available: true
+      image_scan: clean  # the step's own exit-code=1-on-match behaviour (severity HIGH,CRITICAL, ignore-unfixed) makes a "success" conclusion itself the proof of zero qualifying findings
+    secrets:
+      conclusion: success
+      evidence: job log https://github.com/Mrutunjay84/NsureGRC/actions/runs/40232416860/job/121286772312
+      history_scanned: true  # actions/checkout ran with fetch-depth: 0 at this job (confirmed in the job log), making full history available to gitleaks
+    sca:
+      conclusion: success
+      evidence: artifact sca-evidence (id 12612839291, digest sha256:f9d36a61fb65d4b0bb71607124098befbbfc6a902a4daedd1e797bd7b506452a)
+  workflow_sha256: '0c11ba5c1abeeae91732ac2fa6e014476c5d08cdaddea568373347f33634b64b'  # git show 5cd872e:.github/workflows/ci.yml | sha256sum

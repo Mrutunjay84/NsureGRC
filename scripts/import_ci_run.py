@@ -17,6 +17,7 @@ import json
 import os
 import re
 import sys
+import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET  # noqa: S405 - parsing the project's own pytest output
 import zipfile
@@ -78,10 +79,27 @@ def build_record(run: dict, jobs: list[dict], artifacts: list[dict], junit_xml: 
             "runner_image": "see run log", "jobs": out_jobs}
 
 
+class _StripAuthOnRedirect(urllib.request.HTTPRedirectHandler):
+    """Artifact downloads 302 from api.github.com to a signed Azure Blob Storage URL; forwarding our GitHub
+    Authorization header there (urllib's default redirect behaviour) makes Azure reject the request with 401
+    (its own SAS-token auth in the URL conflicts with an unexpected Authorization header). Strip it whenever
+    the redirect target is a different host than the original request - first run against the real API found
+    this (DEF-20); it cannot be exercised by the fixture-based unit tests, which never issue a real HTTP redirect."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        new_req = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if new_req is not None and urllib.parse.urlsplit(newurl).netloc != urllib.parse.urlsplit(req.full_url).netloc:
+            new_req.headers.pop("Authorization", None)
+        return new_req
+
+
+_OPENER = urllib.request.build_opener(_StripAuthOnRedirect)
+
+
 def _get(url: str, token: str, raw: bool = False):
     req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json",  # noqa: S310
                                                "X-GitHub-Api-Version": "2022-11-28"})
-    with urllib.request.urlopen(req, timeout=60) as r:  # noqa: S310 - fixed https API host
+    with _OPENER.open(req, timeout=60) as r:  # noqa: S310 - fixed https API host
         data = r.read()
     return data if raw else json.loads(data)
 
