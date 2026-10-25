@@ -15,7 +15,8 @@ status_reason: "No external reviewer is available yet (P2-2). The gate is BLOCKE
 implementers:
   - "Claude Code (AI assistant) - authored all Phase 1 source code, tests, scripts and documentation"
 # Project owner: add the names of the human engineers who directed, edited or accepted the implementation, so independence can be checked.
-implementer_humans: []
+implementer_humans:
+  - "Rushi (rushigamer14@gmail.com) - project owner; directed and accepted all Phase 0/Phase 1 implementation decisions"
 
 required_scopes: [audit_hash, audit_integrity_checkpoint, aead_helper, authn_session_mfa]   # see review_scope.yaml
 
