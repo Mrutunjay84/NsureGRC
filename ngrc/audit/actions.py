@@ -237,10 +237,27 @@ ACTIONS_COMPLIANCE_AUDIT: tuple[Action, ...] = (
     _a("compliance_audit.item.result_set", "compliance_audit", "notice", "tenant", [APP], ["result"]),
 )
 
+# D-P4-006: privacy foundation (processing activities, purposes, personal data, rights requests, breaches).
+ACTIONS_PRIVACY: tuple[Action, ...] = (
+    _a("privacy.processing_activity.created", "privacy", "info", "tenant", [APP], ["role"]),
+    _a("privacy.processing_activity.transitioned", "privacy", "info", "tenant", [APP],
+       ["from_status", "to_status"]),
+    _a("privacy.purpose.added", "privacy", "info", "tenant", [APP], ["lawful_basis"]),
+    _a("privacy.personal_data.added", "privacy", "notice", "tenant", [APP], ["special_category"]),
+    _a("privacy.rights_request.created", "privacy", "notice", "tenant", [APP], ["request_type"]),
+    _a("privacy.rights_request.transitioned", "privacy", "notice", "tenant", [APP],
+       ["from_status", "to_status"]),
+    _a("privacy.breach.raised", "privacy", "critical", "tenant", [APP], ["severity"]),
+    _a("privacy.breach.transitioned", "privacy", "critical", "tenant", [APP], ["from_status", "to_status"]),
+    _a("privacy.breach.authority_notified", "privacy", "critical", "tenant", [APP]),
+    _a("privacy.breach.subjects_notified", "privacy", "critical", "tenant", [APP]),
+)
+
 ACTIONS: tuple[Action, ...] = (
     ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
     + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS + ACTIONS_SATISFACTION + ACTIONS_ASSERTION_REVIEW + ACTIONS_TASKS
     + ACTIONS_FINDINGS + ACTIONS_RISK + ACTIONS_INCIDENTS + ACTIONS_GOVERNANCE + ACTIONS_COMPLIANCE_AUDIT
+    + ACTIONS_PRIVACY
 )
 
 BY_NAME = {a.name: a for a in ACTIONS}
