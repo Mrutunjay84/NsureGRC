@@ -82,6 +82,10 @@ tables:
      notes: "D-P3-005: named grouping of tasks under a broader initiative. Deliberately thin (label, owner, target date)."}
   - {table: ten_task, class: TEN, data_class: C, domain: control, owner_module: ngrc.controls, rls: required, tenant_column: tenant_id,
      notes: "D-P3-005: assignable, due-dated unit of work against an ImplementationControl. Not an input to satisfaction_state (07_CONTROL_EVIDENCE.md: supporting operations must not create duplicate control/evidence state)."}
+  - {table: ten_finding, class: TEN, data_class: C, domain: control, owner_module: ngrc.controls, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-001: mutable, verified-close lifecycle record of a control gap. Remediation is this model's own in_remediation state + notes field, not a separate model."}
+  - {table: ten_security_exception, class: TEN, data_class: C, domain: control, owner_module: ngrc.controls, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-001: append-only governed waiver (07_CONTROL_EVIDENCE.md's Exceptions section). No UPDATE grant to ngrc_app at all - every field is fixed at creation; DB trigger rejects UPDATE/DELETE/TRUNCATE outright, same pattern as ten_evidence_revision."}
 
   # ------------------------------------------------------------------ CAT (global catalogue; ngrc_catalog_publisher writes, ngrc_app reads)
   - {table: cat_framework, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none}

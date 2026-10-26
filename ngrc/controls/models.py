@@ -264,3 +264,76 @@ class Task(TenantOwnedModel):
         constraints = [
             models.UniqueConstraint(fields=["tenant", "id"], name="ten_task_tenant_id_uniq"),
         ]
+
+
+class Finding(TenantOwnedModel):
+    """A mutable, verified-close lifecycle record of a control gap (D-P4-001) - sibling of Evidence/Tests
+    under ImplementationControl per the P0 Required Model tree. Remediation is this model's own
+    in_remediation state + remediation_notes, not a separate model - nothing in any spec document gives
+    Remediation distinct fields of its own."""
+
+    class Source(models.TextChoices):
+        TEST = "test"
+        AUDIT = "audit"
+        RISK = "risk"
+        MANUAL = "manual"
+        INTEGRATION = "integration"
+        AI_PROPOSAL = "ai_proposal"
+
+    class Severity(models.TextChoices):
+        LOW = "low"
+        MEDIUM = "medium"
+        HIGH = "high"
+        CRITICAL = "critical"
+
+    class Status(models.TextChoices):
+        OPEN = "open"
+        IN_REMEDIATION = "in_remediation"
+        PENDING_VERIFICATION = "pending_verification"
+        CLOSED = "closed"
+
+    implementation_control = models.ForeignKey(ImplementationControl, on_delete=models.PROTECT, related_name="findings")
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, max_length=2000)
+    source = models.CharField(max_length=12, choices=Source.choices)
+    severity = models.CharField(max_length=10, choices=Severity.choices)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.OPEN)
+    remediation_notes = models.TextField(blank=True, max_length=2000)
+    owner = models.UUIDField(null=True)
+    verified_by = models.UUIDField(null=True)
+    verified_at = models.DateTimeField(null=True)
+    created_by = models.UUIDField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ten_finding"
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="ten_finding_tenant_id_uniq"),
+        ]
+
+
+class SecurityException(TenantOwnedModel):
+    """Append-only governed waiver (D-P4-001, 07_CONTROL_EVIDENCE.md's "Exceptions" section). Named
+    SecurityException, not Exception, to avoid shadowing Python's own builtin - same naming this project's
+    own reference notes (CISO Assistant) already use for the identical object, not a coincidence. No status
+    field: an exception is either live or expired, derived from expiry_date, never stored - same reasoning
+    as Task's derived overdue (D-P3-005). DB-immutable: see migration 0010_security's
+    ten_security_exception_guard trigger, same pattern as ten_evidence_revision_guard."""
+
+    implementation_control = models.ForeignKey(ImplementationControl, on_delete=models.PROTECT, related_name="exceptions")
+    scope = models.TextField(max_length=2000)
+    reason = models.TextField(max_length=2000)
+    approver = models.UUIDField()
+    approved_at = models.DateTimeField()
+    expiry_date = models.DateField()
+    compensating_control = models.TextField(blank=True, max_length=2000)
+    residual_risk = models.TextField(blank=True, max_length=2000)
+    auditor_visible = models.BooleanField(default=True)
+    created_by = models.UUIDField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ten_security_exception"
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="ten_security_exception_tenant_id_uniq"),
+        ]

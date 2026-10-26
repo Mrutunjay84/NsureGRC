@@ -195,9 +195,17 @@ ACTIONS_TASKS: tuple[Action, ...] = (
     _a("control.task.transitioned", "control", "info", "tenant", [APP], ["from_status", "to_status"]),
 )
 
+# D-P4-001: findings and (security) exceptions.
+ACTIONS_FINDINGS: tuple[Action, ...] = (
+    _a("control.finding.raised", "control", "notice", "tenant", [APP], ["source", "severity"]),
+    _a("control.finding.transitioned", "control", "notice", "tenant", [APP], ["from_status", "to_status"]),
+    _a("control.security_exception.recorded", "control", "warning", "tenant", [APP]),
+)
+
 ACTIONS: tuple[Action, ...] = (
     ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
     + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS + ACTIONS_SATISFACTION + ACTIONS_ASSERTION_REVIEW + ACTIONS_TASKS
+    + ACTIONS_FINDINGS
 )
 
 BY_NAME = {a.name: a for a in ACTIONS}
