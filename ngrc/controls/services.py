@@ -19,6 +19,8 @@ from .models import (
     EvidenceRequirement,
     Frequency,
     ImplementationControl,
+    Test,
+    TestResult,
 )
 
 
@@ -122,3 +124,56 @@ def review_evidence_link(link: EvidenceLink, new_state: str, *, reviewed_by) -> 
     audit.record("control.evidence_link.reviewed", actor_id=reviewed_by, object_type="evidence_link",
                  object_id=str(link.id), details={"from_state": from_state, "to_state": new_state})
     return link
+
+
+def create_test(implementation_control: ImplementationControl, name: str, *, created_by,
+                 description: str = "", test_type: str = "", frequency: str = Frequency.ON_DEMAND,
+                 owner=None, reviewer=None) -> Test:
+    test = Test.objects.create(
+        implementation_control=implementation_control, name=name, description=description, test_type=test_type,
+        frequency=frequency, owner=owner, reviewer=reviewer, created_by=created_by,
+    )
+    audit.record("control.test.created", actor_id=created_by, object_type="test", object_id=str(test.id),
+                 details={"test_type": test_type})
+    return test
+
+
+def schedule_test_result(test: Test, *, created_by) -> TestResult:
+    result = TestResult.objects.create(test=test, created_by=created_by)
+    audit.record("control.test_result.scheduled", actor_id=created_by, object_type="test_result",
+                 object_id=str(result.id), details={})
+    return result
+
+
+_ALLOWED_TEST_TRANSITIONS: dict[str, set[str]] = {
+    TestResult.Status.SCHEDULED: {TestResult.Status.RUNNING},
+    TestResult.Status.RUNNING: {TestResult.Status.PASSED, TestResult.Status.FAILED, TestResult.Status.UNKNOWN},
+    TestResult.Status.FAILED: {TestResult.Status.REMEDIATING},
+    TestResult.Status.REMEDIATING: {TestResult.Status.VERIFIED},
+}
+
+
+def transition_test_result(result: TestResult, new_status: str, *, actor_id, detail: str = "",
+                            deadline=None) -> TestResult:
+    """Fails closed: only transitions in `_ALLOWED_TEST_TRANSITIONS` are accepted (D-P3-003). `executed_at`
+    is stamped the moment the result leaves `scheduled` and enters `running`. `deadline` is optional and
+    caller-supplied (never auto-computed - not every tenant's process uses a fixed SLA offset)."""
+    allowed = _ALLOWED_TEST_TRANSITIONS.get(result.status, set())
+    if new_status not in allowed:
+        raise ControlError(f"invalid_transition:{result.status}->{new_status}")
+    from_status = result.status
+    update_fields = ["status"]
+    result.status = new_status
+    if new_status == TestResult.Status.RUNNING:
+        result.executed_at = clock.now()
+        update_fields.append("executed_at")
+    if detail:
+        result.detail = detail
+        update_fields.append("detail")
+    if deadline is not None:
+        result.deadline = deadline
+        update_fields.append("deadline")
+    result.save(update_fields=update_fields)
+    audit.record("control.test_result.transitioned", actor_id=actor_id, object_type="test_result",
+                 object_id=str(result.id), details={"from_status": from_status, "to_status": new_status})
+    return result

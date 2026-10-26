@@ -170,8 +170,16 @@ ACTIONS_EVIDENCE_LINKS: tuple[Action, ...] = (
     _a("control.evidence_link.reviewed", "control", "notice", "tenant", [APP], ["from_state", "to_state"]),
 )
 
+# D-P3-003: Tests and test results.
+ACTIONS_TESTS: tuple[Action, ...] = (
+    _a("control.test.created", "control", "info", "tenant", [APP], ["test_type"]),
+    _a("control.test_result.scheduled", "control", "info", "tenant", [APP]),
+    _a("control.test_result.transitioned", "control", "notice", "tenant", [APP], ["from_status", "to_status"]),
+)
+
 ACTIONS: tuple[Action, ...] = (
-    ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS + ACTIONS_EVIDENCE_LINKS
+    ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
+    + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS
 )
 
 BY_NAME = {a.name: a for a in ACTIONS}
