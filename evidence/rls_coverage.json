@@ -1,6 +1,6 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-26T21:16:06+00:00",
+  "generated_at": "2026-10-26T21:44:08+00:00",
   "generator": "tests/test_evidence_artifacts.py::rls_coverage.json",
   "tables": {
     "audit.action_registry": {
@@ -427,6 +427,39 @@
       "policies": [
         "audit_owner_membership",
         "auth_own_memberships",
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_risk_acceptance": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_risk_assessment": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_risk_scenario": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
         "owner_context",
         "tenant_isolation"
       ],

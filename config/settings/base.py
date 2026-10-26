@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "ngrc.audit",
     "ngrc.framework",
     "ngrc.controls",
+    "ngrc.risk",
 ]
 
 MIDDLEWARE = [

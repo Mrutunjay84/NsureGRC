@@ -202,10 +202,19 @@ ACTIONS_FINDINGS: tuple[Action, ...] = (
     _a("control.security_exception.recorded", "control", "warning", "tenant", [APP]),
 )
 
+# D-P4-002: risk assessments, scenarios and acceptances.
+ACTIONS_RISK: tuple[Action, ...] = (
+    _a("risk.assessment.created", "risk", "info", "tenant", [APP]),
+    _a("risk.scenario.created", "risk", "notice", "tenant", [APP], ["risk_level"]),
+    _a("risk.scenario.treatment_set", "risk", "info", "tenant", [APP], ["treatment"]),
+    _a("risk.scenario.transitioned", "risk", "notice", "tenant", [APP], ["from_status", "to_status"]),
+    _a("risk.acceptance.recorded", "risk", "warning", "tenant", [APP]),
+)
+
 ACTIONS: tuple[Action, ...] = (
     ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
     + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS + ACTIONS_SATISFACTION + ACTIONS_ASSERTION_REVIEW + ACTIONS_TASKS
-    + ACTIONS_FINDINGS
+    + ACTIONS_FINDINGS + ACTIONS_RISK
 )
 
 BY_NAME = {a.name: a for a in ACTIONS}
