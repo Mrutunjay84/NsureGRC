@@ -1,13 +1,15 @@
-"""Posture and control health metrics (D-P5-001).
+"""Posture, control health and framework coverage metrics (D-P5-001, D-P5-002).
 
-Pure read-model computation over ngrc.controls data - no models, no migrations, nothing stored here. Callers
-must already be inside the target tenant's `tenant_context()`, same convention as every other domain's
-service module; these functions are read-only (no audit events - nothing is being decided or changed, only
-measured, same reasoning as ngrc.risk.services.risk_level and ngrc.controls.services._fresh_accepted_links).
+Pure read-model computation over ngrc.controls/ngrc.framework data - no models, no migrations, nothing
+stored here. Callers must already be inside the target tenant's `tenant_context()`, same convention as
+every other domain's service module; these functions are read-only (no audit events - nothing is being
+decided or changed, only measured, same reasoning as ngrc.risk.services.risk_level and
+ngrc.controls.services._fresh_accepted_links).
 """
 from __future__ import annotations
 
 from ngrc.controls.models import ControlAssertion, ImplementationControl, SatisfactionState
+from ngrc.framework import services as framework_services
 
 # Excluded entirely from both sides of the posture ratio - per the Status Rule ("never infer compliance
 # from missing values"), an assertion nobody has evaluated yet cannot honestly score as a measured 0% or
@@ -71,3 +73,24 @@ def control_health(implementation_control: ImplementationControl) -> dict:
         if worst_rank == -1 or rank < worst_rank:
             worst_rank, worst_id, worst_state = rank, assertion_id, state
     return {"health": worst_state, "worst_assertion_id": worst_id, "assertion_count": len(assertions)}
+
+
+def framework_coverage(framework_urn: str) -> dict:
+    """What fraction of a resolved framework's requirements have at least one ControlAssertion (D-P5-002) -
+    "mapped", not "effective" (see the ADR's judgment call; tenant_posture/control_health answer the
+    effectiveness question instead). Fails closed the same way assert_control does: raises
+    ngrc.framework.services.FrameworkError if the tenant has not activated this framework."""
+    resolved_urns = {r.urn for r in framework_services.resolve_requirements(framework_urn)}
+    asserted_urns = set(
+        ControlAssertion.objects.filter(framework_urn=framework_urn)
+        .values_list("requirement_urn", flat=True).distinct()
+    )
+    covered = resolved_urns & asserted_urns
+    total = len(resolved_urns)
+    coverage_pct = (len(covered) / total * 100.0) if total > 0 else None
+    return {
+        "total_requirements": total,
+        "covered_count": len(covered),
+        "coverage_pct": coverage_pct,
+        "uncovered_requirement_urns": sorted(resolved_urns - asserted_urns),
+    }
