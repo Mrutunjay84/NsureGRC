@@ -62,6 +62,8 @@ for _k, _priv in [
     ("governance.manage", True),  # D-P4-004: create/edit policies, objectives, issues
     ("compliance_audit.read", False),
     ("compliance_audit.manage", True),  # D-P4-005: create/edit compliance audits and audit items
+    ("privacy.read", False),
+    ("privacy.manage", True),  # D-P4-006: create/edit processing activities, rights requests, breaches
 ]:
     register(_k, privileged=_priv, realm="tenant")
 
@@ -92,10 +94,11 @@ SYSTEM_ROLES: dict[str, dict] = {
         "permissions": ["tenant.view", "tenant.members.read", "tenant.members.manage", "tenant.roles.read",
                         "tenant.roles.manage", "tenant.invitations.manage", "tenant.support.read", "tenant.recovery.approve", "evidence.read", "evidence.upload", "audit.read",
                         "framework.read", "framework.manage", "control.read", "control.manage", "risk.read", "risk.manage",
-                        "governance.read", "governance.manage", "compliance_audit.read", "compliance_audit.manage"],
+                        "governance.read", "governance.manage", "compliance_audit.read", "compliance_audit.manage",
+                        "privacy.read", "privacy.manage"],
     },
     "member": {"name": "Member", "permissions": ["tenant.view", "tenant.members.read", "framework.read", "control.read",
-                                                  "risk.read", "governance.read", "compliance_audit.read"]},
+                                                  "risk.read", "governance.read", "compliance_audit.read", "privacy.read"]},
 }
 
 # Platform role -> permissions. Deliberately no role has standing access to tenant content (D-P0-005 s2).

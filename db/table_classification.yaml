@@ -108,6 +108,17 @@ tables:
   - {table: ten_audit_item, class: TEN, data_class: C, domain: "audit (assessment)", owner_module: ngrc.compliance_audit, rls: required, tenant_column: tenant_id,
      notes: "D-P4-005: one requirement's verdict inside an Audit. result is never auto-derived from a linked ControlAssertion.satisfaction_state - an independent human judgment. Not yet DB-immutable once the parent Audit is locked (flagged as a real gap in the ADR)."}
 
+  - {table: ten_processing_activity, class: TEN, data_class: C, domain: privacy, owner_module: ngrc.privacy, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-006: root of a GDPR Art. 30 Record of Processing Activities entry (organisational metadata, not personal data itself)."}
+  - {table: ten_purpose, class: TEN, data_class: C, domain: privacy, owner_module: ngrc.privacy, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-006: a ProcessingActivity's purpose + GDPR Art. 6(1) lawful basis. Sibling of PersonalData, not nested under it."}
+  - {table: ten_personal_data, class: TEN, data_class: C, domain: privacy, owner_module: ngrc.privacy, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-006: a category of personal data processed (metadata describing what is processed, not the data itself). special_category flags GDPR Art. 9 data."}
+  - {table: ten_rights_request, class: TEN, data_class: C, domain: privacy, owner_module: ngrc.privacy, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-006: a GDPR Art. 15-21 data-subject rights request. requester_reference is the tenant's own case reference, never raw data-subject PII."}
+  - {table: ten_privacy_breach, class: TEN, data_class: C, domain: privacy, owner_module: ngrc.privacy, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-006: a personal-data breach record. notified_authority_at/notified_subjects_at track GDPR Art. 33/34's two distinct notification duties independently."}
+
   # ------------------------------------------------------------------ CAT (global catalogue; ngrc_catalog_publisher writes, ngrc_app reads)
   - {table: cat_framework, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none}
   - {table: cat_framework_version, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none,
