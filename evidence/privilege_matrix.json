@@ -1,6 +1,6 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-26T22:10:43+00:00",
+  "generated_at": "2026-10-26T22:21:40+00:00",
   "generator": "tests/test_evidence_artifacts.py::privilege_matrix.json",
   "role_attributes": [
     {
@@ -228,7 +228,32 @@
         "SELECT",
         "UPDATE"
       ],
+      "ten_personal_data": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
       "ten_policy": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_privacy_breach": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_processing_activity": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_purpose": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_rights_request": [
         "INSERT",
         "SELECT",
         "UPDATE"

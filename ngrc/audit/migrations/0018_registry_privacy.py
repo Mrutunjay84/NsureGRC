@@ -1,9 +1,5 @@
 """Seed the audit actions added for the privacy foundation (D-P4-006, ACTIONS_PRIVACY). Registry rows are
-append-only; this migration only adds rows.
-
-NOTE: this branch was cut before D-P4-005's compliance_audit migration (also claiming 0017) merged to
-main - renumbered to 0018 (dependency updated) when this branch is rebased onto main, before opening the
-PR, same pattern as D-P3/D-P4's other parallel-branch increments."""
+append-only; this migration only adds rows."""
 from django.db import migrations
 
 from ngrc.audit.actions import ACTIONS_PRIVACY
@@ -22,5 +18,5 @@ def seed(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-    dependencies = [("audit", "0016_registry_governance")]
+    dependencies = [("audit", "0017_registry_compliance_audit")]
     operations = [migrations.RunPython(seed, migrations.RunPython.noop)]

@@ -1,6 +1,6 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-26T22:10:42+00:00",
+  "generated_at": "2026-10-26T22:21:39+00:00",
   "generator": "tests/test_evidence_artifacts.py::rls_coverage.json",
   "tables": {
     "audit.action_registry": {
@@ -489,7 +489,62 @@
       "rls_expected": "required",
       "rls_forced": true
     },
+    "ten_personal_data": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
     "ten_policy": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_privacy_breach": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_processing_activity": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_purpose": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_rights_request": {
       "class": "TEN",
       "data_class": "C",
       "policies": [
