@@ -48,11 +48,12 @@ def draft_version(framework: Framework, version_label: str, *, created_by, effec
 
 
 def add_requirement(version: FrameworkVersion, urn: str, ref_id: str, title: str, *, text_hash: str = "",
-                     parent: Requirement | None = None) -> Requirement:
+                     parent: Requirement | None = None, reference_controls: list | None = None) -> Requirement:
     if version.status != FrameworkVersion.Status.DRAFT:
         raise FrameworkError("version_not_draft")
     return Requirement.objects.using("catalog").create(
         framework_version=version, urn=urn, ref_id=ref_id, title=title, text_hash=text_hash, parent=parent,
+        reference_controls=reference_controls or [],
     )
 
 

@@ -62,6 +62,27 @@ def test_publish_freezes_version_and_requirements():
         c.rollback()
 
 
+def test_reference_controls_round_trip_and_freeze_on_publish():
+    fw = _framework()
+    version = services.draft_version(fw, "v1", created_by=uuid.uuid4())
+    guidance = [{"catalog": "NIST SP 800-53", "ref": "AC-2", "note": "account management"}]
+    req = services.add_requirement(version, "req-a", "A.1", "Control A", reference_controls=guidance)
+    assert req.reference_controls == guidance
+
+    services.publish_version(version, published_by=uuid.uuid4())
+    with role_connect("ngrc_catalog_publisher") as c:
+        with pytest.raises(Exception, match="immutable"):
+            c.execute("UPDATE cat_requirement SET reference_controls = %s::jsonb WHERE id = %s", ['[]', str(req.id)])
+        c.rollback()
+
+
+def test_add_requirement_defaults_reference_controls_to_empty_list():
+    fw = _framework()
+    version = services.draft_version(fw, "v1", created_by=uuid.uuid4())
+    req = services.add_requirement(version, "req-a", "A.1", "Control A")
+    assert req.reference_controls == []
+
+
 def test_draft_requirements_are_editable_before_publish():
     fw = _framework()
     version = services.draft_version(fw, "v1", created_by=uuid.uuid4())
