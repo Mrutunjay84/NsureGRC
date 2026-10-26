@@ -227,10 +227,20 @@ ACTIONS_GOVERNANCE: tuple[Action, ...] = (
     _a("governance.issue.transitioned", "governance", "info", "tenant", [APP], ["from_status", "to_status"]),
 )
 
+# D-P4-005: compliance audits and audit items (new ngrc.compliance_audit app - deliberately not "audit.*",
+# which already belongs to the security audit-log system, ngrc.audit).
+ACTIONS_COMPLIANCE_AUDIT: tuple[Action, ...] = (
+    _a("compliance_audit.audit.created", "compliance_audit", "info", "tenant", [APP], ["framework_urn"]),
+    _a("compliance_audit.audit.transitioned", "compliance_audit", "notice", "tenant", [APP],
+       ["from_status", "to_status"]),
+    _a("compliance_audit.item.added", "compliance_audit", "info", "tenant", [APP], ["requirement_urn"]),
+    _a("compliance_audit.item.result_set", "compliance_audit", "notice", "tenant", [APP], ["result"]),
+)
+
 ACTIONS: tuple[Action, ...] = (
     ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
     + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS + ACTIONS_SATISFACTION + ACTIONS_ASSERTION_REVIEW + ACTIONS_TASKS
-    + ACTIONS_FINDINGS + ACTIONS_RISK + ACTIONS_INCIDENTS + ACTIONS_GOVERNANCE
+    + ACTIONS_FINDINGS + ACTIONS_RISK + ACTIONS_INCIDENTS + ACTIONS_GOVERNANCE + ACTIONS_COMPLIANCE_AUDIT
 )
 
 BY_NAME = {a.name: a for a in ACTIONS}

@@ -103,6 +103,11 @@ tables:
   - {table: ten_issue, class: TEN, data_class: C, domain: governance, owner_module: ngrc.governance, rls: required, tenant_column: tenant_id,
      notes: "D-P4-004: tenant-root governance concern, not anchored to one ImplementationControl. Deliberately lighter than Finding - closing needs no verification step."}
 
+  - {table: ten_compliance_audit, class: TEN, data_class: C, domain: "audit (assessment)", owner_module: ngrc.compliance_audit, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-005: a formal assessment exercise against a framework_urn. draft->...->locked, 07_CONTROL_EVIDENCE.md's exact workflow. No edge leaves locked. App deliberately NOT named ngrc.audit (the existing security audit-log system)."}
+  - {table: ten_audit_item, class: TEN, data_class: C, domain: "audit (assessment)", owner_module: ngrc.compliance_audit, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-005: one requirement's verdict inside an Audit. result is never auto-derived from a linked ControlAssertion.satisfaction_state - an independent human judgment. Not yet DB-immutable once the parent Audit is locked (flagged as a real gap in the ADR)."}
+
   # ------------------------------------------------------------------ CAT (global catalogue; ngrc_catalog_publisher writes, ngrc_app reads)
   - {table: cat_framework, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none}
   - {table: cat_framework_version, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none,
