@@ -135,7 +135,7 @@ def test_task_activity_does_not_touch_satisfaction_state(tenant_a):
         control_services.transition_task(task, ControlTask.Status.IN_PROGRESS, actor_id=uuid.uuid4())
         control_services.transition_task(task, ControlTask.Status.DONE, actor_id=uuid.uuid4())
         assertion.refresh_from_db()
-    assert assertion.satisfaction_state == SatisfactionState.UNKNOWN
+    assert assertion.satisfaction_state == SatisfactionState.NOT_ASSESSED
 
 
 def test_a_tenant_cannot_see_another_tenants_task_or_control_plan(tenant_a, tenant_b):

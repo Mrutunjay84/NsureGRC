@@ -90,13 +90,14 @@ def _failed_test(impl):
     return control_services.transition_test_result(result, ControlTestResult.Status.FAILED, actor_id=uuid.uuid4())
 
 
-def test_no_inputs_stays_unknown(tenant_a):
+def test_no_inputs_stays_not_assessed(tenant_a):
+    """DEF-22: "unknown" is reserved for data-unavailability; "nothing built yet" is not_assessed."""
     with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
         _impl, assertion = _setup(tenant_a)
         uow.flush()
         control_services.recompute_satisfaction_state(assertion, actor_id=uuid.uuid4())
         assertion.refresh_from_db()
-    assert assertion.satisfaction_state == SatisfactionState.UNKNOWN
+    assert assertion.satisfaction_state == SatisfactionState.NOT_ASSESSED
 
 
 def test_evidence_link_with_nothing_positive_is_needs_attention(tenant_a):

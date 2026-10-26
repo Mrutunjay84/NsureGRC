@@ -137,7 +137,7 @@ def test_audit_item_result_is_never_auto_derived_from_control_assertion(tenant_a
         audit_obj = ca_services.create_audit(fw.urn, "2027 Annual Audit", created_by=uuid.uuid4())
         item = ca_services.add_audit_item(audit_obj, "req-a", created_by=uuid.uuid4(), control_assertion=assertion)
         uow.flush()
-        assert assertion.satisfaction_state == SatisfactionState.UNKNOWN
+        assert assertion.satisfaction_state == SatisfactionState.NOT_ASSESSED
         assert item.result == AuditItem.Result.NOT_ASSESSED
         item = ca_services.set_audit_item_result(item, AuditItem.Result.NON_COMPLIANT, actor_id=uuid.uuid4(),
                                                   observation="no evidence on file despite the assertion")

@@ -60,8 +60,10 @@ def test_assert_control_against_a_resolved_requirement(tenant_a):
         uow.flush()
     assert assertion.requirement_urn == "req-a"
     # 07_CONTROL_EVIDENCE.md: health is derived from tests/evidence/review state, none of which exist yet
-    # (EvidenceLink/Test are later increments) - anything other than "unknown" here would be fiction.
-    assert assertion.satisfaction_state == SatisfactionState.UNKNOWN
+    # (EvidenceLink/Test are later increments) - anything other than "not_assessed" here would be fiction.
+    # DEF-22: "unknown" is reserved for data-unavailability (02_PRD.md s16's Status Vocabulary + the Status
+    # Rule), not "nothing built yet" - this is the normal state for a freshly-created assertion.
+    assert assertion.satisfaction_state == SatisfactionState.NOT_ASSESSED
 
 
 def test_assert_control_fails_closed_without_an_activation(tenant_a):
