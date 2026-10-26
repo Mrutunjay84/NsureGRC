@@ -161,3 +161,57 @@ class EvidenceLink(TenantOwnedModel):
                 name="ten_evidence_link_unique_revision_per_assertion",
             ),
         ]
+
+
+class Test(TenantOwnedModel):
+    """A standing test procedure attached to an ImplementationControl (D-P3-003) - verifies the
+    implementation itself, independent of which framework requirement it happens to be asserted against
+    (04_DATA_MODEL.md's tree places Test as a sibling of Evidence/Finding/Exception under
+    ImplementationControl, not under ControlAssertion)."""
+
+    implementation_control = models.ForeignKey(ImplementationControl, on_delete=models.PROTECT, related_name="tests")
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, max_length=2000)
+    test_type = models.CharField(max_length=100, blank=True)
+    frequency = models.CharField(max_length=12, choices=Frequency.choices, default=Frequency.ON_DEMAND)
+    owner = models.UUIDField(null=True)
+    reviewer = models.UUIDField(null=True)
+    lifecycle = models.CharField(max_length=10, choices=Lifecycle.choices, default=Lifecycle.DRAFT)
+    created_by = models.UUIDField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ten_test"
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="ten_test_tenant_id_uniq"),
+        ]
+
+
+class TestResult(TenantOwnedModel):
+    """One execution's outcome (D-P3-003). Lifecycle: scheduled -> running -> passed/failed/unknown ->
+    remediating -> verified (07_CONTROL_EVIDENCE.md) - only a failed result continues into remediation
+    (see the ADR's judgment call); passed/unknown/verified are terminal for that row. Transitions are
+    service-enforced (ngrc.controls.services), no DB trigger - same precedent as EvidenceLink.review_state."""
+
+    class Status(models.TextChoices):
+        SCHEDULED = "scheduled"
+        RUNNING = "running"
+        PASSED = "passed"
+        FAILED = "failed"
+        UNKNOWN = "unknown"
+        REMEDIATING = "remediating"
+        VERIFIED = "verified"
+
+    test = models.ForeignKey(Test, on_delete=models.PROTECT, related_name="results")
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.SCHEDULED)
+    executed_at = models.DateTimeField(null=True)
+    detail = models.TextField(blank=True, max_length=2000)
+    deadline = models.DateField(null=True)
+    created_by = models.UUIDField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ten_test_result"
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="ten_test_result_tenant_id_uniq"),
+        ]

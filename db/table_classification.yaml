@@ -74,6 +74,10 @@ tables:
      notes: "D-P3-002: standing evidence expectation attached to an ImplementationControl. No requested/collected/... lifecycle of its own - fulfilment is a read-model question over EvidenceLink rows."}
   - {table: ten_evidence_link, class: TEN, data_class: C, domain: control, owner_module: ngrc.controls, rls: required, tenant_column: tenant_id,
      notes: "D-P3-002: governed link from a pinned, already-collected EvidenceRevision to a ControlAssertion. evidence_revision_id carries a same-tenant composite FK into ten_evidence_revision (raw SQL, same pattern as ten_evidence_revision -> ten_evidence)."}
+  - {table: ten_test, class: TEN, data_class: C, domain: control, owner_module: ngrc.controls, rls: required, tenant_column: tenant_id,
+     notes: "D-P3-003: standing test procedure attached to an ImplementationControl (sibling of EvidenceRequirement, not nested under ControlAssertion)."}
+  - {table: ten_test_result, class: TEN, data_class: C, domain: control, owner_module: ngrc.controls, rls: required, tenant_column: tenant_id,
+     notes: "D-P3-003: one test execution's outcome. scheduled -> running -> passed/failed/unknown -> remediating -> verified; only failed continues into remediation."}
 
   # ------------------------------------------------------------------ CAT (global catalogue; ngrc_catalog_publisher writes, ngrc_app reads)
   - {table: cat_framework, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none}
