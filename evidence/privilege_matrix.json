@@ -1,6 +1,6 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-26T21:51:39+00:00",
+  "generated_at": "2026-10-26T22:01:13+00:00",
   "generator": "tests/test_evidence_artifacts.py::privilege_matrix.json",
   "role_attributes": [
     {
@@ -197,6 +197,11 @@
         "SELECT",
         "UPDATE"
       ],
+      "ten_issue": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
       "ten_mapping_override": [
         "INSERT",
         "SELECT",
@@ -204,6 +209,16 @@
       ],
       "ten_membership": [
         "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_objective": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_policy": [
         "INSERT",
         "SELECT",
         "UPDATE"
