@@ -1,5 +1,6 @@
-"""D-P5-001: posture and control health metrics - unknown/not_assessed excluded from the posture ratio,
-weighting by coverage, control_health's worst-assertion rollup, tenant isolation."""
+"""D-P5-001/D-P5-002: posture, control health and framework coverage metrics - unknown/not_assessed
+excluded from the posture ratio, weighting by coverage, control_health's worst-assertion rollup,
+framework_coverage's mapped-not-effective definition, tenant isolation."""
 from __future__ import annotations
 
 import uuid
@@ -128,3 +129,65 @@ def test_a_tenant_cannot_see_another_tenants_posture(tenant_a, tenant_b):
         result = reporting_services.tenant_posture()
     assert result["posture_pct"] is None
     assert result["scored_count"] == 0
+
+
+def test_framework_coverage_fails_closed_without_an_activation(tenant_a):
+    fw = _framework_with_requirements()
+    with tenant_context(tenant_a.id):
+        with pytest.raises(framework_services.FrameworkError):
+            reporting_services.framework_coverage(fw.urn)
+
+
+def test_framework_coverage_zero_percent_is_a_real_measurement_not_none(tenant_a):
+    """D-P5-002: unlike tenant_posture, a framework with known requirements and zero assertions reports
+    0.0%, not None - the requirement count itself is known, so this is a real measurement."""
+    fw = _framework_with_requirements(n=2)
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id):
+        result = reporting_services.framework_coverage(fw.urn)
+    assert result["total_requirements"] == 2
+    assert result["covered_count"] == 0
+    assert result["coverage_pct"] == 0.0
+    assert sorted(result["uncovered_requirement_urns"]) == ["req-0", "req-1"]
+
+
+def test_framework_coverage_partial(tenant_a):
+    fw = _framework_with_requirements(n=2)
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        control_services.assert_control(impl, fw.urn, "req-0", created_by=uuid.uuid4())
+        uow.flush()
+        result = reporting_services.framework_coverage(fw.urn)
+    assert result["covered_count"] == 1
+    assert result["coverage_pct"] == pytest.approx(50.0)
+    assert result["uncovered_requirement_urns"] == ["req-1"]
+
+
+def test_framework_coverage_mapped_not_effective(tenant_a):
+    """D-P5-002: an assertion counts toward coverage regardless of its satisfaction_state - coverage means
+    "mapped", not "effective" (that question belongs to control_health/tenant_posture instead)."""
+    fw = _framework_with_requirements()
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        assertion = control_services.assert_control(impl, fw.urn, "req-0", created_by=uuid.uuid4())
+        assertion.satisfaction_state = SatisfactionState.NEEDS_ATTENTION
+        assertion.save(update_fields=["satisfaction_state"])
+        uow.flush()
+        result = reporting_services.framework_coverage(fw.urn)
+    assert result["coverage_pct"] == pytest.approx(100.0)
+
+
+def test_framework_coverage_tenant_isolation(tenant_a, tenant_b):
+    fw = _framework_with_requirements()
+    _activate(tenant_a, fw)
+    _activate(tenant_b, fw)
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        control_services.assert_control(impl, fw.urn, "req-0", created_by=uuid.uuid4())
+        uow.flush()
+    with tenant_context(tenant_b.id):
+        result = reporting_services.framework_coverage(fw.urn)
+    assert result["covered_count"] == 0
+    assert result["coverage_pct"] == 0.0
