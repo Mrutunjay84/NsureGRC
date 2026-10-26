@@ -56,6 +56,8 @@ for _k, _priv in [
     ("framework.manage", True),  # D-P2-001: activate/pin a framework version, migrate, override a mapping
     ("control.read", False),
     ("control.manage", True),  # D-P3-001: create/edit common & implementation controls, assert against requirements
+    ("risk.read", False),
+    ("risk.manage", True),  # D-P4-002: create/edit risk assessments/scenarios, record risk acceptances
 ]:
     register(_k, privileged=_priv, realm="tenant")
 
@@ -85,9 +87,10 @@ SYSTEM_ROLES: dict[str, dict] = {
         "name": "Administrator",
         "permissions": ["tenant.view", "tenant.members.read", "tenant.members.manage", "tenant.roles.read",
                         "tenant.roles.manage", "tenant.invitations.manage", "tenant.support.read", "tenant.recovery.approve", "evidence.read", "evidence.upload", "audit.read",
-                        "framework.read", "framework.manage", "control.read", "control.manage"],
+                        "framework.read", "framework.manage", "control.read", "control.manage", "risk.read", "risk.manage"],
     },
-    "member": {"name": "Member", "permissions": ["tenant.view", "tenant.members.read", "framework.read", "control.read"]},
+    "member": {"name": "Member", "permissions": ["tenant.view", "tenant.members.read", "framework.read", "control.read",
+                                                  "risk.read"]},
 }
 
 # Platform role -> permissions. Deliberately no role has standing access to tenant content (D-P0-005 s2).

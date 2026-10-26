@@ -87,6 +87,13 @@ tables:
   - {table: ten_security_exception, class: TEN, data_class: C, domain: control, owner_module: ngrc.controls, rls: required, tenant_column: tenant_id,
      notes: "D-P4-001: append-only governed waiver (07_CONTROL_EVIDENCE.md's Exceptions section). No UPDATE grant to ngrc_app at all - every field is fixed at creation; DB trigger rejects UPDATE/DELETE/TRUNCATE outright, same pattern as ten_evidence_revision."}
 
+  - {table: ten_risk_assessment, class: TEN, data_class: C, domain: risk, owner_module: ngrc.risk, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-002: a named risk-assessment exercise (e.g. '2027 Annual')."}
+  - {table: ten_risk_scenario, class: TEN, data_class: C, domain: risk, owner_module: ngrc.risk, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-002: threat/vulnerability pairing scored 1-5 likelihood/impact (ISO 27005). risk_level is derived (ngrc.risk.services.risk_level), never stored."}
+  - {table: ten_risk_acceptance, class: TEN, data_class: C, domain: risk, owner_module: ngrc.risk, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-002: append-only governed acceptance of residual risk, same pattern as ten_security_exception. No UPDATE grant to ngrc_app; DB trigger rejects UPDATE/DELETE/TRUNCATE outright."}
+
   # ------------------------------------------------------------------ CAT (global catalogue; ngrc_catalog_publisher writes, ngrc_app reads)
   - {table: cat_framework, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none}
   - {table: cat_framework_version, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none,
