@@ -157,7 +157,8 @@ def role_connect(role: str):
     """Open a NEW psycopg connection as a runtime role (outside Django) for privilege-matrix probing."""
     pw_env = {"ngrc_app": "NGRC_DB_APP_PASSWORD", "ngrc_auth": "NGRC_DB_AUTH_PASSWORD", "ngrc_ops": "NGRC_DB_OPS_PASSWORD",
               "ngrc_owner": "NGRC_DB_OWNER_PASSWORD", "ngrc_audit_reader_platform": "NGRC_DB_AUDIT_READER_PASSWORD",
-              "ngrc_audit_sealer": "NGRC_DB_AUDIT_SEALER_PASSWORD", "ngrc_audit_verifier": "NGRC_DB_AUDIT_VERIFIER_PASSWORD"}
+              "ngrc_audit_sealer": "NGRC_DB_AUDIT_SEALER_PASSWORD", "ngrc_audit_verifier": "NGRC_DB_AUDIT_VERIFIER_PASSWORD",
+              "ngrc_catalog_publisher": "NGRC_DB_CATALOG_PASSWORD"}
     assert _ID.match(role)
     return psycopg.connect(**_dsn(pw_env[role], role, settings.DB_NAME), autocommit=False)
 

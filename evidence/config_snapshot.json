@@ -31,6 +31,7 @@
     "audit_verifier": "ngrc_audit_verifier",
     "auth": "ngrc_auth",
     "autonomous": "ngrc_app",
+    "catalog": "ngrc_catalog_publisher",
     "default": "ngrc_app",
     "ops": "ngrc_ops",
     "owner": "ngrc_owner"
@@ -49,7 +50,8 @@
     "ngrc.tenancy",
     "ngrc.evidence",
     "ngrc.authz",
-    "ngrc.audit"
+    "ngrc.audit",
+    "ngrc.framework"
   ],
   "KEY_PROVIDER": "local",
   "MIDDLEWARE": [
@@ -114,6 +116,6 @@
   "SUPPORT_GRANT_MAX_MINUTES": 480,
   "X_FRAME_OPTIONS": "DENY",
   "database": "ngrc_test",
-  "generated_at": "2026-10-20T21:27:46+00:00",
+  "generated_at": "2026-10-24T23:32:21+00:00",
   "generator": "tests/test_evidence_artifacts.py::config_snapshot.json"
 }

@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "ngrc.evidence",
     "ngrc.authz",
     "ngrc.audit",
+    "ngrc.framework",
 ]
 
 MIDDLEWARE = [
@@ -90,11 +91,13 @@ _DB_ROLES = {
     "audit_reader": ("ngrc_audit_reader_platform", "NGRC_DB_AUDIT_READER_PASSWORD"),
     "audit_sealer": ("ngrc_audit_sealer", "NGRC_DB_AUDIT_SEALER_PASSWORD"),
     "audit_verifier": ("ngrc_audit_verifier", "NGRC_DB_AUDIT_VERIFIER_PASSWORD"),
+    "catalog": ("ngrc_catalog_publisher", "NGRC_DB_CATALOG_PASSWORD"),  # CAT/PLT writer (D-P2-001)
 }
 _PLANE_ALIASES = {
     "customer": ["default", "autonomous", "auth"],
     # The operator plane also serves support-session reads through ngrc_app, only after a grant check (D-P0-005 s3).
-    "operator": ["default", "autonomous", "ops", "audit_reader"],
+    # `catalog` is here (not on `customer`) because framework authoring/publish is a Platform Curator action (D-P2-001).
+    "operator": ["default", "autonomous", "ops", "audit_reader", "catalog"],
     "migrate": ["owner"],
     # audit worker processes: exactly ONE database role each (verifier: read-only + run records; sealer: head read + checkpoint insert)
     "audit_verify": ["audit_verifier"],

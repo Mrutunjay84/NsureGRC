@@ -1,6 +1,6 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-20T21:27:45+00:00",
+  "generated_at": "2026-10-25T22:43:37+00:00",
   "generator": "tests/test_evidence_artifacts.py::rls_coverage.json",
   "tables": {
     "audit.action_registry": {
@@ -58,6 +58,38 @@
     "audit.verification_run": {
       "class": "AUD",
       "data_class": "R",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "cat_framework": {
+      "class": "CAT",
+      "data_class": "I",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "cat_framework_version": {
+      "class": "CAT",
+      "data_class": "I",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "cat_mapping": {
+      "class": "CAT",
+      "data_class": "I",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "cat_requirement": {
+      "class": "CAT",
+      "data_class": "I",
       "policies": [],
       "rls_enabled": false,
       "rls_expected": "none",
@@ -147,6 +179,22 @@
       "rls_expected": "none",
       "rls_forced": false
     },
+    "plt_framework_change_set": {
+      "class": "PLT",
+      "data_class": "I",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
+    "plt_framework_source_registry": {
+      "class": "PLT",
+      "data_class": "I",
+      "policies": [],
+      "rls_enabled": false,
+      "rls_expected": "none",
+      "rls_forced": false
+    },
     "plt_operator_account": {
       "class": "PLT",
       "data_class": "R",
@@ -222,6 +270,39 @@
     "ten_evidence_revision": {
       "class": "TEN",
       "data_class": "R",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_framework_activation": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_framework_changeset_decision": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_mapping_override": {
+      "class": "TEN",
+      "data_class": "C",
       "policies": [
         "owner_context",
         "tenant_isolation"

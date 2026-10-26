@@ -71,6 +71,7 @@ def _env(**over):
                 "NGRC_WEBAUTHN_ORIGINS": "https://app.example.test", "NGRC_PUBLIC_BASE_URL": "https://app.example.test",
                 "NGRC_DB_APP_PASSWORD": "x", "NGRC_DB_AUTH_PASSWORD": "x", "NGRC_DB_OPS_PASSWORD": "x", "NGRC_DB_OWNER_PASSWORD": "x",
                 "NGRC_DB_AUDIT_READER_PASSWORD": "x", "NGRC_DB_AUDIT_SEALER_PASSWORD": "x", "NGRC_DB_AUDIT_VERIFIER_PASSWORD": "x",
+                "NGRC_DB_CATALOG_PASSWORD": "x",
                 "NGRC_ENV": "prod", "NGRC_PLANE": "customer", "PYTHONIOENCODING": "utf-8"})
     env.update(over)
     return {k: v for k, v in env.items() if v is not None}
@@ -105,7 +106,7 @@ def test_weak_secret_key_and_wildcard_hosts_stop_startup():
 
 
 @pytest.mark.parametrize("plane,expected", [("customer", {"default", "autonomous", "auth"}),
-                                            ("operator", {"default", "autonomous", "ops", "audit_reader"}), ("migrate", {"default", "owner"}),
+                                            ("operator", {"default", "autonomous", "ops", "audit_reader", "catalog"}), ("migrate", {"default", "owner"}),
                                             ("audit_verify", {"default", "audit_verifier"}), ("audit_seal", {"default", "audit_sealer"})])
 def test_each_process_plane_receives_only_its_own_database_roles(plane, expected):
     code = "from django.conf import settings; import json; print(json.dumps(sorted(settings.DATABASES)))"
@@ -117,6 +118,12 @@ def test_each_process_plane_receives_only_its_own_database_roles(plane, expected
     r = _run(code, "config.settings.base", **over)
     assert r.returncode == 0, r.stderr
     assert set(json.loads(r.stdout)) == expected
+
+
+def test_operator_plane_requires_the_catalog_role_password():
+    """D-P2-001: the operator plane is the only one that loads `catalog` (ngrc_catalog_publisher)."""
+    r = _run("import django; django.setup()", "config.settings.base", NGRC_PLANE="operator", NGRC_DB_CATALOG_PASSWORD=None)
+    assert r.returncode != 0 and "ImproperlyConfigured" in r.stderr and "NGRC_DB_CATALOG_PASSWORD" in r.stderr
 
 
 def test_runtime_roles_in_database_settings_are_not_privileged():

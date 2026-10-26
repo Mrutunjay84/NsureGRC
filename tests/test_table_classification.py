@@ -14,7 +14,10 @@ pytestmark = pytest.mark.security
 MANIFEST = Path(__file__).resolve().parent.parent / "db" / "table_classification.yaml"
 CLASSES = {"CAT", "PLT", "IDN", "TEN", "AUD", "SYS"}
 DATA_CLASSES = {"P", "I", "C", "R"}
-RUNTIME_ROLES = ["ngrc_app", "ngrc_auth", "ngrc_ops", "ngrc_audit_reader_platform", "ngrc_audit_sealer", "ngrc_audit_verifier"]
+RUNTIME_ROLES = ["ngrc_app", "ngrc_auth", "ngrc_ops", "ngrc_audit_reader_platform", "ngrc_audit_sealer", "ngrc_audit_verifier",
+                  "ngrc_catalog_publisher"]
+CAT_PLT_FRAMEWORK_TABLES = ["cat_framework", "cat_framework_version", "cat_requirement", "cat_mapping",
+                            "plt_framework_change_set", "plt_framework_source_registry"]
 PRIVS = ["SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"]
 CRUD = {"SELECT", "INSERT", "UPDATE", "DELETE"}
 IDN_TABLES = ["idn_account", "idn_session", "idn_totp_factor", "idn_webauthn_credential", "idn_recovery_code",
@@ -27,7 +30,11 @@ OPERATOR_TABLES = ["plt_operator_account", "plt_operator_role", "plt_operator_se
 EXPECTED = {
     "ngrc_app": {"ten_role": CRUD, "ten_membership": CRUD, "plt_tenant": {"SELECT"}, "audit.tenant_event": {"SELECT"},
                  "audit.checkpoint": {"SELECT"},
-                 "ten_evidence": {"SELECT", "INSERT", "UPDATE"}, "ten_evidence_revision": {"SELECT", "INSERT", "UPDATE"}},  # never DELETE
+                 "ten_evidence": {"SELECT", "INSERT", "UPDATE"}, "ten_evidence_revision": {"SELECT", "INSERT", "UPDATE"},  # never DELETE
+                 **{t: {"SELECT"} for t in CAT_PLT_FRAMEWORK_TABLES},  # D-P2-001: read-only, never writes the catalogue
+                 "ten_framework_activation": {"SELECT", "INSERT", "UPDATE"},
+                 "ten_mapping_override": {"SELECT", "INSERT", "UPDATE"},
+                 "ten_framework_changeset_decision": {"SELECT", "INSERT"}},
     "ngrc_auth": {**{t: CRUD for t in IDN_TABLES}, "plt_tenant": {"SELECT"}, "ten_membership": {"SELECT"},
                   "ten_role": {"SELECT"}, "idn_recovery_request": {"SELECT"}},  # recovery: read-only, every write via SECURITY DEFINER fns
     "ngrc_ops": {**{t: CRUD for t in OPERATOR_TABLES}, "plt_tenant": {"SELECT", "INSERT", "UPDATE"},
@@ -37,6 +44,9 @@ EXPECTED = {
     "ngrc_audit_verifier": {"audit.tenant_event": {"SELECT"}, "audit.platform_event": {"SELECT"}, "audit.chain_head": {"SELECT"},
                             "audit.checkpoint": {"SELECT"}, "audit.verification_run": {"SELECT", "INSERT"},
                             "audit.action_registry": {"SELECT"}},
+    # D-P2-001: the only writer of CAT/this PLT content. Never DELETE: published/locked rows are frozen by a
+    # trigger; drafts are discarded via a status flip, not deletion.
+    "ngrc_catalog_publisher": {t: {"SELECT", "INSERT", "UPDATE"} for t in CAT_PLT_FRAMEWORK_TABLES},
 }
 
 

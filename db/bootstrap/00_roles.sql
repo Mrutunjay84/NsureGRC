@@ -6,6 +6,7 @@
 --        -v auth_pw="$NGRC_DB_AUTH_PASSWORD"   -v ops_pw="$NGRC_DB_OPS_PASSWORD" \
 --        -v auditreader_pw="$NGRC_DB_AUDIT_READER_PASSWORD" \
 --        -v sealer_pw="$NGRC_DB_AUDIT_SEALER_PASSWORD" -v verifier_pw="$NGRC_DB_AUDIT_VERIFIER_PASSWORD" \
+--        -v catalog_pw="$NGRC_DB_CATALOG_PASSWORD" \
 --        -f 00_roles.sql
 --
 -- No passwords are stored in this file. Every runtime role is NOSUPERUSER NOBYPASSRLS and owns nothing.
@@ -30,6 +31,10 @@ CREATE ROLE ngrc_audit_reader_platform LOGIN PASSWORD :'auditreader_pw' NOSUPERU
 CREATE ROLE ngrc_audit_sealer          LOGIN PASSWORD :'sealer_pw'      NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
 CREATE ROLE ngrc_audit_verifier        LOGIN PASSWORD :'verifier_pw'    NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
 
+-- D-P2-001: the only role that may write CAT (catalogue) / this PLT framework-engine state. No RLS - CAT/PLT
+-- carry no tenant_id (D-P0-009); isolation here is role separation, same reasoning as ngrc_auth/ngrc_app.
+CREATE ROLE ngrc_catalog_publisher LOGIN PASSWORD :'catalog_pw' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+
 -- Defence in depth: RLS can never be switched off for runtime roles; bounded statement time.
 ALTER ROLE ngrc_app  SET row_security = on;
 ALTER ROLE ngrc_auth SET row_security = on;
@@ -37,3 +42,4 @@ ALTER ROLE ngrc_ops  SET row_security = on;
 ALTER ROLE ngrc_app  SET statement_timeout = '30s';
 ALTER ROLE ngrc_auth SET statement_timeout = '30s';
 ALTER ROLE ngrc_ops  SET statement_timeout = '30s';
+ALTER ROLE ngrc_catalog_publisher SET statement_timeout = '30s';
