@@ -1,4 +1,4 @@
-"""Risk assessments, scenarios and acceptances (D-P4-002).
+"""Risk assessments, scenarios and acceptances (D-P4-002); incidents (D-P4-003).
 
 All plain TEN writes (no new DB role - D-P0-009's risk/bia/asset/incident domain has no CAT/PLT content
 beyond the P1-deferred threat/CWE catalogues). Callers must already be inside the target tenant's
@@ -10,7 +10,7 @@ from __future__ import annotations
 from ngrc.audit import service as audit
 from ngrc.core import clock
 
-from .models import RiskAcceptance, RiskAssessment, RiskScenario
+from .models import Incident, RiskAcceptance, RiskAssessment, RiskScenario
 
 
 class RiskError(Exception):
@@ -110,3 +110,50 @@ def accept_risk_scenario(scenario: RiskScenario, justification: str, *, approver
     audit.record("risk.acceptance.recorded", actor_id=created_by, object_type="risk_acceptance",
                  object_id=str(acceptance.id), details={})
     return acceptance
+
+
+def raise_incident(title: str, *, severity: str, created_by, description: str = "", owner=None,
+                    detected_at=None, risk_scenario: RiskScenario | None = None,
+                    implementation_control=None) -> Incident:
+    incident = Incident.objects.create(
+        title=title, description=description, severity=severity, owner=owner,
+        detected_at=detected_at or clock.now(), risk_scenario=risk_scenario,
+        implementation_control=implementation_control, created_by=created_by,
+    )
+    audit.record("risk.incident.raised", actor_id=created_by, object_type="incident", object_id=str(incident.id),
+                 details={"severity": severity})
+    return incident
+
+
+_ALLOWED_INCIDENT_TRANSITIONS: dict[str, set[str]] = {
+    Incident.Status.DETECTED: {Incident.Status.INVESTIGATING},
+    Incident.Status.INVESTIGATING: {Incident.Status.CONTAINED},
+    Incident.Status.CONTAINED: {Incident.Status.RESOLVED},
+    Incident.Status.RESOLVED: {Incident.Status.CLOSED},
+    Incident.Status.CLOSED: {Incident.Status.DETECTED},
+}
+
+
+def transition_incident(incident: Incident, new_status: str, *, actor_id) -> Incident:
+    """Fails closed: strictly linear forward progression through the NIST SP 800-61 stages, no skipping -
+    only `closed -> detected` reopens (D-P4-003). resolved_at/closed_at are stamped entering their
+    respective states and cleared together on reopening."""
+    allowed = _ALLOWED_INCIDENT_TRANSITIONS.get(incident.status, set())
+    if new_status not in allowed:
+        raise RiskError(f"invalid_transition:{incident.status}->{new_status}")
+    from_status = incident.status
+    incident.status = new_status
+    update_fields = ["status"]
+    if new_status == Incident.Status.RESOLVED:
+        incident.resolved_at = clock.now()
+        update_fields.append("resolved_at")
+    elif new_status == Incident.Status.CLOSED:
+        incident.closed_at = clock.now()
+        update_fields.append("closed_at")
+    elif new_status == Incident.Status.DETECTED and from_status == Incident.Status.CLOSED:
+        incident.resolved_at, incident.closed_at = None, None
+        update_fields += ["resolved_at", "closed_at"]
+    incident.save(update_fields=update_fields)
+    audit.record("risk.incident.transitioned", actor_id=actor_id, object_type="incident", object_id=str(incident.id),
+                 details={"from_status": from_status, "to_status": new_status})
+    return incident
