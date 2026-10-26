@@ -50,7 +50,18 @@ class ImplementationControl(TenantOwnedModel):
 
 
 class SatisfactionState(models.TextChoices):
+    """The canonical six-value Status Vocabulary (02_PRD.md s16): "unknown | not_assessed | needs_attention
+    | partially_effective | effective | verified". DEF-22: this enum originally shipped (D-P3-001/004) with
+    only five values, missing not_assessed - a real spec gap, not a style choice. Per 11_MASTER_CLAUDE_BUILD_SPEC.md's
+    own Status Rule ("Use `unknown` for unavailable/stale source data"), `unknown` means a genuine data
+    problem (the derivation could not even be attempted); `not_assessed` means the derivation ran and found
+    nothing to go on yet (no Test, no EvidenceLink) - the normal state for a freshly-created assertion.
+    `unknown` is declared to complete the vocabulary but is not yet produced by any code path in this
+    codebase - no part of the current derivation detects source-data unavailability, so inventing a branch
+    that fabricates reaching it would itself be exactly the kind of fake completeness this project's rules
+    forbid. Left reachable only by a future increment that actually detects that condition."""
     UNKNOWN = "unknown"
+    NOT_ASSESSED = "not_assessed"
     NEEDS_ATTENTION = "needs_attention"
     PARTIALLY_EFFECTIVE = "partially_effective"
     EFFECTIVE = "effective"
@@ -81,7 +92,7 @@ class ControlAssertion(TenantOwnedModel):
     framework_urn = models.SlugField(max_length=200)
     requirement_urn = models.SlugField(max_length=250)
     coverage = models.IntegerField(null=True)
-    satisfaction_state = models.CharField(max_length=20, choices=SatisfactionState.choices, default=SatisfactionState.UNKNOWN)
+    satisfaction_state = models.CharField(max_length=20, choices=SatisfactionState.choices, default=SatisfactionState.NOT_ASSESSED)
     review_state = models.CharField(max_length=12, choices=ReviewState.choices, default=ReviewState.UNREVIEWED)
     valid_from = models.DateField(null=True)
     valid_to = models.DateField(null=True)

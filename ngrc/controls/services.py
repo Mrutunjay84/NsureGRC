@@ -241,7 +241,7 @@ def recompute_satisfaction_state(assertion: ControlAssertion, *, actor_id) -> Co
     has_passed_or_verified = any(s in (TestResult.Status.PASSED, TestResult.Status.VERIFIED) for s in latest_statuses)
 
     if not tests and not links:
-        new_state = SatisfactionState.UNKNOWN
+        new_state = SatisfactionState.NOT_ASSESSED
     elif has_failed_or_remediating:
         new_state = SatisfactionState.NEEDS_ATTENTION
     elif fresh_accepted and has_passed_or_verified:
