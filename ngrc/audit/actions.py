@@ -217,10 +217,20 @@ ACTIONS_INCIDENTS: tuple[Action, ...] = (
     _a("risk.incident.transitioned", "risk", "notice", "tenant", [APP], ["from_status", "to_status"]),
 )
 
+# D-P4-004: policies, objectives and issues.
+ACTIONS_GOVERNANCE: tuple[Action, ...] = (
+    _a("governance.policy.created", "governance", "info", "tenant", [APP]),
+    _a("governance.policy.transitioned", "governance", "notice", "tenant", [APP], ["from_status", "to_status"]),
+    _a("governance.objective.created", "governance", "info", "tenant", [APP]),
+    _a("governance.objective.transitioned", "governance", "info", "tenant", [APP], ["from_status", "to_status"]),
+    _a("governance.issue.raised", "governance", "notice", "tenant", [APP], ["severity"]),
+    _a("governance.issue.transitioned", "governance", "info", "tenant", [APP], ["from_status", "to_status"]),
+)
+
 ACTIONS: tuple[Action, ...] = (
     ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
     + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS + ACTIONS_SATISFACTION + ACTIONS_ASSERTION_REVIEW + ACTIONS_TASKS
-    + ACTIONS_FINDINGS + ACTIONS_RISK + ACTIONS_INCIDENTS
+    + ACTIONS_FINDINGS + ACTIONS_RISK + ACTIONS_INCIDENTS + ACTIONS_GOVERNANCE
 )
 
 BY_NAME = {a.name: a for a in ACTIONS}

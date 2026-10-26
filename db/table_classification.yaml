@@ -96,6 +96,13 @@ tables:
   - {table: ten_incident, class: TEN, data_class: C, domain: risk, owner_module: ngrc.risk, rls: required, tenant_column: tenant_id,
      notes: "D-P4-003: detect-through-close lifecycle (NIST SP 800-61 stages). Optional links to a RiskScenario and/or ImplementationControl, neither required at creation."}
 
+  - {table: ten_policy, class: TEN, data_class: C, domain: governance, owner_module: ngrc.governance, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-004: draft/active/retired governance document record."}
+  - {table: ten_objective, class: TEN, data_class: C, domain: governance, owner_module: ngrc.governance, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-004: a tracked goal with a target date. No metric linkage yet (Phase 5's configurable metrology scope)."}
+  - {table: ten_issue, class: TEN, data_class: C, domain: governance, owner_module: ngrc.governance, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-004: tenant-root governance concern, not anchored to one ImplementationControl. Deliberately lighter than Finding - closing needs no verification step."}
+
   # ------------------------------------------------------------------ CAT (global catalogue; ngrc_catalog_publisher writes, ngrc_app reads)
   - {table: cat_framework, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none}
   - {table: cat_framework_version, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none,
