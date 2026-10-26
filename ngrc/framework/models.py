@@ -137,7 +137,8 @@ class FrameworkChangeSet(ClassifiedModel):
 
 
 class SourceRegistryEntry(ClassifiedModel):
-    """Metadata-only stub (D-P2-001): no fetcher reads or writes this in this increment."""
+    """Metadata for one external source (D-P2-001 stub; first real use in D-P2-002). `last_payload_sha256`
+    backs the "24h Conditional Check": a fetch that hashes the same as last time produces no new draft."""
 
     ngrc_class = "PLT"
     ngrc_read_db = "default"
@@ -149,6 +150,7 @@ class SourceRegistryEntry(ClassifiedModel):
     canonical_url = models.URLField(max_length=500, blank=True)
     licence_note = models.CharField(max_length=300, blank=True)
     last_checked_at = models.DateTimeField(null=True)
+    last_payload_sha256 = models.CharField(max_length=64, blank=True)
 
     class Meta:
         db_table = "plt_framework_source_registry"
