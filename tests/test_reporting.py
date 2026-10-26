@@ -1,6 +1,7 @@
-"""D-P5-001/D-P5-002: posture, control health and framework coverage metrics - unknown/not_assessed
-excluded from the posture ratio, weighting by coverage, control_health's worst-assertion rollup,
-framework_coverage's mapped-not-effective definition, tenant isolation."""
+"""D-P5-001/D-P5-002/D-P5-003: posture, control health, framework coverage and evidence coverage metrics -
+unknown/not_assessed excluded from the posture ratio, weighting by coverage, control_health's
+worst-assertion rollup, framework_coverage's mapped-not-effective definition, evidence_coverage's
+freshness-reuse and no-lifecycle-gate, tenant isolation."""
 from __future__ import annotations
 
 import uuid
@@ -9,8 +10,9 @@ import pytest
 
 from ngrc.audit import service as audit_service
 from ngrc.controls import services as control_services
-from ngrc.controls.models import SatisfactionState
+from ngrc.controls.models import EvidenceLink, SatisfactionState
 from ngrc.core.context import tenant_context
+from ngrc.evidence.models import Evidence, EvidenceRevision
 from ngrc.framework import services as framework_services
 from ngrc.reporting import services as reporting_services
 
@@ -191,3 +193,122 @@ def test_framework_coverage_tenant_isolation(tenant_a, tenant_b):
         result = reporting_services.framework_coverage(fw.urn)
     assert result["covered_count"] == 0
     assert result["coverage_pct"] == 0.0
+
+
+def _revision() -> EvidenceRevision:
+    ev = Evidence.objects.create(title="Access review export", created_by=uuid.uuid4())
+    return EvidenceRevision.objects.create(
+        evidence_id=ev.id, revision_no=1, filename="export.pdf", declared_type="application/pdf",
+        detected_type="application/pdf", size_bytes=1024, sha256="0" * 64, storage_key=f"k-{uuid.uuid4().hex}",
+        state=EvidenceRevision.State.COLLECTED, created_by=uuid.uuid4(),
+    )
+
+
+def _accept_evidence(assertion, *, evidence_requirement=None, clock_ctl=None, advance_days=None):
+    rev = _revision()
+    link = control_services.link_evidence(assertion, rev, created_by=uuid.uuid4(), evidence_requirement=evidence_requirement)
+    link = control_services.review_evidence_link(link, EvidenceLink.ReviewState.IN_REVIEW, reviewed_by=uuid.uuid4())
+    if clock_ctl is not None and advance_days is not None:
+        clock_ctl.advance(days=advance_days)
+    return control_services.review_evidence_link(link, EvidenceLink.ReviewState.ACCEPTED, reviewed_by=uuid.uuid4())
+
+
+def test_evidence_coverage_is_none_with_no_requirements_at_all(tenant_a):
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        uow.flush()
+        result = reporting_services.evidence_coverage(impl)
+    assert result["coverage_pct"] is None
+    assert result["total_requirements"] == 0
+
+
+def test_evidence_coverage_zero_percent_is_a_real_measurement_not_none(tenant_a):
+    """D-P5-003: like framework_coverage, a control with known requirements and zero fresh accepted links
+    reports 0.0%, not None."""
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        req = control_services.create_evidence_requirement(impl, "access_review_export", created_by=uuid.uuid4())
+        uow.flush()
+        result = reporting_services.evidence_coverage(impl)
+    assert result["total_requirements"] == 1
+    assert result["covered_count"] == 0
+    assert result["coverage_pct"] == 0.0
+    assert result["uncovered_requirement_ids"] == [req.id]
+
+
+def test_evidence_coverage_counts_a_draft_requirement(tenant_a):
+    """D-P5-003: no lifecycle gate - a requirement left at its draft default (no activation workflow exists
+    anywhere in ngrc.controls) still counts, both in the denominator and once satisfied."""
+    fw = _framework_with_requirements()
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        assertion = control_services.assert_control(impl, fw.urn, "req-0", created_by=uuid.uuid4())
+        req = control_services.create_evidence_requirement(impl, "access_review_export", created_by=uuid.uuid4())
+        uow.flush()
+        assert req.lifecycle == "draft"
+        _accept_evidence(assertion, evidence_requirement=req)
+        result = reporting_services.evidence_coverage(impl)
+    assert result["coverage_pct"] == pytest.approx(100.0)
+    assert result["covered_count"] == 1
+
+
+def test_evidence_coverage_excludes_stale_links(tenant_a, clock_ctl):
+    fw = _framework_with_requirements()
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        assertion = control_services.assert_control(impl, fw.urn, "req-0", created_by=uuid.uuid4())
+        req = control_services.create_evidence_requirement(impl, "access_review_export", created_by=uuid.uuid4(),
+                                                             freshness_days=30)
+        uow.flush()
+        _accept_evidence(assertion, evidence_requirement=req, clock_ctl=clock_ctl, advance_days=45)
+        result = reporting_services.evidence_coverage(impl)
+    assert result["coverage_pct"] == 0.0
+    assert result["uncovered_requirement_ids"] == [req.id]
+
+
+def test_evidence_coverage_excludes_unaccepted_links(tenant_a):
+    fw = _framework_with_requirements()
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        assertion = control_services.assert_control(impl, fw.urn, "req-0", created_by=uuid.uuid4())
+        req = control_services.create_evidence_requirement(impl, "access_review_export", created_by=uuid.uuid4())
+        uow.flush()
+        rev = _revision()
+        control_services.link_evidence(assertion, rev, created_by=uuid.uuid4(), evidence_requirement=req)
+        result = reporting_services.evidence_coverage(impl)
+    assert result["coverage_pct"] == 0.0
+
+
+def test_evidence_coverage_partial_across_two_requirements(tenant_a):
+    fw = _framework_with_requirements()
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        assertion = control_services.assert_control(impl, fw.urn, "req-0", created_by=uuid.uuid4())
+        req1 = control_services.create_evidence_requirement(impl, "access_review_export", created_by=uuid.uuid4())
+        req2 = control_services.create_evidence_requirement(impl, "firewall_config", created_by=uuid.uuid4())
+        uow.flush()
+        _accept_evidence(assertion, evidence_requirement=req1)
+        result = reporting_services.evidence_coverage(impl)
+    assert result["total_requirements"] == 2
+    assert result["covered_count"] == 1
+    assert result["coverage_pct"] == pytest.approx(50.0)
+    assert result["uncovered_requirement_ids"] == [req2.id]
+
+
+def test_evidence_coverage_tenant_isolation(tenant_a, tenant_b):
+    fw = _framework_with_requirements()
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        assertion = control_services.assert_control(impl, fw.urn, "req-0", created_by=uuid.uuid4())
+        req = control_services.create_evidence_requirement(impl, "access_review_export", created_by=uuid.uuid4())
+        uow.flush()
+        _accept_evidence(assertion, evidence_requirement=req)
+    with tenant_context(tenant_b.id):
+        result = reporting_services.evidence_coverage(impl)
+    assert result["total_requirements"] == 0
+    assert result["coverage_pct"] is None

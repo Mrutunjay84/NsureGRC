@@ -8,7 +8,14 @@ ngrc.controls.services._fresh_accepted_links).
 """
 from __future__ import annotations
 
-from ngrc.controls.models import ControlAssertion, ImplementationControl, SatisfactionState
+from ngrc.controls import services as control_services
+from ngrc.controls.models import (
+    ControlAssertion,
+    EvidenceLink,
+    EvidenceRequirement,
+    ImplementationControl,
+    SatisfactionState,
+)
 from ngrc.framework import services as framework_services
 
 # Excluded entirely from both sides of the posture ratio - per the Status Rule ("never infer compliance
@@ -93,4 +100,40 @@ def framework_coverage(framework_urn: str) -> dict:
         "covered_count": len(covered),
         "coverage_pct": coverage_pct,
         "uncovered_requirement_urns": sorted(resolved_urns - asserted_urns),
+    }
+
+
+def evidence_coverage(implementation_control: ImplementationControl) -> dict:
+    """What fraction of an ImplementationControl's EvidenceRequirements are satisfied by at least one fresh,
+    accepted EvidenceLink (D-P5-003). Every EvidenceRequirement row counts, regardless of its `lifecycle`
+    field - that field (draft/active/retired) has no transition service anywhere in `ngrc.controls` yet
+    (same for CommonControl/ImplementationControl/ControlPlan's own `lifecycle`, confirmed by
+    `test_tasks_and_plans.py`'s `plan.lifecycle == "draft"` check), so every row created through
+    `create_evidence_requirement` sits at its `draft` default forever today - gating this metric on
+    `lifecycle == active` would make it report `None`/zero for every real tenant until an activation
+    workflow exists that nothing in this codebase builds. The model's own docstring already defines an
+    EvidenceRequirement as "a standing expectation" the moment it exists, with no lifecycle qualifier -
+    this metric takes that definition literally rather than inventing a gate the data can never satisfy.
+    Freshness/acceptance reuses `ngrc.controls.services.is_link_fresh` rather than re-deriving it - that
+    staleness arithmetic has exactly one definition in this codebase. `coverage_pct` is `0.0` (a real
+    measurement), not `None`, when requirements exist but none are satisfied - same "known denominator"
+    reasoning as `framework_coverage`; it is `None` only when the control has no EvidenceRequirements at
+    all."""
+    requirements = list(EvidenceRequirement.objects.filter(implementation_control=implementation_control))
+    if not requirements:
+        return {"total_requirements": 0, "covered_count": 0, "coverage_pct": None, "uncovered_requirement_ids": []}
+
+    links = list(
+        EvidenceLink.objects.filter(
+            evidence_requirement__in=requirements, review_state=EvidenceLink.ReviewState.ACCEPTED,
+        ).select_related("evidence_requirement")
+    )
+    covered_ids = {link.evidence_requirement_id for link in links if control_services.is_link_fresh(link)}
+    total = len(requirements)
+    covered_count = len(covered_ids)
+    return {
+        "total_requirements": total,
+        "covered_count": covered_count,
+        "coverage_pct": covered_count / total * 100.0,
+        "uncovered_requirement_ids": sorted(r.id for r in requirements if r.id not in covered_ids),
     }
