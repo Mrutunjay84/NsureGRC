@@ -188,9 +188,16 @@ ACTIONS_ASSERTION_REVIEW: tuple[Action, ...] = (
     _a("control.assertion.reviewed", "control", "notice", "tenant", [APP]),
 )
 
+# D-P3-005: tasks and control plans.
+ACTIONS_TASKS: tuple[Action, ...] = (
+    _a("control.control_plan.created", "control", "info", "tenant", [APP]),
+    _a("control.task.created", "control", "info", "tenant", [APP]),
+    _a("control.task.transitioned", "control", "info", "tenant", [APP], ["from_status", "to_status"]),
+)
+
 ACTIONS: tuple[Action, ...] = (
     ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
-    + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS + ACTIONS_SATISFACTION + ACTIONS_ASSERTION_REVIEW
+    + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS + ACTIONS_SATISFACTION + ACTIONS_ASSERTION_REVIEW + ACTIONS_TASKS
 )
 
 BY_NAME = {a.name: a for a in ACTIONS}

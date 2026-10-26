@@ -1,6 +1,6 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-26T20:30:13+00:00",
+  "generated_at": "2026-10-26T21:01:17+00:00",
   "generator": "tests/test_evidence_artifacts.py::rls_coverage.json",
   "tables": {
     "audit.action_registry": {
@@ -278,6 +278,17 @@
       "rls_expected": "required",
       "rls_forced": true
     },
+    "ten_control_plan": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
     "ten_evidence": {
       "class": "TEN",
       "data_class": "R",
@@ -417,6 +428,17 @@
       "data_class": "C",
       "policies": [
         "auth_own_roles",
+        "owner_context",
+        "tenant_isolation"
+      ],
+      "rls_enabled": true,
+      "rls_expected": "required",
+      "rls_forced": true
+    },
+    "ten_task": {
+      "class": "TEN",
+      "data_class": "C",
+      "policies": [
         "owner_context",
         "tenant_isolation"
       ],

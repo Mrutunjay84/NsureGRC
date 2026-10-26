@@ -15,11 +15,13 @@ from ngrc.framework import services as framework_services
 from .models import (
     CommonControl,
     ControlAssertion,
+    ControlPlan,
     EvidenceLink,
     EvidenceRequirement,
     Frequency,
     ImplementationControl,
     SatisfactionState,
+    Task,
     Test,
     TestResult,
 )
@@ -255,3 +257,51 @@ def recompute_satisfaction_state(assertion: ControlAssertion, *, actor_id) -> Co
         audit.record("control.assertion.satisfaction_recomputed", actor_id=actor_id, object_type="control_assertion",
                      object_id=str(assertion.id), details={"from_state": old_state, "to_state": new_state})
     return assertion
+
+
+def create_control_plan(name: str, *, created_by, description: str = "", owner=None, target_date=None) -> ControlPlan:
+    plan = ControlPlan.objects.create(name=name, description=description, owner=owner, target_date=target_date,
+                                       created_by=created_by)
+    audit.record("control.control_plan.created", actor_id=created_by, object_type="control_plan",
+                 object_id=str(plan.id), details={})
+    return plan
+
+
+def create_task(implementation_control: ImplementationControl, title: str, *, created_by, description: str = "",
+                 assigned_to=None, due_date=None, control_plan: ControlPlan | None = None) -> Task:
+    task = Task.objects.create(
+        implementation_control=implementation_control, control_plan=control_plan, title=title,
+        description=description, assigned_to=assigned_to, due_date=due_date, created_by=created_by,
+    )
+    audit.record("control.task.created", actor_id=created_by, object_type="task", object_id=str(task.id), details={})
+    return task
+
+
+_ALLOWED_TASK_TRANSITIONS: dict[str, set[str]] = {
+    Task.Status.OPEN: {Task.Status.IN_PROGRESS, Task.Status.DONE},
+    Task.Status.IN_PROGRESS: {Task.Status.DONE, Task.Status.OPEN},
+    Task.Status.DONE: {Task.Status.OPEN},
+}
+
+
+def transition_task(task: Task, new_status: str, *, actor_id) -> Task:
+    """Fails closed: only transitions in `_ALLOWED_TASK_TRANSITIONS` are accepted (D-P3-005). Entering
+    `done` stamps completed_at/completed_by; reopening (leaving `done`) clears both. Deliberately does not
+    touch any ControlAssertion's satisfaction_state - tasks are "supporting operations", not a health input
+    (07_CONTROL_EVIDENCE.md)."""
+    allowed = _ALLOWED_TASK_TRANSITIONS.get(task.status, set())
+    if new_status not in allowed:
+        raise ControlError(f"invalid_transition:{task.status}->{new_status}")
+    from_status = task.status
+    task.status = new_status
+    update_fields = ["status"]
+    if new_status == Task.Status.DONE:
+        task.completed_at, task.completed_by = clock.now(), actor_id
+        update_fields += ["completed_at", "completed_by"]
+    elif from_status == Task.Status.DONE:
+        task.completed_at, task.completed_by = None, None
+        update_fields += ["completed_at", "completed_by"]
+    task.save(update_fields=update_fields)
+    audit.record("control.task.transitioned", actor_id=actor_id, object_type="task", object_id=str(task.id),
+                 details={"from_status": from_status, "to_status": new_status})
+    return task

@@ -78,6 +78,10 @@ tables:
      notes: "D-P3-003: standing test procedure attached to an ImplementationControl (sibling of EvidenceRequirement, not nested under ControlAssertion)."}
   - {table: ten_test_result, class: TEN, data_class: C, domain: control, owner_module: ngrc.controls, rls: required, tenant_column: tenant_id,
      notes: "D-P3-003: one test execution's outcome. scheduled -> running -> passed/failed/unknown -> remediating -> verified; only failed continues into remediation."}
+  - {table: ten_control_plan, class: TEN, data_class: C, domain: control, owner_module: ngrc.controls, rls: required, tenant_column: tenant_id,
+     notes: "D-P3-005: named grouping of tasks under a broader initiative. Deliberately thin (label, owner, target date)."}
+  - {table: ten_task, class: TEN, data_class: C, domain: control, owner_module: ngrc.controls, rls: required, tenant_column: tenant_id,
+     notes: "D-P3-005: assignable, due-dated unit of work against an ImplementationControl. Not an input to satisfaction_state (07_CONTROL_EVIDENCE.md: supporting operations must not create duplicate control/evidence state)."}
 
   # ------------------------------------------------------------------ CAT (global catalogue; ngrc_catalog_publisher writes, ngrc_app reads)
   - {table: cat_framework, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none}
