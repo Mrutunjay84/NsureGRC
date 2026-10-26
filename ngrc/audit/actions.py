@@ -177,9 +177,20 @@ ACTIONS_TESTS: tuple[Action, ...] = (
     _a("control.test_result.transitioned", "control", "notice", "tenant", [APP], ["from_status", "to_status"]),
 )
 
+# D-P3-004: real satisfaction_state derivation from EvidenceLink + TestResult signals.
+ACTIONS_SATISFACTION: tuple[Action, ...] = (
+    _a("control.assertion.satisfaction_recomputed", "control", "info", "tenant", [APP], ["from_state", "to_state"]),
+)
+
+# D-P3-004: closes the gap D-P3-001 left open - mark_assertion_reviewed's own event (separate migration,
+# 0011, from ACTIONS_SATISFACTION's 0010 - two distinct concerns, each gets its own batch per convention).
+ACTIONS_ASSERTION_REVIEW: tuple[Action, ...] = (
+    _a("control.assertion.reviewed", "control", "notice", "tenant", [APP]),
+)
+
 ACTIONS: tuple[Action, ...] = (
     ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
-    + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS
+    + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS + ACTIONS_SATISFACTION + ACTIONS_ASSERTION_REVIEW
 )
 
 BY_NAME = {a.name: a for a in ACTIONS}
