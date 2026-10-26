@@ -18,5 +18,5 @@ def seed(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-    dependencies = [("audit", "0014_registry_risk")]
+    dependencies = [("audit", "0016_registry_governance")]
     operations = [migrations.RunPython(seed, migrations.RunPython.noop)]

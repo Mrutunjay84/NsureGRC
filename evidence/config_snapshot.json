@@ -54,7 +54,8 @@
     "ngrc.framework",
     "ngrc.controls",
     "ngrc.risk",
-    "ngrc.governance"
+    "ngrc.governance",
+    "ngrc.compliance_audit"
   ],
   "KEY_PROVIDER": "local",
   "MIDDLEWARE": [
@@ -119,6 +120,6 @@
   "SUPPORT_GRANT_MAX_MINUTES": 480,
   "X_FRAME_OPTIONS": "DENY",
   "database": "ngrc_test",
-  "generated_at": "2026-10-26T22:01:14+00:00",
+  "generated_at": "2026-10-26T22:10:44+00:00",
   "generator": "tests/test_evidence_artifacts.py::config_snapshot.json"
 }

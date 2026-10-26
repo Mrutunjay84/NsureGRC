@@ -1,6 +1,6 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-26T22:01:13+00:00",
+  "generated_at": "2026-10-26T22:10:43+00:00",
   "generator": "tests/test_evidence_artifacts.py::privilege_matrix.json",
   "role_attributes": [
     {
@@ -123,7 +123,17 @@
       "plt_tenant": [
         "SELECT"
       ],
+      "ten_audit_item": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
       "ten_common_control": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_compliance_audit": [
         "INSERT",
         "SELECT",
         "UPDATE"
