@@ -211,10 +211,16 @@ ACTIONS_RISK: tuple[Action, ...] = (
     _a("risk.acceptance.recorded", "risk", "warning", "tenant", [APP]),
 )
 
+# D-P4-003: incidents.
+ACTIONS_INCIDENTS: tuple[Action, ...] = (
+    _a("risk.incident.raised", "risk", "warning", "tenant", [APP], ["severity"]),
+    _a("risk.incident.transitioned", "risk", "notice", "tenant", [APP], ["from_status", "to_status"]),
+)
+
 ACTIONS: tuple[Action, ...] = (
     ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
     + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS + ACTIONS_SATISFACTION + ACTIONS_ASSERTION_REVIEW + ACTIONS_TASKS
-    + ACTIONS_FINDINGS + ACTIONS_RISK
+    + ACTIONS_FINDINGS + ACTIONS_RISK + ACTIONS_INCIDENTS
 )
 
 BY_NAME = {a.name: a for a in ACTIONS}

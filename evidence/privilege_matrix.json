@@ -1,6 +1,6 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-26T21:44:09+00:00",
+  "generated_at": "2026-10-26T21:51:39+00:00",
   "generator": "tests/test_evidence_artifacts.py::privilege_matrix.json",
   "role_attributes": [
     {
@@ -188,6 +188,11 @@
         "UPDATE"
       ],
       "ten_implementation_control": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ],
+      "ten_incident": [
         "INSERT",
         "SELECT",
         "UPDATE"

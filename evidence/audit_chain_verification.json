@@ -3,32 +3,32 @@
     {
       "algorithm": "ed25519",
       "cp_index": 1,
-      "digest": "0bc87ddd78f2bca51104e7767efd1d9d5db91254b9e2041c7e92b1d0f0dbbe12",
+      "digest": "eb337c5a33445f3999e1189fdd4a62e57728d1595a1a0f3bb47f0cec0f540e0b",
       "format": 2,
-      "head_hash": "3fea5ce3b8ac083822ea688b20f93fb3efb192ff3e92dc0fe364f09ebcf8099c",
+      "head_hash": "d508b159d2c50c90df34356365a436fad2c10c6a2d55e25a923638ff9ddbb8d3",
       "heartbeat": false,
-      "issued_at": "2026-10-26T21:44:10.181346Z",
-      "key_id": "dev-547324b220ef16ba",
-      "prev_cp_digest": "ab1cf988feda65d42355e3e8f0b047899ac2960c8d4b075907a9cc510ff8c3b2",
+      "issued_at": "2026-10-26T21:51:39.808423Z",
+      "key_id": "dev-665ec7791f80f88f",
+      "prev_cp_digest": "84c1f5b8b4fb1e2afa804018a7d2fe6f9aad4cfd39293c037733d7c4feb14693",
       "seq": 4,
-      "signature": "696bc0e113b086d4c6f873adaf8619739b6f5fc49583b307afbf84e8994b137d5e7f307cbe5331cb0cab147bfb770ce9a4c071668def812883cc0465e0fbf407",
+      "signature": "0404b6cc7fe95e993cbf23bc426fa27de6f40059a61d5c32c3a2dddbaa5ee3d8a1e8d8e120c65a6aa9c9d4883fbc0ceee7ddfd52bfd219e902914586a9acfb08",
       "sink": "dev-local-file (NOT WORM)",
-      "stream_key": "97d1f5da-b12a-424e-870f-72c023909eec"
+      "stream_key": "ce2c3e32-d4c6-4369-bb37-f64913bccc86"
     }
   ],
   "database": "ngrc_test",
   "export_sink": "local directory (NOT WORM storage)",
-  "generated_at": "2026-10-26T21:44:10+00:00",
+  "generated_at": "2026-10-26T21:51:39+00:00",
   "generator": "tests/test_evidence_artifacts.py::audit_chain_verification.json",
   "ok": true,
   "scope": "fresh tenant created by this test (the shared test database also holds deliberately tampered streams)",
   "signer": {
     "algorithm": "ed25519",
     "dev_only": true,
-    "key_id": "dev-547324b220ef16ba",
+    "key_id": "dev-665ec7791f80f88f",
     "note": "DEV-ONLY Ed25519 key on the same host as the DB; NOT the production control (open item O-4)"
   },
-  "stream": "97d1f5da-b12a-424e-870f-72c023909eec",
+  "stream": "ce2c3e32-d4c6-4369-bb37-f64913bccc86",
   "verified_through_seq": 4,
   "violations": []
 }

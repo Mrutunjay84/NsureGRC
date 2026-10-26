@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from django.db import models
 
+from ngrc.controls.models import ImplementationControl
 from ngrc.core.models import TenantOwnedModel
 
 
@@ -85,4 +86,47 @@ class RiskAcceptance(TenantOwnedModel):
         db_table = "ten_risk_acceptance"
         constraints = [
             models.UniqueConstraint(fields=["tenant", "id"], name="ten_risk_acceptance_tenant_id_uniq"),
+        ]
+
+
+class Incident(TenantOwnedModel):
+    """Detect-through-close lifecycle (D-P4-003, NIST SP 800-61 stages named as states) - same app/domain
+    as Risk per D-P0-009's risk/bia/asset/incident grouping. Both control/scenario links are optional:
+    incidents are often raised before investigation connects them to a specific risk or control."""
+
+    class Severity(models.TextChoices):
+        """Deliberately the same four literal values as ngrc.controls.models.Finding.Severity (D-P4-001) -
+        one severity scale across this codebase's governance objects, not two that would need reconciling
+        in Phase 5's cross-object reporting. Not programmatically derived from it (a cross-enum value
+        reference is fragile); kept in sync by convention and this comment."""
+        LOW = "low"
+        MEDIUM = "medium"
+        HIGH = "high"
+        CRITICAL = "critical"
+
+    class Status(models.TextChoices):
+        DETECTED = "detected"
+        INVESTIGATING = "investigating"
+        CONTAINED = "contained"
+        RESOLVED = "resolved"
+        CLOSED = "closed"
+
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, max_length=2000)
+    severity = models.CharField(max_length=10, choices=Severity.choices)
+    status = models.CharField(max_length=14, choices=Status.choices, default=Status.DETECTED)
+    detected_at = models.DateTimeField()
+    resolved_at = models.DateTimeField(null=True)
+    closed_at = models.DateTimeField(null=True)
+    owner = models.UUIDField(null=True)
+    risk_scenario = models.ForeignKey(RiskScenario, on_delete=models.PROTECT, related_name="incidents", null=True, blank=True)
+    implementation_control = models.ForeignKey(ImplementationControl, on_delete=models.PROTECT, related_name="incidents",
+                                                null=True, blank=True)
+    created_by = models.UUIDField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ten_incident"
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="ten_incident_tenant_id_uniq"),
         ]

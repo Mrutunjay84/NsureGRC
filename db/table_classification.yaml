@@ -93,6 +93,8 @@ tables:
      notes: "D-P4-002: threat/vulnerability pairing scored 1-5 likelihood/impact (ISO 27005). risk_level is derived (ngrc.risk.services.risk_level), never stored."}
   - {table: ten_risk_acceptance, class: TEN, data_class: C, domain: risk, owner_module: ngrc.risk, rls: required, tenant_column: tenant_id,
      notes: "D-P4-002: append-only governed acceptance of residual risk, same pattern as ten_security_exception. No UPDATE grant to ngrc_app; DB trigger rejects UPDATE/DELETE/TRUNCATE outright."}
+  - {table: ten_incident, class: TEN, data_class: C, domain: risk, owner_module: ngrc.risk, rls: required, tenant_column: tenant_id,
+     notes: "D-P4-003: detect-through-close lifecycle (NIST SP 800-61 stages). Optional links to a RiskScenario and/or ImplementationControl, neither required at creation."}
 
   # ------------------------------------------------------------------ CAT (global catalogue; ngrc_catalog_publisher writes, ngrc_app reads)
   - {table: cat_framework, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none}
