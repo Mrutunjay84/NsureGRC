@@ -215,3 +215,52 @@ class TestResult(TenantOwnedModel):
         constraints = [
             models.UniqueConstraint(fields=["tenant", "id"], name="ten_test_result_tenant_id_uniq"),
         ]
+
+
+class ControlPlan(TenantOwnedModel):
+    """A named grouping of tasks under a broader initiative (D-P3-005) - a label, an owner and a target
+    date, deliberately thin: nothing in any available spec document asks for more structure than that."""
+
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, max_length=2000)
+    owner = models.UUIDField(null=True)
+    target_date = models.DateField(null=True)
+    lifecycle = models.CharField(max_length=10, choices=Lifecycle.choices, default=Lifecycle.DRAFT)
+    created_by = models.UUIDField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ten_control_plan"
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="ten_control_plan_tenant_id_uniq"),
+        ]
+
+
+class Task(TenantOwnedModel):
+    """An assignable, due-dated unit of work against an ImplementationControl (D-P3-005) - sibling of
+    EvidenceRequirement/Test under ImplementationControl, never FK'd to Evidence/EvidenceLink directly
+    (07_CONTROL_EVIDENCE.md: supporting operations must not create duplicate control/evidence state).
+    No stored "overdue" status - derivable from status != done and due_date < today, computed on read."""
+
+    class Status(models.TextChoices):
+        OPEN = "open"
+        IN_PROGRESS = "in_progress"
+        DONE = "done"
+
+    implementation_control = models.ForeignKey(ImplementationControl, on_delete=models.PROTECT, related_name="tasks")
+    control_plan = models.ForeignKey(ControlPlan, on_delete=models.PROTECT, related_name="tasks", null=True, blank=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, max_length=2000)
+    assigned_to = models.UUIDField(null=True)
+    due_date = models.DateField(null=True)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.OPEN)
+    completed_at = models.DateTimeField(null=True)
+    completed_by = models.UUIDField(null=True)
+    created_by = models.UUIDField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ten_task"
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="ten_task_tenant_id_uniq"),
+        ]
