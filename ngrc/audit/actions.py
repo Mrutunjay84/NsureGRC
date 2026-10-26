@@ -155,7 +155,15 @@ ACTIONS_CUSTOM_FRAMEWORK: tuple[Action, ...] = (
        ["framework_urn", "version_label"]),
 )
 
-ACTIONS: tuple[Action, ...] = ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK
+# D-P3-001: Common/Implementation controls and control assertions.
+ACTIONS_CONTROLS: tuple[Action, ...] = (
+    _a("control.common_control.created", "control", "info", "tenant", [APP], ["key"]),
+    _a("control.implementation_control.created", "control", "info", "tenant", [APP], ["common_control_key"]),
+    _a("control.assertion.created", "control", "info", "tenant", [APP],
+       ["framework_urn", "requirement_urn"]),
+)
+
+ACTIONS: tuple[Action, ...] = ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
 
 BY_NAME = {a.name: a for a in ACTIONS}
 if len(BY_NAME) != len(ACTIONS):  # explicit raise: asserts vanish under `python -O`

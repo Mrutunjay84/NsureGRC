@@ -64,6 +64,13 @@ tables:
   - {table: ten_framework_custom_requirement, class: TEN, data_class: C, domain: framework, owner_module: ngrc.framework, rls: required, tenant_column: tenant_id,
      notes: "D-P2-003: immutable once its version is published (trigger checks the parent version's status)."}
 
+  - {table: ten_common_control, class: TEN, data_class: C, domain: control, owner_module: ngrc.controls, rls: required, tenant_column: tenant_id,
+     notes: "D-P3-001: reusable control intent/objective."}
+  - {table: ten_implementation_control, class: TEN, data_class: C, domain: control, owner_module: ngrc.controls, rls: required, tenant_column: tenant_id,
+     notes: "D-P3-001: concrete implementation of a CommonControl."}
+  - {table: ten_control_assertion, class: TEN, data_class: C, domain: control, owner_module: ngrc.controls, rls: required, tenant_column: tenant_id,
+     notes: "D-P3-001: links an ImplementationControl to a framework requirement by stable (framework_urn, requirement_urn) keys, not an FK into cat_requirement/ten_framework_custom_requirement. satisfaction_state is stored, not yet derived (no EvidenceLink/Test linkage this increment)."}
+
   # ------------------------------------------------------------------ CAT (global catalogue; ngrc_catalog_publisher writes, ngrc_app reads)
   - {table: cat_framework, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none}
   - {table: cat_framework_version, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none,

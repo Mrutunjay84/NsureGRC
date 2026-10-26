@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "ngrc.authz",
     "ngrc.audit",
     "ngrc.framework",
+    "ngrc.controls",
 ]
 
 MIDDLEWARE = [
