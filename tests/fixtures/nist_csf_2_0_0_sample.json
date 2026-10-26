@@ -1,0 +1,2194 @@
+{
+  "response": {
+    "requestType": 4,
+    "elements": {
+      "documents": [
+        {
+          "doc_identifier": "CSF_2_0_0",
+          "name": "NIST Cybersecurity Framework",
+          "version": "Version  2.0",
+          "website": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf"
+        }
+      ],
+      "relationship_types": [
+        {
+          "relationship_identifier": "projection",
+          "description": "Represents a relationship between two elements."
+        },
+        {
+          "relationship_identifier": "incorporated_into",
+          "description": "Used within the 800-53 dataset to denote where a withdrawn control was incorporated into"
+        },
+        {
+          "relationship_identifier": "moved_to",
+          "description": "Used within the 800-53 dataset to denote where a withdrawn control was moved to"
+        },
+        {
+          "relationship_identifier": "external_reference",
+          "description": "Represents a relationship to an external source of information"
+        }
+      ],
+      "elements": [
+        {
+          "element_type": "function",
+          "element_identifier": "RS",
+          "title": "RESPOND",
+          "text": "Actions regarding a detected cybersecurity incident are taken",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS",
+          "title": "00005",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.MA",
+          "title": "00005.00001",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.MA-01",
+          "title": "00005.00001.00001",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.MA-02",
+          "title": "00005.00001.00002",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.MA-03",
+          "title": "00005.00001.00003",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.MA-04",
+          "title": "00005.00001.00004",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.MA-05",
+          "title": "00005.00001.00005",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.RP",
+          "title": "00005.00002",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.RP-01",
+          "title": "00005.00002.00001",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.AN",
+          "title": "00005.00003",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.AN-01",
+          "title": "00005.00003.00001",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.AN-02",
+          "title": "00005.00003.00002",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.AN-03",
+          "title": "00005.00003.00003",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.AN-04",
+          "title": "00005.00003.00004",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.AN-05",
+          "title": "00005.00003.00005",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.AN-06",
+          "title": "00005.00003.00006",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.AN-07",
+          "title": "00005.00003.00007",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.AN-08",
+          "title": "00005.00003.00008",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.CO",
+          "title": "00005.00004",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.CO-01",
+          "title": "00005.00004.00001",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.CO-02",
+          "title": "00005.00004.00002",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.CO-03",
+          "title": "00005.00004.00003",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.CO-04",
+          "title": "00005.00004.00004",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.CO-05",
+          "title": "00005.00004.00005",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.MI",
+          "title": "00005.00005",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.MI-01",
+          "title": "00005.00005.00001",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.MI-02",
+          "title": "00005.00005.00002",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.MI-03",
+          "title": "00005.00005.00003",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.IM",
+          "title": "00005.00006",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.IM-01",
+          "title": "00005.00006.00001",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "sort",
+          "element_identifier": "S-RS.IM-02",
+          "title": "00005.00006.00002",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "category",
+          "element_identifier": "RS.MA",
+          "title": "Incident Management",
+          "text": "Responses to detected cybersecurity incidents are managed",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "category",
+          "element_identifier": "RS.AN",
+          "title": "Incident Analysis",
+          "text": "Investigations are conducted to ensure effective response and support forensics and recovery activities",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "category",
+          "element_identifier": "RS.CO",
+          "title": "Incident Response Reporting and Communication",
+          "text": "Response activities are coordinated with internal and external stakeholders as required by laws, regulations, or policies",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "category",
+          "element_identifier": "RS.MI",
+          "title": "Incident Mitigation",
+          "text": "Activities are performed to prevent expansion of an event and mitigate its effects",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "category",
+          "element_identifier": "RS.RP",
+          "title": "Response Planning",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "category",
+          "element_identifier": "RS.IM",
+          "title": "Improvements",
+          "text": "",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.MI-03",
+          "title": "",
+          "text": "Newly identified vulnerabilities are mitigated or documented as accepted risks",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.CO-04",
+          "title": "",
+          "text": "Coordination with stakeholders occurs consistent with response plans",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.CO-05",
+          "title": "",
+          "text": "Voluntary information sharing occurs with external stakeholders to achieve broader cybersecurity situational awareness",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.IM-01",
+          "title": "",
+          "text": "Response plans incorporate lessons learned",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.IM-02",
+          "title": "",
+          "text": "Response strategies are updated",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.RP-01",
+          "title": "",
+          "text": "Response plan is executed during or after an incident",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.AN-01",
+          "title": "",
+          "text": "Notifications from detection systems are investigated",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.AN-02",
+          "title": "",
+          "text": "The impact of the incident is understood",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.AN-04",
+          "title": "",
+          "text": "Incidents are categorized consistent with response plans",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.AN-05",
+          "title": "",
+          "text": "Processes are established to receive, analyze and respond to vulnerabilities disclosed to the organization from internal and external sources (e.g. internal testing, security bulletins, or security researchers)",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.CO-01",
+          "title": "",
+          "text": "Personnel know their roles and order of operations when a response is needed",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.MA-01",
+          "title": "",
+          "text": "The incident response plan is executed in coordination with relevant third parties once an incident is declared",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.MA-02",
+          "title": "",
+          "text": "Incident reports are triaged and validated",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.MA-03",
+          "title": "",
+          "text": "Incidents are categorized and prioritized",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.MA-04",
+          "title": "",
+          "text": "Incidents are escalated or elevated as needed",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.MA-05",
+          "title": "",
+          "text": "The criteria for initiating incident recovery are applied",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.AN-03",
+          "title": "",
+          "text": "Analysis is performed to establish what has taken place during an incident and the root cause of the incident",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.AN-06",
+          "title": "",
+          "text": "Actions performed during an investigation are recorded, and the records' integrity and provenance are preserved",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.AN-07",
+          "title": "",
+          "text": "Incident data and metadata are collected, and their integrity and provenance are preserved",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.AN-08",
+          "title": "",
+          "text": "An incident's magnitude is estimated and validated",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.CO-02",
+          "title": "",
+          "text": "Internal and external stakeholders are notified of incidents",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.CO-03",
+          "title": "",
+          "text": "Information is shared with designated internal and external stakeholders",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.MI-01",
+          "title": "",
+          "text": "Incidents are contained",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "subcategory",
+          "element_identifier": "RS.MI-02",
+          "title": "",
+          "text": "Incidents are eradicated",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MA-01.308",
+          "title": "Ex1",
+          "text": "Detection technologies automatically report confirmed incidents",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MA-01.309",
+          "title": "Ex2",
+          "text": "Request incident response assistance from the organization's incident response outsourcer",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MA-01.310",
+          "title": "Ex3",
+          "text": "Designate an incident lead for each incident",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MA-01.311",
+          "title": "Ex4",
+          "text": "Initiate execution of additional cybersecurity plans as needed to support incident response (for example, business continuity and disaster recovery)",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MA-02.312",
+          "title": "Ex1",
+          "text": "Preliminarily review incident reports to confirm that they are cybersecurity-related and necessitate incident response activities",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MA-02.313",
+          "title": "Ex2",
+          "text": "Apply criteria to estimate the severity of an incident",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MA-03.314",
+          "title": "Ex1",
+          "text": "Further review and categorize incidents based on the type of incident (e.g., data breach, ransomware, DDoS, account compromise)",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MA-03.315",
+          "title": "Ex2",
+          "text": "Prioritize incidents based on their scope, likely impact, and time-critical nature",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MA-03.316",
+          "title": "Ex3",
+          "text": "Select incident response strategies for active incidents by balancing the need to quickly recover from an incident with the need to observe the attacker or conduct a more thorough investigation",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MA-04.317",
+          "title": "Ex1",
+          "text": "Track and validate the status of all ongoing incidents",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MA-04.318",
+          "title": "Ex2",
+          "text": "Coordinate incident escalation or elevation with designated internal and external stakeholders",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MA-05.319",
+          "title": "Ex1",
+          "text": "Apply incident recovery criteria to known and assumed characteristics of the incident to determine whether incident recovery processes should be initiated",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MA-05.320",
+          "title": "Ex2",
+          "text": "Take the possible operational disruption of incident recovery activities into account",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.AN-03.321",
+          "title": "Ex1",
+          "text": "Determine the sequence of events that occurred during the incident and which assets and resources were involved in each event",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.AN-03.322",
+          "title": "Ex2",
+          "text": "Attempt to determine what vulnerabilities, threats, and threat actors were directly or indirectly involved in the incident",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.AN-03.323",
+          "title": "Ex3",
+          "text": "Analyze the incident to find the underlying, systemic root causes",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.AN-03.324",
+          "title": "Ex4",
+          "text": "Check any cyber deception technology for additional information on attacker behavior",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.AN-06.325",
+          "title": "Ex1",
+          "text": "Require each incident responder and others (e.g., system administrators, cybersecurity engineers) who perform incident response tasks to record their actions and make the record immutable",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.AN-06.326",
+          "title": "Ex2",
+          "text": "Require the incident lead to document the incident in detail and be responsible for preserving the integrity of the documentation and the sources of all information being reported",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.AN-07.327",
+          "title": "Ex1",
+          "text": "Collect, preserve, and safeguard the integrity of all pertinent incident data and metadata (e.g., data source, date/time of collection) based on evidence preservation and chain-of-custody procedures",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.AN-08.328",
+          "title": "Ex1",
+          "text": "Review other potential targets of the incident to search for indicators of compromise and evidence of persistence",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.AN-08.329",
+          "title": "Ex2",
+          "text": "Automatically run tools on targets to look for indicators of compromise and evidence of persistence",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.CO-02.330",
+          "title": "Ex1",
+          "text": "Follow the organization's breach notification procedures after discovering a data breach incident, including notifying affected customers",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.CO-02.331",
+          "title": "Ex2",
+          "text": "Notify business partners and customers of incidents in accordance with contractual requirements",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.CO-02.332",
+          "title": "Ex3",
+          "text": "Notify law enforcement agencies and regulatory bodies of incidents based on criteria in the incident response plan and management approval",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.CO-03.333",
+          "title": "Ex1",
+          "text": "Securely share information consistent with response plans and information sharing agreements",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.CO-03.334",
+          "title": "Ex2",
+          "text": "Voluntarily share information about an attacker's observed TTPs, with all sensitive data removed, with an Information Sharing and Analysis Center (ISAC)",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.CO-03.335",
+          "title": "Ex3",
+          "text": "Notify HR when malicious insider activity occurs",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.CO-03.336",
+          "title": "Ex4",
+          "text": "Regularly update senior leadership on the status of major incidents",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.CO-03.337",
+          "title": "Ex5",
+          "text": "Follow the rules and protocols defined in contracts for incident information sharing between the organization and its suppliers",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.CO-03.338",
+          "title": "Ex6",
+          "text": "Coordinate crisis communication methods between the organization and its critical suppliers",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MI-01.339",
+          "title": "Ex1",
+          "text": "Cybersecurity technologies (e.g., antivirus software) and cybersecurity features of other technologies (e.g., operating systems, network infrastructure devices) automatically perform containment actions",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MI-01.340",
+          "title": "Ex2",
+          "text": "Allow incident responders to manually select and perform containment actions",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MI-01.341",
+          "title": "Ex3",
+          "text": "Allow a third party (e.g., internet service provider, managed security service provider) to perform containment actions on behalf of the organization",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MI-01.342",
+          "title": "Ex4",
+          "text": "Automatically transfer compromised endpoints to a remediation virtual local area network (VLAN)",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MI-02.343",
+          "title": "Ex1",
+          "text": "Cybersecurity technologies and cybersecurity features of other technologies (e.g., operating systems, network infrastructure devices) automatically perform eradication actions",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MI-02.344",
+          "title": "Ex2",
+          "text": "Allow incident responders to manually select and perform eradication actions",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "implementation_example",
+          "element_identifier": "RS.MI-02.345",
+          "title": "Ex3",
+          "text": "Allow a third party (e.g., managed security service provider) to perform eradication actions on behalf of the organization",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "party",
+          "element_identifier": "third",
+          "title": "3rd",
+          "text": "3rd Party Risk",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "party",
+          "element_identifier": "first",
+          "title": "1st",
+          "text": "1st Party Risk",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "withdraw_reason",
+          "element_identifier": "WR-RS.CO-01",
+          "title": "",
+          "text": "Incorporated into PR.AT-01",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "withdraw_reason",
+          "element_identifier": "WR-RS.AN-05",
+          "title": "",
+          "text": "Moved to ID.RA-08",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "withdraw_reason",
+          "element_identifier": "WR-RS.AN-04",
+          "title": "",
+          "text": "Moved to RS.MA-03",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "withdraw_reason",
+          "element_identifier": "WR-RS.AN-02",
+          "title": "",
+          "text": "Incorporated into RS.MA-02, RS.MA-03, RS.MA-04",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "withdraw_reason",
+          "element_identifier": "WR-RS.AN-01",
+          "title": "",
+          "text": "Incorporated into RS.MA-02",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "withdraw_reason",
+          "element_identifier": "WR-RS.RP-01",
+          "title": "",
+          "text": "Incorporated into RS.MA-01",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "withdraw_reason",
+          "element_identifier": "WR-RS.RP",
+          "title": "",
+          "text": "Incorporated into RS.MA",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "withdraw_reason",
+          "element_identifier": "WR-RS.IM-02",
+          "title": "",
+          "text": "Incorporated into ID.IM-03",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "withdraw_reason",
+          "element_identifier": "WR-RS.IM-01",
+          "title": "",
+          "text": "Incorporated into ID.IM-03, ID.IM-04",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "withdraw_reason",
+          "element_identifier": "WR-RS.CO-05",
+          "title": "",
+          "text": "Incorporated into RS.CO-03",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "withdraw_reason",
+          "element_identifier": "WR-RS.CO-04",
+          "title": "",
+          "text": "Incorporated into RS.MA-01, RS.MA-04",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "withdraw_reason",
+          "element_identifier": "WR-RS.MI-03",
+          "title": "",
+          "text": "Incorporated into ID.RA-06",
+          "doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "element_type": "withdraw_reason",
+          "element_identifier": "WR-RS.IM",
+          "title": "",
+          "text": "Incorporated into ID.IM",
+          "doc_identifier": "CSF_2_0_0"
+        }
+      ],
+      "relationships": [
+        {
+          "source_element_identifier": "RS",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-01.308",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-01.309",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-01.310",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-01.311",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-02",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-02.312",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-02.313",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-03",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-03.314",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-03.315",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-03.316",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-04",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-04.317",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-04.318",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-05",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-05",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-05.319",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-05",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-05.320",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-03",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-03.321",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-03.322",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-03.323",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-03.324",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-06",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-06",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-06.325",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-06",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-06.326",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-07",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-07",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-07.327",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-08",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-08",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-08.328",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-08",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-08.329",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-02",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-02.330",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-02.331",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-02.332",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-03",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-03.333",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-03.334",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-03.335",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-03.336",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-03.337",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-03.338",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MI",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MI-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MI-01.339",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MI-01.340",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MI-01.341",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MI-01.342",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MI-02",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MI-02.343",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MI-02.344",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MI-02.345",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "first",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "first",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "first",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-05",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "first",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "first",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-06",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "first",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-07",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "first",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-08",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "first",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "first",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "first",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "first",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "first",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "third",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "third",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "third",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "third",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "third",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "CA",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "SI",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "SI",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "CP",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "CP",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "CP",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "CP",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "CP",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "PT",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-06",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "IR",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "IR",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "IR",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "IR",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "IR",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "IR",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RA",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RA",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RA",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "PE",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "PE",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "PE",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "PM",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-06",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "AU",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "AU",
+          "dest_doc_identifier": "SP_800_53_5_1_1",
+          "relationship_identifier": "external_reference",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.RP",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.RP",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "WR-RS.RP",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.RP",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.RP-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.RP-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "WR-RS.RP-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.RP-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "incorporated_into",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "WR-RS.AN-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.AN-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-02",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "incorporated_into",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-02",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "WR-RS.AN-02",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.AN-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-02",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "incorporated_into",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.AN-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-03",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "incorporated_into",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.AN-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-04",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "incorporated_into",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-04",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "WR-RS.AN-04",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.AN-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-03",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "moved_to",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.AN-05",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-05",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "WR-RS.AN-05",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.AN-05",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "ID.RA-08",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "moved_to",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "WR-RS.CO-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.CO-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "PR.AT-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "incorporated_into",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-04",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "WR-RS.CO-04",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.CO-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "incorporated_into",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.CO-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MA-04",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "incorporated_into",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-05",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-05",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "WR-RS.CO-05",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.CO-05",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.CO-03",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "incorporated_into",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.MI-03",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "WR-RS.MI-03",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.MI-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "ID.RA-06",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "incorporated_into",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.IM",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.IM",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "WR-RS.IM",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.IM",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "ID.IM",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "incorporated_into",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.IM",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.IM-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.IM-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "WR-RS.IM-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.IM-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "ID.IM-03",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "incorporated_into",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.IM-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "ID.IM-04",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "incorporated_into",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.IM",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "RS.IM-02",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.IM-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "WR-RS.IM-02",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "WR-RS.IM-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "ID.IM-03",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "incorporated_into",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.MA",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.MA-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.MA-02",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.MA-03",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.MA-04",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MA-05",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.MA-05",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.RP",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.RP",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.RP-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.RP-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.AN",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.AN-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.AN-02",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.AN-03",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.AN-04",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-05",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.AN-05",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-06",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.AN-06",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-07",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.AN-07",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.AN-08",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.AN-08",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.CO",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.CO-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.CO-02",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.CO-03",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-04",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.CO-04",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.CO-05",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.CO-05",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.MI",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.MI-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.MI-02",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.MI-03",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.MI-03",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.IM",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.IM",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.IM-01",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.IM-01",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        },
+        {
+          "source_element_identifier": "RS.IM-02",
+          "source_doc_identifier": "CSF_2_0_0",
+          "dest_element_identifier": "S-RS.IM-02",
+          "dest_doc_identifier": "CSF_2_0_0",
+          "relationship_identifier": "projection",
+          "provenance_doc_identifier": "CSF_2_0_0"
+        }
+      ]
+    }
+  }
+}
