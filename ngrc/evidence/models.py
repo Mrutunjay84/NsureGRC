@@ -52,6 +52,8 @@ class EvidenceRevision(TenantOwnedModel):
     class Meta:
         db_table = "ten_evidence_revision"
         constraints = [
+            # target of ngrc.controls.EvidenceLink's composite FK (D-P3-002) - same reasoning as ten_evidence's own tenant_id_uniq above.
+            models.UniqueConstraint(fields=["tenant", "id"], name="ten_evidence_revision_tenant_id_uniq"),
             models.UniqueConstraint(fields=["tenant", "evidence_id", "revision_no"], name="ten_evidence_revision_no_uniq"),
             models.UniqueConstraint(fields=["tenant", "storage_key"], name="ten_evidence_revision_key_uniq"),
             models.CheckConstraint(condition=models.Q(state__in=["scan_pending", "collected", "quarantined"]), name="ten_evidence_revision_state"),

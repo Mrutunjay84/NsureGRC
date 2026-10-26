@@ -57,6 +57,16 @@ class SatisfactionState(models.TextChoices):
     VERIFIED = "verified"
 
 
+class Frequency(models.TextChoices):
+    ON_DEMAND = "on_demand"
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+    QUARTERLY = "quarterly"
+    SEMI_ANNUAL = "semi_annual"
+    ANNUAL = "annual"
+
+
 class ControlAssertion(TenantOwnedModel):
     """Links an ImplementationControl to a framework requirement by stable (framework_urn, requirement_urn)
     keys, never an ORM FK into cat_requirement/ten_framework_custom_requirement - same D-P0-009 s2.3
@@ -85,5 +95,69 @@ class ControlAssertion(TenantOwnedModel):
             models.UniqueConstraint(
                 fields=["tenant", "implementation_control", "framework_urn", "requirement_urn"],
                 name="ten_control_assertion_unique_link",
+            ),
+        ]
+
+
+class EvidenceRequirement(TenantOwnedModel):
+    """A standing expectation attached to an ImplementationControl (D-P3-002): what evidence is expected,
+    not evidence itself. Fulfilment is a read-model question over EvidenceLink rows, not a stored flag here
+    (see the ADR's judgment call 2) - this is why there is no requested/collected/... state on this model."""
+
+    implementation_control = models.ForeignKey(ImplementationControl, on_delete=models.PROTECT,
+                                                related_name="evidence_requirements")
+    evidence_type = models.CharField(max_length=100)
+    source_system = models.CharField(max_length=150, blank=True)
+    frequency = models.CharField(max_length=12, choices=Frequency.choices, default=Frequency.ON_DEMAND)
+    freshness_days = models.IntegerField(null=True)
+    acceptance_criteria = models.TextField(blank=True, max_length=2000)
+    owner = models.UUIDField(null=True)
+    reviewer = models.UUIDField(null=True)
+    lifecycle = models.CharField(max_length=10, choices=Lifecycle.choices, default=Lifecycle.DRAFT)
+    created_by = models.UUIDField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ten_evidence_requirement"
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="ten_evidence_requirement_tenant_id_uniq"),
+            models.CheckConstraint(condition=models.Q(freshness_days__gte=0) | models.Q(freshness_days__isnull=True),
+                                    name="ten_evidence_requirement_freshness_nonneg"),
+        ]
+
+
+class EvidenceLink(TenantOwnedModel):
+    """Governed link from a pinned, already-collected EvidenceRevision to a ControlAssertion (D-P3-002).
+    `evidence_revision_id` is a plain UUID field, not a Django ForeignKey: the same-tenant composite FK
+    (tenant_id, evidence_revision_id) -> ten_evidence_revision(tenant_id, id) is created in raw SQL in
+    migration 0005, identical pattern to EvidenceRevision.evidence_id's own link to ten_evidence - a plain
+    single-column FK's referential check runs as the table owner and does not honour RLS, so anything
+    pointing into the evidence domain specifically uses the stronger composite constraint."""
+
+    class ReviewState(models.TextChoices):
+        COLLECTED = "collected"
+        IN_REVIEW = "in_review"
+        ACCEPTED = "accepted"
+        REJECTED = "rejected"
+        EXPIRED = "expired"
+        SUPERSEDED = "superseded"
+
+    control_assertion = models.ForeignKey(ControlAssertion, on_delete=models.PROTECT, related_name="evidence_links")
+    evidence_requirement = models.ForeignKey(EvidenceRequirement, on_delete=models.PROTECT, related_name="links",
+                                              null=True, blank=True)
+    evidence_revision_id = models.UUIDField()
+    review_state = models.CharField(max_length=12, choices=ReviewState.choices, default=ReviewState.COLLECTED)
+    reviewed_by = models.UUIDField(null=True)
+    reviewed_at = models.DateTimeField(null=True)
+    created_by = models.UUIDField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ten_evidence_link"
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "id"], name="ten_evidence_link_tenant_id_uniq"),
+            models.UniqueConstraint(
+                fields=["tenant", "control_assertion", "evidence_revision_id"],
+                name="ten_evidence_link_unique_revision_per_assertion",
             ),
         ]

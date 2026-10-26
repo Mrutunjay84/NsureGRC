@@ -163,7 +163,16 @@ ACTIONS_CONTROLS: tuple[Action, ...] = (
        ["framework_urn", "requirement_urn"]),
 )
 
-ACTIONS: tuple[Action, ...] = ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
+# D-P3-002: Evidence requirements and evidence links (connecting EvidenceRevision to a ControlAssertion).
+ACTIONS_EVIDENCE_LINKS: tuple[Action, ...] = (
+    _a("control.evidence_requirement.created", "control", "info", "tenant", [APP], ["evidence_type"]),
+    _a("control.evidence_link.created", "control", "info", "tenant", [APP], ["review_state"]),
+    _a("control.evidence_link.reviewed", "control", "notice", "tenant", [APP], ["from_state", "to_state"]),
+)
+
+ACTIONS: tuple[Action, ...] = (
+    ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS + ACTIONS_EVIDENCE_LINKS
+)
 
 BY_NAME = {a.name: a for a in ACTIONS}
 if len(BY_NAME) != len(ACTIONS):  # explicit raise: asserts vanish under `python -O`
