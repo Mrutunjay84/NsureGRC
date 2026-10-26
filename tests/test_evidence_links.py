@@ -82,10 +82,12 @@ def test_link_evidence_to_control_assertion(tenant_a):
     assert link.control_assertion_id == assertion.id
     assert link.evidence_revision_id == rev.id
     assert link.review_state == EvidenceLink.ReviewState.COLLECTED
-    # health derivation is a later increment (D-P3-00x): linking evidence must not silently change this
+    # D-P3-004: linking now triggers a real recompute - unaccepted evidence and no tests yet means there's
+    # nothing positive to show, which the derivation ladder reports as needs_attention, not unknown anymore
+    # (unknown is reserved for "nothing built against this assertion at all" - a link now exists).
     with tenant_context(tenant_a.id):
         assertion.refresh_from_db()
-    assert assertion.satisfaction_state == SatisfactionState.UNKNOWN
+    assert assertion.satisfaction_state == SatisfactionState.NEEDS_ATTENTION
 
 
 def test_link_evidence_fails_closed_for_scan_pending_revision(tenant_a):

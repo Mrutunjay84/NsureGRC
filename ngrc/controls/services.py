@@ -19,6 +19,7 @@ from .models import (
     EvidenceRequirement,
     Frequency,
     ImplementationControl,
+    SatisfactionState,
     Test,
     TestResult,
 )
@@ -71,6 +72,19 @@ def assert_control(implementation_control: ImplementationControl, framework_urn:
     return assertion
 
 
+def mark_assertion_reviewed(assertion: ControlAssertion, *, reviewed_by) -> ControlAssertion:
+    """One-directional (unreviewed -> reviewed only): a reviewer's sign-off is a discrete event, not a
+    togglable flag (D-P3-004). Fails closed against reviewing an already-reviewed assertion twice."""
+    if assertion.review_state == ControlAssertion.ReviewState.REVIEWED:
+        raise ControlError("already_reviewed")
+    assertion.review_state = ControlAssertion.ReviewState.REVIEWED
+    assertion.save(update_fields=["review_state"])
+    audit.record("control.assertion.reviewed", actor_id=reviewed_by, object_type="control_assertion",
+                 object_id=str(assertion.id), details={})
+    recompute_satisfaction_state(assertion, actor_id=reviewed_by)
+    return assertion
+
+
 def create_evidence_requirement(implementation_control: ImplementationControl, evidence_type: str, *, created_by,
                                  source_system: str = "", frequency: str = Frequency.ON_DEMAND,
                                  freshness_days: int | None = None, acceptance_criteria: str = "",
@@ -102,6 +116,7 @@ def link_evidence(control_assertion: ControlAssertion, evidence_revision: Eviden
     )
     audit.record("control.evidence_link.created", actor_id=created_by, object_type="evidence_link",
                  object_id=str(link.id), details={"review_state": link.review_state})
+    recompute_satisfaction_state(control_assertion, actor_id=created_by)
     return link
 
 
@@ -123,6 +138,7 @@ def review_evidence_link(link: EvidenceLink, new_state: str, *, reviewed_by) -> 
     link.save(update_fields=["review_state", "reviewed_by", "reviewed_at"])
     audit.record("control.evidence_link.reviewed", actor_id=reviewed_by, object_type="evidence_link",
                  object_id=str(link.id), details={"from_state": from_state, "to_state": new_state})
+    recompute_satisfaction_state(link.control_assertion, actor_id=reviewed_by)
     return link
 
 
@@ -176,4 +192,66 @@ def transition_test_result(result: TestResult, new_status: str, *, actor_id, det
     result.save(update_fields=update_fields)
     audit.record("control.test_result.transitioned", actor_id=actor_id, object_type="test_result",
                  object_id=str(result.id), details={"from_status": from_status, "to_status": new_status})
+    for assertion in ControlAssertion.objects.filter(implementation_control=result.test.implementation_control_id):
+        recompute_satisfaction_state(assertion, actor_id=actor_id)
     return result
+
+
+def _fresh_accepted_links(accepted_links: list[EvidenceLink]) -> list[EvidenceLink]:
+    """A link naming an EvidenceRequirement with freshness_days set is fresh only if its pinned
+    EvidenceRevision is not yet older than that window; a link with no requirement, or a requirement with
+    no freshness_days, is never considered stale (D-P3-004 - nothing to measure it against)."""
+    fresh = []
+    for link in accepted_links:
+        if link.evidence_requirement_id and link.evidence_requirement.freshness_days is not None:
+            rev = EvidenceRevision.objects.filter(id=link.evidence_revision_id).first()
+            if rev and (clock.now() - rev.created_at).days > link.evidence_requirement.freshness_days:
+                continue
+        fresh.append(link)
+    return fresh
+
+
+def _latest_test_statuses(tests: list[Test]) -> list[str]:
+    statuses = []
+    for t in tests:
+        latest = TestResult.objects.filter(test=t).order_by("-created_at", "-id").first()
+        if latest is not None:
+            statuses.append(latest.status)
+    return statuses
+
+
+def recompute_satisfaction_state(assertion: ControlAssertion, *, actor_id) -> ControlAssertion:
+    """Derives ControlAssertion.satisfaction_state from EvidenceLink and TestResult signals - the ladder is
+    documented in full, with its reasoning, in 00_CONTROL/PHASE3/D-P3-004_Satisfaction_State_Derivation.md.
+    Connection health, exceptions and "implementation completeness" are NOT inputs: no model exists for the
+    first two anywhere in this codebase, and the third has no concrete definition anywhere in the spec to
+    derive from - approximating any of them would be fabricating a signal, not deriving one. Only writes and
+    audits when the derived state actually changes."""
+    links = list(EvidenceLink.objects.filter(control_assertion=assertion))
+    accepted_links = [link for link in links if link.review_state == EvidenceLink.ReviewState.ACCEPTED]
+    fresh_accepted = _fresh_accepted_links(accepted_links)
+
+    tests = list(Test.objects.filter(implementation_control_id=assertion.implementation_control_id))
+    latest_statuses = _latest_test_statuses(tests)
+    has_failed_or_remediating = any(s in (TestResult.Status.FAILED, TestResult.Status.REMEDIATING) for s in latest_statuses)
+    has_passed_or_verified = any(s in (TestResult.Status.PASSED, TestResult.Status.VERIFIED) for s in latest_statuses)
+
+    if not tests and not links:
+        new_state = SatisfactionState.UNKNOWN
+    elif has_failed_or_remediating:
+        new_state = SatisfactionState.NEEDS_ATTENTION
+    elif fresh_accepted and has_passed_or_verified:
+        new_state = (SatisfactionState.VERIFIED if assertion.review_state == ControlAssertion.ReviewState.REVIEWED
+                     else SatisfactionState.EFFECTIVE)
+    elif accepted_links or has_passed_or_verified:
+        new_state = SatisfactionState.PARTIALLY_EFFECTIVE
+    else:
+        new_state = SatisfactionState.NEEDS_ATTENTION
+
+    if new_state != assertion.satisfaction_state:
+        old_state = assertion.satisfaction_state
+        assertion.satisfaction_state = new_state
+        assertion.save(update_fields=["satisfaction_state"])
+        audit.record("control.assertion.satisfaction_recomputed", actor_id=actor_id, object_type="control_assertion",
+                     object_id=str(assertion.id), details={"from_state": old_state, "to_state": new_state})
+    return assertion
