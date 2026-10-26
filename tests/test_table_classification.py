@@ -46,7 +46,9 @@ EXPECTED = {
                  "ten_test": {"SELECT", "INSERT", "UPDATE"},
                  "ten_test_result": {"SELECT", "INSERT", "UPDATE"},
                  "ten_control_plan": {"SELECT", "INSERT", "UPDATE"},
-                 "ten_task": {"SELECT", "INSERT", "UPDATE"}},
+                 "ten_task": {"SELECT", "INSERT", "UPDATE"},
+                 "ten_finding": {"SELECT", "INSERT", "UPDATE"},
+                 "ten_security_exception": {"SELECT", "INSERT"}},
     "ngrc_auth": {**{t: CRUD for t in IDN_TABLES}, "plt_tenant": {"SELECT"}, "ten_membership": {"SELECT"},
                   "ten_role": {"SELECT"}, "idn_recovery_request": {"SELECT"}},  # recovery: read-only, every write via SECURITY DEFINER fns
     "ngrc_ops": {**{t: CRUD for t in OPERATOR_TABLES}, "plt_tenant": {"SELECT", "INSERT", "UPDATE"},

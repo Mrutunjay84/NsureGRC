@@ -18,9 +18,11 @@ from .models import (
     ControlPlan,
     EvidenceLink,
     EvidenceRequirement,
+    Finding,
     Frequency,
     ImplementationControl,
     SatisfactionState,
+    SecurityException,
     Task,
     Test,
     TestResult,
@@ -305,3 +307,63 @@ def transition_task(task: Task, new_status: str, *, actor_id) -> Task:
     audit.record("control.task.transitioned", actor_id=actor_id, object_type="task", object_id=str(task.id),
                  details={"from_status": from_status, "to_status": new_status})
     return task
+
+
+def raise_finding(implementation_control: ImplementationControl, title: str, *, source: str, severity: str,
+                   created_by, description: str = "", owner=None) -> Finding:
+    finding = Finding.objects.create(
+        implementation_control=implementation_control, title=title, description=description, source=source,
+        severity=severity, owner=owner, created_by=created_by,
+    )
+    audit.record("control.finding.raised", actor_id=created_by, object_type="finding", object_id=str(finding.id),
+                 details={"source": source, "severity": severity})
+    return finding
+
+
+_ALLOWED_FINDING_TRANSITIONS: dict[str, set[str]] = {
+    Finding.Status.OPEN: {Finding.Status.IN_REMEDIATION},
+    Finding.Status.IN_REMEDIATION: {Finding.Status.PENDING_VERIFICATION},
+    Finding.Status.PENDING_VERIFICATION: {Finding.Status.CLOSED, Finding.Status.IN_REMEDIATION},
+    Finding.Status.CLOSED: {Finding.Status.OPEN},
+}
+
+
+def transition_finding(finding: Finding, new_status: str, *, actor_id, remediation_notes: str = "") -> Finding:
+    """Fails closed: only transitions in `_ALLOWED_FINDING_TRANSITIONS` are accepted (D-P4-001) - in
+    particular, `closed` is reachable only from `pending_verification`, enforcing "close requires
+    verification" as a graph constraint, not a convention. Entering `closed` stamps
+    verified_by/verified_at; reopening (leaving `closed`) clears both."""
+    allowed = _ALLOWED_FINDING_TRANSITIONS.get(finding.status, set())
+    if new_status not in allowed:
+        raise ControlError(f"invalid_transition:{finding.status}->{new_status}")
+    from_status = finding.status
+    finding.status = new_status
+    update_fields = ["status"]
+    if remediation_notes:
+        finding.remediation_notes = remediation_notes
+        update_fields.append("remediation_notes")
+    if new_status == Finding.Status.CLOSED:
+        finding.verified_by, finding.verified_at = actor_id, clock.now()
+        update_fields += ["verified_by", "verified_at"]
+    elif from_status == Finding.Status.CLOSED:
+        finding.verified_by, finding.verified_at = None, None
+        update_fields += ["verified_by", "verified_at"]
+    finding.save(update_fields=update_fields)
+    audit.record("control.finding.transitioned", actor_id=actor_id, object_type="finding", object_id=str(finding.id),
+                 details={"from_status": from_status, "to_status": new_status})
+    return finding
+
+
+def record_exception(implementation_control: ImplementationControl, scope: str, reason: str, *, approver,
+                      expiry_date, created_by, compensating_control: str = "", residual_risk: str = "",
+                      auditor_visible: bool = True) -> SecurityException:
+    """Append-only: approver/approved_at are captured now, at creation, not as a later mutation - creating
+    this row records a decision that has already been made (D-P4-001)."""
+    exc = SecurityException.objects.create(
+        implementation_control=implementation_control, scope=scope, reason=reason, approver=approver,
+        approved_at=clock.now(), expiry_date=expiry_date, compensating_control=compensating_control,
+        residual_risk=residual_risk, auditor_visible=auditor_visible, created_by=created_by,
+    )
+    audit.record("control.security_exception.recorded", actor_id=created_by, object_type="security_exception",
+                 object_id=str(exc.id), details={})
+    return exc
