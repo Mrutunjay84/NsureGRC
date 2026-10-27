@@ -1,7 +1,8 @@
-"""D-P5-001/D-P5-002/D-P5-003: posture, control health, framework coverage and evidence coverage metrics -
-unknown/not_assessed excluded from the posture ratio, weighting by coverage, control_health's
-worst-assertion rollup, framework_coverage's mapped-not-effective definition, evidence_coverage's
-freshness-reuse and no-lifecycle-gate, tenant isolation."""
+"""D-P5-001/D-P5-002/D-P5-003/D-P5-004: posture, control health, framework coverage, evidence coverage and
+high-finding-ageing metrics - unknown/not_assessed excluded from the posture ratio, weighting by coverage,
+control_health's worst-assertion rollup, framework_coverage's mapped-not-effective definition,
+evidence_coverage's freshness-reuse and no-lifecycle-gate, high_finding_ageing's severity/status filtering
+and oldest-first ordering, tenant isolation."""
 from __future__ import annotations
 
 import uuid
@@ -10,7 +11,7 @@ import pytest
 
 from ngrc.audit import service as audit_service
 from ngrc.controls import services as control_services
-from ngrc.controls.models import EvidenceLink, SatisfactionState
+from ngrc.controls.models import EvidenceLink, Finding, SatisfactionState
 from ngrc.core.context import tenant_context
 from ngrc.evidence.models import Evidence, EvidenceRevision
 from ngrc.framework import services as framework_services
@@ -312,3 +313,69 @@ def test_evidence_coverage_tenant_isolation(tenant_a, tenant_b):
         result = reporting_services.evidence_coverage(impl)
     assert result["total_requirements"] == 0
     assert result["coverage_pct"] is None
+
+
+def _finding(impl, *, severity=Finding.Severity.HIGH):
+    return control_services.raise_finding(impl, "Stale firewall rule", source=Finding.Source.MANUAL,
+                                           severity=severity, created_by=uuid.uuid4())
+
+
+def test_high_finding_ageing_is_empty_with_no_findings(tenant_a):
+    with tenant_context(tenant_a.id):
+        result = reporting_services.high_finding_ageing()
+    assert result == {"count": 0, "oldest_age_days": None, "findings": []}
+
+
+def test_high_finding_ageing_excludes_low_and_medium_severity(tenant_a):
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        _finding(impl, severity=Finding.Severity.LOW)
+        _finding(impl, severity=Finding.Severity.MEDIUM)
+        uow.flush()
+        result = reporting_services.high_finding_ageing()
+    assert result["count"] == 0
+
+
+def test_high_finding_ageing_excludes_closed_findings(tenant_a):
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        finding = _finding(impl)
+        uow.flush()
+        finding = control_services.transition_finding(finding, Finding.Status.IN_REMEDIATION, actor_id=uuid.uuid4())
+        finding = control_services.transition_finding(finding, Finding.Status.PENDING_VERIFICATION, actor_id=uuid.uuid4())
+        control_services.transition_finding(finding, Finding.Status.CLOSED, actor_id=uuid.uuid4())
+        result = reporting_services.high_finding_ageing()
+    assert result["count"] == 0
+
+
+def test_high_finding_ageing_sorts_oldest_first_and_reports_age(tenant_a):
+    """Finding has no append-only guard (unlike EvidenceRevision) - created_at is backdated directly rather
+    than via clock_ctl, which only shifts clock.now() forward and would age both findings identically since
+    Django's auto_now_add is real wall-clock, not ngrc.core.clock."""
+    from datetime import timedelta
+
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        older = _finding(impl, severity=Finding.Severity.CRITICAL)
+        newer = _finding(impl, severity=Finding.Severity.HIGH)
+        uow.flush()
+        older.created_at -= timedelta(days=10)
+        older.save(update_fields=["created_at"])
+        result = reporting_services.high_finding_ageing()
+    assert result["count"] == 2
+    assert [row["id"] for row in result["findings"]] == [older.id, newer.id]
+    assert result["findings"][0]["age_days"] == 10
+    assert result["findings"][1]["age_days"] == 0
+    assert result["oldest_age_days"] == 10
+    assert result["findings"][0]["severity"] == Finding.Severity.CRITICAL
+    assert result["findings"][0]["implementation_control_id"] == impl.id
+
+
+def test_high_finding_ageing_tenant_isolation(tenant_a, tenant_b):
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        _finding(impl)
+        uow.flush()
+    with tenant_context(tenant_b.id):
+        result = reporting_services.high_finding_ageing()
+    assert result["count"] == 0

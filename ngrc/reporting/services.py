@@ -1,4 +1,5 @@
-"""Posture, control health and framework coverage metrics (D-P5-001, D-P5-002).
+"""Posture, control health, framework coverage, evidence coverage and high-finding ageing metrics
+(D-P5-001..004).
 
 Pure read-model computation over ngrc.controls/ngrc.framework data - no models, no migrations, nothing
 stored here. Callers must already be inside the target tenant's `tenant_context()`, same convention as
@@ -13,9 +14,11 @@ from ngrc.controls.models import (
     ControlAssertion,
     EvidenceLink,
     EvidenceRequirement,
+    Finding,
     ImplementationControl,
     SatisfactionState,
 )
+from ngrc.core import clock
 from ngrc.framework import services as framework_services
 
 # Excluded entirely from both sides of the posture ratio - per the Status Rule ("never infer compliance
@@ -136,4 +139,40 @@ def evidence_coverage(implementation_control: ImplementationControl) -> dict:
         "covered_count": covered_count,
         "coverage_pct": covered_count / total * 100.0,
         "uncovered_requirement_ids": sorted(r.id for r in requirements if r.id not in covered_ids),
+    }
+
+
+# The two top rungs of Finding.Severity - "high finding" means high-or-worse, not "high finding" literally
+# as the only value matched (D-P5-004's judgment call).
+_HIGH_FINDING_SEVERITIES = (Finding.Severity.HIGH, Finding.Severity.CRITICAL)
+
+
+def high_finding_ageing() -> dict:
+    """How long the current tenant's currently-open high/critical Findings have been open (D-P5-004). Age is
+    `now() - created_at` in days - `Finding` has no per-status timestamp to measure time-in-current-state
+    instead (same data limitation `is_link_fresh` already works within). Tenant-wide, not per-control -
+    ageing is inherently a cross-control worklist question, unlike `control_health`/`evidence_coverage`.
+    `oldest_age_days` is `None` only when there are no open high/critical findings at all - a real (good)
+    state, not an absence of measurement."""
+    now = clock.now()
+    findings = (
+        Finding.objects.filter(severity__in=_HIGH_FINDING_SEVERITIES)
+        .exclude(status=Finding.Status.CLOSED)
+        .values_list("id", "severity", "status", "created_at", "implementation_control_id")
+    )
+    rows = [
+        {
+            "id": finding_id,
+            "severity": severity,
+            "status": status,
+            "age_days": (now - created_at).days,
+            "implementation_control_id": implementation_control_id,
+        }
+        for finding_id, severity, status, created_at, implementation_control_id in findings
+    ]
+    rows.sort(key=lambda row: row["age_days"], reverse=True)
+    return {
+        "count": len(rows),
+        "oldest_age_days": rows[0]["age_days"] if rows else None,
+        "findings": rows,
     }
