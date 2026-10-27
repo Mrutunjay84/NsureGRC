@@ -62,7 +62,8 @@ EXPECTED = {
                  "ten_purpose": {"SELECT", "INSERT", "UPDATE"},
                  "ten_personal_data": {"SELECT", "INSERT", "UPDATE"},
                  "ten_rights_request": {"SELECT", "INSERT", "UPDATE"},
-                 "ten_privacy_breach": {"SELECT", "INSERT", "UPDATE"}},
+                 "ten_privacy_breach": {"SELECT", "INSERT", "UPDATE"},
+                 "ten_notification": {"SELECT", "INSERT", "UPDATE"}},
     "ngrc_auth": {**{t: CRUD for t in IDN_TABLES}, "plt_tenant": {"SELECT"}, "ten_membership": {"SELECT"},
                   "ten_role": {"SELECT"}, "idn_recovery_request": {"SELECT"}},  # recovery: read-only, every write via SECURITY DEFINER fns
     "ngrc_ops": {**{t: CRUD for t in OPERATOR_TABLES}, "plt_tenant": {"SELECT", "INSERT", "UPDATE"},

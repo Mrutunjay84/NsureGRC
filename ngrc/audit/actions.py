@@ -253,11 +253,16 @@ ACTIONS_PRIVACY: tuple[Action, ...] = (
     _a("privacy.breach.subjects_notified", "privacy", "critical", "tenant", [APP]),
 )
 
+# D-P5-007: notification service core (event-triggered, in-app only).
+ACTIONS_NOTIFICATIONS: tuple[Action, ...] = (
+    _a("notification.created", "notifications", "info", "tenant", [APP], ["category"]),
+)
+
 ACTIONS: tuple[Action, ...] = (
     ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
     + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS + ACTIONS_SATISFACTION + ACTIONS_ASSERTION_REVIEW + ACTIONS_TASKS
     + ACTIONS_FINDINGS + ACTIONS_RISK + ACTIONS_INCIDENTS + ACTIONS_GOVERNANCE + ACTIONS_COMPLIANCE_AUDIT
-    + ACTIONS_PRIVACY
+    + ACTIONS_PRIVACY + ACTIONS_NOTIFICATIONS
 )
 
 BY_NAME = {a.name: a for a in ACTIONS}

@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     "ngrc.compliance_audit",
     "ngrc.privacy",
     "ngrc.reporting",
+    "ngrc.notifications",
 ]
 
 MIDDLEWARE = [

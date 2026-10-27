@@ -10,6 +10,7 @@ from ngrc.audit import service as audit
 from ngrc.controls.models import ControlAssertion
 from ngrc.core import clock
 from ngrc.framework import services as framework_services
+from ngrc.notifications import services as notification_services
 
 from .models import Audit, AuditItem
 
@@ -65,6 +66,16 @@ def transition_audit(audit_obj: Audit, new_status: str, *, actor_id) -> Audit:
     audit_obj.save(update_fields=update_fields)
     audit.record("compliance_audit.audit.transitioned", actor_id=actor_id, object_type="audit",
                  object_id=str(audit_obj.id), details={"from_status": from_status, "to_status": new_status})
+    if new_status == Audit.Status.SUBMITTED:
+        notification_services.notify(
+            audit_obj.reviewer, "audit_awaiting_review", f"Audit ready for review: {audit_obj.name}",
+            object_type="audit", object_id=audit_obj.id, created_by=actor_id,
+        )
+    elif new_status == Audit.Status.CHANGES_REQUESTED:
+        notification_services.notify(
+            audit_obj.assigned_to, "audit_changes_requested", f"Changes requested on audit: {audit_obj.name}",
+            object_type="audit", object_id=audit_obj.id, created_by=actor_id,
+        )
     return audit_obj
 
 
