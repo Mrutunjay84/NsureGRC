@@ -201,18 +201,21 @@ def transition_test_result(result: TestResult, new_status: str, *, actor_id, det
     return result
 
 
-def _fresh_accepted_links(accepted_links: list[EvidenceLink]) -> list[EvidenceLink]:
+def is_link_fresh(link: EvidenceLink) -> bool:
     """A link naming an EvidenceRequirement with freshness_days set is fresh only if its pinned
     EvidenceRevision is not yet older than that window; a link with no requirement, or a requirement with
-    no freshness_days, is never considered stale (D-P3-004 - nothing to measure it against)."""
-    fresh = []
-    for link in accepted_links:
-        if link.evidence_requirement_id and link.evidence_requirement.freshness_days is not None:
-            rev = EvidenceRevision.objects.filter(id=link.evidence_revision_id).first()
-            if rev and (clock.now() - rev.created_at).days > link.evidence_requirement.freshness_days:
-                continue
-        fresh.append(link)
-    return fresh
+    no freshness_days, is never considered stale (D-P3-004 - nothing to measure it against). Public: also
+    the single source of truth for `ngrc.reporting.services.evidence_coverage` (D-P5-003), which must not
+    duplicate this arithmetic."""
+    if link.evidence_requirement_id and link.evidence_requirement.freshness_days is not None:
+        rev = EvidenceRevision.objects.filter(id=link.evidence_revision_id).first()
+        if rev and (clock.now() - rev.created_at).days > link.evidence_requirement.freshness_days:
+            return False
+    return True
+
+
+def _fresh_accepted_links(accepted_links: list[EvidenceLink]) -> list[EvidenceLink]:
+    return [link for link in accepted_links if is_link_fresh(link)]
 
 
 def _latest_test_statuses(tests: list[Test]) -> list[str]:
