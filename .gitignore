@@ -19,3 +19,10 @@ evidence/review_package/*.zip
 
 # local dev evidence store
 var/
+
+# self-signed local TLS cert for the dev server (D-P6-001) - never commit, regenerate per machine
+.dev-certs/
+
+# frontend (03_APP/nsuregrc-ui) build artifacts and dependencies
+nsuregrc-ui/node_modules/
+nsuregrc-ui/dist/

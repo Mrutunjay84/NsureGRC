@@ -14,6 +14,7 @@ if settings.NGRC_PLANE in {"customer", "all"}:
         path("api/v1/auth/", include("ngrc.iam.urls")),
         path("api/v1/tenant/", include("ngrc.tenancy.urls")),
         path("api/v1/tenant/", include("ngrc.evidence.urls")),
+        path("api/v1/tenant/", include("ngrc.reporting.urls")),
     ]
 if settings.NGRC_PLANE in {"operator", "all"}:
     urlpatterns += [path("ops/api/v1/", include("ngrc.control_plane.urls"))]
