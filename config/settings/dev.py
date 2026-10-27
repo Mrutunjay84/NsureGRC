@@ -14,4 +14,5 @@ DEBUG = env_bool("NGRC_DEBUG", False)
 SECURE_SSL_REDIRECT = False
 SECURE_HSTS_SECONDS = 0
 KEY_PROVIDER = "local"  # DEV-ONLY local key provider (not KMS)
-CSRF_TRUSTED_ORIGINS = ["https://localhost", "https://127.0.0.1"]
+CSRF_TRUSTED_ORIGINS = ["https://localhost", "https://127.0.0.1",
+                        "https://localhost:5173", "https://127.0.0.1:5173"]  # Vite dev server (D-P6-001)

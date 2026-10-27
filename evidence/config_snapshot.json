@@ -123,6 +123,6 @@
   "SUPPORT_GRANT_MAX_MINUTES": 480,
   "X_FRAME_OPTIONS": "DENY",
   "database": "ngrc_test",
-  "generated_at": "2026-10-27T03:26:02+00:00",
+  "generated_at": "2026-10-27T04:39:18+00:00",
   "generator": "tests/test_evidence_artifacts.py::config_snapshot.json"
 }

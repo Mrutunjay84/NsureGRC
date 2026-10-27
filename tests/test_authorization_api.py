@@ -107,11 +107,14 @@ def test_drf_defaults_fail_closed():
 def test_endpoint_inventory_is_reviewed():
     """Any new route fails this test until the inventory (and therefore its authz/IDOR tests) is consciously extended.
     Search and download exist since the P2 gate work (F-AUZ-005, F-DAT-004) and are listed explicitly; their cross-tenant tests live in
-    tests/test_cross_tenant_search.py and tests/test_evidence_download.py. Report/export/job/notification endpoints still do not exist."""
+    tests/test_cross_tenant_search.py and tests/test_evidence_download.py. The reporting dashboard (D-P6-001, Phase 6) is the first
+    "report" route - its tenant-isolation test lives in tests/test_reporting_api.py::test_dashboard_tenant_isolation. Export/job/
+    notification endpoints still do not exist."""
     names = {p for p, _ in _routes()}
     sensitive = {p for p in names if any(w in p for w in ("search", "download", "upload", "file", "attachment", "export", "report"))}
-    assert sensitive == {"api/v1/tenant/search/", "api/v1/tenant/evidence/<uuid:pk>/revisions/<uuid:rid>/download/", "api/v1/tenant/audit/export/"}, sensitive
-    assert len(names) == 1 + 29 + 21 + 24  # healthz + customer auth (+factors, +recovery) + tenant (+recovery, +evidence, +search) + operator plane (+recovery)
+    assert sensitive == {"api/v1/tenant/search/", "api/v1/tenant/evidence/<uuid:pk>/revisions/<uuid:rid>/download/",
+                         "api/v1/tenant/audit/export/", "api/v1/tenant/reporting/dashboard/"}, sensitive
+    assert len(names) == 1 + 29 + 21 + 25  # healthz + customer auth (+factors, +recovery) + tenant (+recovery, +evidence, +search, +reporting) + operator plane (+recovery)
 
 
 # ------------------------------------------------------------------------------------------------ privilege escalation

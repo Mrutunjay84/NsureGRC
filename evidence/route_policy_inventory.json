@@ -1,8 +1,8 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-27T03:26:02+00:00",
+  "generated_at": "2026-10-27T04:39:17+00:00",
   "generator": "tests/test_evidence_artifacts.py::route_policy_inventory.json",
-  "route_count": 75,
+  "route_count": 76,
   "routes": [
     {
       "methods": [
@@ -618,6 +618,20 @@
       ],
       "step_up": "T1",
       "view": "ngrc.tenancy.views.RecoveryDenyView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "tenant.view",
+      "public_reason": null,
+      "route": "/api/v1/tenant/reporting/dashboard/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.reporting.views.DashboardView"
     },
     {
       "methods": [

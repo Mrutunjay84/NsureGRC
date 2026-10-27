@@ -302,7 +302,9 @@ def test_repository_contains_no_hardcoded_secrets():
     hits = []
     for path in ROOT.rglob("*"):
         rel = path.relative_to(ROOT).as_posix()
-        if (not path.is_file() or any(part in {".venv", "__pycache__", ".pytest_cache", ".ruff_cache", "evidence", ".git"}
+        if (not path.is_file() or any(part in {".venv", "__pycache__", ".pytest_cache", ".ruff_cache", "evidence", ".git",
+                                               ".dev-certs", "node_modules"}  # .dev-certs: gitignored local dev TLS
+                                      # key (D-P6-001, scripts/gen_dev_cert.sh), regenerated per machine, never committed
                                       for part in path.parts) or path.suffix in {".pyc", ".lock", ".png"}):
             continue
         if rel in allowed_files or rel.startswith("tests/"):
