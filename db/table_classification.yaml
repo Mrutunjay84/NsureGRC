@@ -119,6 +119,9 @@ tables:
   - {table: ten_privacy_breach, class: TEN, data_class: C, domain: privacy, owner_module: ngrc.privacy, rls: required, tenant_column: tenant_id,
      notes: "D-P4-006: a personal-data breach record. notified_authority_at/notified_subjects_at track GDPR Art. 33/34's two distinct notification duties independently."}
 
+  - {table: ten_notification, class: TEN, data_class: C, domain: notifications, owner_module: ngrc.notifications, rls: required, tenant_column: tenant_id,
+     notes: "D-P5-007: an in-app, event-triggered notice for one recipient. recipient is a plain UUID (IAM is IDN, not TEN). Event-triggered only - no condition/scheduled notifications, no email/webhook delivery, no preferences (see the ADR)."}
+
   # ------------------------------------------------------------------ CAT (global catalogue; ngrc_catalog_publisher writes, ngrc_app reads)
   - {table: cat_framework, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none}
   - {table: cat_framework_version, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none,

@@ -11,6 +11,7 @@ from ngrc.audit import service as audit
 from ngrc.core import clock
 from ngrc.evidence.models import EvidenceRevision
 from ngrc.framework import services as framework_services
+from ngrc.notifications import services as notification_services
 
 from .models import (
     CommonControl,
@@ -312,6 +313,12 @@ def transition_task(task: Task, new_status: str, *, actor_id) -> Task:
     return task
 
 
+# "High finding" (D-P5-004's own judgment call) - the two top rungs of Finding.Severity. Public: the single
+# source of truth for both this notification trigger and ngrc.reporting.services.high_finding_ageing, which
+# must not re-derive it independently.
+HIGH_FINDING_SEVERITIES = (Finding.Severity.HIGH, Finding.Severity.CRITICAL)
+
+
 def raise_finding(implementation_control: ImplementationControl, title: str, *, source: str, severity: str,
                    created_by, description: str = "", owner=None) -> Finding:
     finding = Finding.objects.create(
@@ -320,6 +327,11 @@ def raise_finding(implementation_control: ImplementationControl, title: str, *, 
     )
     audit.record("control.finding.raised", actor_id=created_by, object_type="finding", object_id=str(finding.id),
                  details={"source": source, "severity": severity})
+    if severity in HIGH_FINDING_SEVERITIES:
+        notification_services.notify(
+            owner, "finding_raised", f"High-severity finding raised: {title}",
+            object_type="finding", object_id=finding.id, created_by=created_by,
+        )
     return finding
 
 

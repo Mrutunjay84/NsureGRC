@@ -144,21 +144,18 @@ def evidence_coverage(implementation_control: ImplementationControl) -> dict:
     }
 
 
-# The two top rungs of Finding.Severity - "high finding" means high-or-worse, not "high finding" literally
-# as the only value matched (D-P5-004's judgment call).
-_HIGH_FINDING_SEVERITIES = (Finding.Severity.HIGH, Finding.Severity.CRITICAL)
-
-
 def high_finding_ageing() -> dict:
-    """How long the current tenant's currently-open high/critical Findings have been open (D-P5-004). Age is
-    `now() - created_at` in days - `Finding` has no per-status timestamp to measure time-in-current-state
-    instead (same data limitation `is_link_fresh` already works within). Tenant-wide, not per-control -
-    ageing is inherently a cross-control worklist question, unlike `control_health`/`evidence_coverage`.
-    `oldest_age_days` is `None` only when there are no open high/critical findings at all - a real (good)
-    state, not an absence of measurement."""
+    """How long the current tenant's currently-open high/critical Findings have been open (D-P5-004). "High
+    finding" reuses `ngrc.controls.services.HIGH_FINDING_SEVERITIES` - the same definition D-P5-007's
+    `raise_finding` notification trigger uses, not re-derived here. Age is `now() - created_at` in days -
+    `Finding` has no per-status timestamp to measure time-in-current-state instead (same data limitation
+    `is_link_fresh` already works within). Tenant-wide, not per-control - ageing is inherently a
+    cross-control worklist question, unlike `control_health`/`evidence_coverage`. `oldest_age_days` is
+    `None` only when there are no open high/critical findings at all - a real (good) state, not an absence
+    of measurement."""
     now = clock.now()
     findings = (
-        Finding.objects.filter(severity__in=_HIGH_FINDING_SEVERITIES)
+        Finding.objects.filter(severity__in=control_services.HIGH_FINDING_SEVERITIES)
         .exclude(status=Finding.Status.CLOSED)
         .values_list("id", "severity", "status", "created_at", "implementation_control_id")
     )
