@@ -1,9 +1,10 @@
-"""D-P5-001..006: posture, control health, framework coverage, evidence coverage, high-finding-ageing,
-overdue-tasks and audit-bottleneck metrics - unknown/not_assessed excluded from the posture ratio,
-weighting by coverage, control_health's worst-assertion rollup, framework_coverage's mapped-not-effective
-definition, evidence_coverage's freshness-reuse and no-lifecycle-gate, high_finding_ageing's severity/status
-filtering and oldest-first ordering, overdue_tasks' done/no-due-date exclusions, audit_bottlenecks'
-draft/in_progress/locked exclusions, tenant isolation."""
+"""D-P5-001..006/008: posture, control health, framework coverage, evidence coverage, high-finding-ageing,
+overdue-tasks, audit-bottleneck metrics and the tenant_report aggregator - unknown/not_assessed excluded
+from the posture ratio, weighting by coverage, control_health's worst-assertion rollup,
+framework_coverage's mapped-not-effective definition, evidence_coverage's freshness-reuse and
+no-lifecycle-gate, high_finding_ageing's severity/status filtering and oldest-first ordering,
+overdue_tasks' done/no-due-date exclusions, audit_bottlenecks' draft/in_progress/locked exclusions,
+tenant_report's per-control/per-framework rollup, tenant isolation."""
 from __future__ import annotations
 
 import uuid
@@ -533,3 +534,48 @@ def test_audit_bottlenecks_tenant_isolation(tenant_a, tenant_b):
     with tenant_context(tenant_b.id):
         result = reporting_services.audit_bottlenecks()
     assert result["count"] == 0
+
+
+def test_tenant_report_is_all_empty_with_nothing_built(tenant_a):
+    with tenant_context(tenant_a.id):
+        result = reporting_services.tenant_report()
+    assert result["posture"]["posture_pct"] is None
+    assert result["high_finding_ageing"]["count"] == 0
+    assert result["overdue_tasks"]["count"] == 0
+    assert result["audit_bottlenecks"]["count"] == 0
+    assert result["control_health"] == {}
+    assert result["evidence_coverage"] == {}
+    assert result["framework_coverage"] == {}
+
+
+def test_tenant_report_rolls_up_control_and_evidence_coverage_per_control(tenant_a):
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        control_services.create_evidence_requirement(impl, "access_review_export", created_by=uuid.uuid4())
+        uow.flush()
+        result = reporting_services.tenant_report()
+    assert set(result["control_health"].keys()) == {str(impl.id)}
+    assert result["control_health"][str(impl.id)]["health"] == SatisfactionState.NOT_ASSESSED
+    assert set(result["evidence_coverage"].keys()) == {str(impl.id)}
+    assert result["evidence_coverage"][str(impl.id)]["coverage_pct"] == 0.0
+
+
+def test_tenant_report_rolls_up_framework_coverage_per_active_framework(tenant_a):
+    fw = _framework_with_requirements()
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id):
+        result = reporting_services.tenant_report()
+    assert set(result["framework_coverage"].keys()) == {fw.urn}
+    assert result["framework_coverage"][fw.urn]["coverage_pct"] == 0.0
+
+
+def test_tenant_report_tenant_isolation(tenant_a, tenant_b):
+    fw = _framework_with_requirements()
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        _impl()
+        uow.flush()
+    with tenant_context(tenant_b.id):
+        result = reporting_services.tenant_report()
+    assert result["control_health"] == {}
+    assert result["framework_coverage"] == {}
