@@ -1,5 +1,5 @@
-"""Posture, control health, framework coverage, evidence coverage, high-finding ageing, overdue-task and
-audit-bottleneck metrics (D-P5-001..006).
+"""Posture, control health, framework coverage, evidence coverage, high-finding ageing, overdue-task,
+audit-bottleneck metrics and the tenant metrics report (D-P5-001..006, D-P5-008).
 
 Pure read-model computation over ngrc.controls/ngrc.framework/ngrc.compliance_audit data - no models, no
 migrations, nothing stored here. Callers must already be inside the target tenant's `tenant_context()`,
@@ -22,6 +22,7 @@ from ngrc.controls.models import (
 )
 from ngrc.core import clock
 from ngrc.framework import services as framework_services
+from ngrc.framework.models import FrameworkActivation
 
 # Excluded entirely from both sides of the posture ratio - per the Status Rule ("never infer compliance
 # from missing values"), an assertion nobody has evaluated yet cannot honestly score as a measured 0% or
@@ -243,4 +244,27 @@ def audit_bottlenecks() -> dict:
         "count": len(rows),
         "oldest_age_days": rows[0]["age_days"] if rows else None,
         "audits": rows,
+    }
+
+
+def tenant_report() -> dict:
+    """Every Phase 5 metric for the current tenant, assembled into one snapshot (D-P5-008) - "reports" from
+    `11_MASTER_CLAUDE_BUILD_SPEC.md`'s Phase 5 line, scoped as structured data only: no rendering/UI exists
+    anywhere in this project, and nothing here invents one. Pure composition of already-built, already-
+    tested functions - no new metric logic. `control_health`/`evidence_coverage` are rolled up across every
+    ImplementationControl in the tenant; `framework_coverage` across every framework the tenant has an
+    active FrameworkActivation for - a report wants the whole picture, not one call site."""
+    controls = list(ImplementationControl.objects.all())
+    framework_urns = (
+        FrameworkActivation.objects.filter(status=FrameworkActivation.Status.ACTIVE)
+        .values_list("framework_urn", flat=True).distinct()
+    )
+    return {
+        "posture": tenant_posture(),
+        "high_finding_ageing": high_finding_ageing(),
+        "overdue_tasks": overdue_tasks(),
+        "audit_bottlenecks": audit_bottlenecks(),
+        "control_health": {str(c.id): control_health(c) for c in controls},
+        "evidence_coverage": {str(c.id): evidence_coverage(c) for c in controls},
+        "framework_coverage": {urn: framework_coverage(urn) for urn in framework_urns},
     }

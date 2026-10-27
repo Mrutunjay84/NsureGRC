@@ -1,6 +1,6 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-27T03:16:34+00:00",
+  "generated_at": "2026-10-27T03:26:02+00:00",
   "generator": "tests/test_evidence_artifacts.py::route_policy_inventory.json",
   "route_count": 75,
   "routes": [
