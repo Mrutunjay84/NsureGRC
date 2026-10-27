@@ -1,9 +1,9 @@
-"""D-P5-001/D-P5-002/D-P5-003/D-P5-004/D-P5-005: posture, control health, framework coverage, evidence
-coverage, high-finding-ageing and overdue-tasks metrics - unknown/not_assessed excluded from the posture
-ratio, weighting by coverage, control_health's worst-assertion rollup, framework_coverage's
-mapped-not-effective definition, evidence_coverage's freshness-reuse and no-lifecycle-gate,
-high_finding_ageing's severity/status filtering and oldest-first ordering, overdue_tasks' done/no-due-date
-exclusions, tenant isolation."""
+"""D-P5-001..006: posture, control health, framework coverage, evidence coverage, high-finding-ageing,
+overdue-tasks and audit-bottleneck metrics - unknown/not_assessed excluded from the posture ratio,
+weighting by coverage, control_health's worst-assertion rollup, framework_coverage's mapped-not-effective
+definition, evidence_coverage's freshness-reuse and no-lifecycle-gate, high_finding_ageing's severity/status
+filtering and oldest-first ordering, overdue_tasks' done/no-due-date exclusions, audit_bottlenecks'
+draft/in_progress/locked exclusions, tenant isolation."""
 from __future__ import annotations
 
 import uuid
@@ -12,6 +12,8 @@ from datetime import timedelta
 import pytest
 
 from ngrc.audit import service as audit_service
+from ngrc.compliance_audit import services as compliance_audit_services
+from ngrc.compliance_audit.models import Audit
 from ngrc.controls import services as control_services
 from ngrc.controls.models import EvidenceLink, Finding, SatisfactionState, Task
 from ngrc.core import clock
@@ -448,4 +450,86 @@ def test_overdue_tasks_tenant_isolation(tenant_a, tenant_b):
         uow.flush()
     with tenant_context(tenant_b.id):
         result = reporting_services.overdue_tasks()
+    assert result["count"] == 0
+
+
+def _audit(fw, *, status=Audit.Status.DRAFT):
+    """Creates a fresh (draft) Audit and walks it forward through the real transition graph up to (and
+    including) `status` - stops as soon as it arrives, never transitions past it."""
+    audit_obj = compliance_audit_services.create_audit(fw.urn, "Q4 review", created_by=uuid.uuid4())
+    for target in (Audit.Status.ASSIGNED, Audit.Status.IN_PROGRESS, Audit.Status.SUBMITTED):
+        if audit_obj.status == status:
+            return audit_obj
+        audit_obj = compliance_audit_services.transition_audit(audit_obj, target, actor_id=uuid.uuid4())
+    return audit_obj
+
+
+def test_audit_bottlenecks_is_empty_with_no_audits(tenant_a):
+    with tenant_context(tenant_a.id):
+        result = reporting_services.audit_bottlenecks()
+    assert result == {"count": 0, "oldest_age_days": None, "audits": []}
+
+
+def test_audit_bottlenecks_excludes_draft_and_in_progress(tenant_a):
+    fw = _framework_with_requirements()
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        compliance_audit_services.create_audit(fw.urn, "Draft audit", created_by=uuid.uuid4())
+        _audit(fw, status=Audit.Status.IN_PROGRESS)
+        uow.flush()
+        result = reporting_services.audit_bottlenecks()
+    assert result["count"] == 0
+
+
+def test_audit_bottlenecks_excludes_locked(tenant_a):
+    fw = _framework_with_requirements()
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        audit_obj = _audit(fw, status=Audit.Status.SUBMITTED)
+        for target in (Audit.Status.REVIEW, Audit.Status.ACCEPTED, Audit.Status.SIGNOFF, Audit.Status.LOCKED):
+            audit_obj = compliance_audit_services.transition_audit(audit_obj, target, actor_id=uuid.uuid4())
+        uow.flush()
+        result = reporting_services.audit_bottlenecks()
+    assert result["count"] == 0
+
+
+def test_audit_bottlenecks_counts_each_waiting_state(tenant_a):
+    fw = _framework_with_requirements()
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        submitted = _audit(fw, status=Audit.Status.SUBMITTED)
+        review = compliance_audit_services.transition_audit(
+            _audit(fw, status=Audit.Status.SUBMITTED), Audit.Status.REVIEW, actor_id=uuid.uuid4())
+        uow.flush()
+        result = reporting_services.audit_bottlenecks()
+    assert result["count"] == 2
+    assert {row["id"] for row in result["audits"]} == {submitted.id, review.id}
+    assert {row["status"] for row in result["audits"]} == {Audit.Status.SUBMITTED, Audit.Status.REVIEW}
+
+
+def test_audit_bottlenecks_sorts_oldest_first(tenant_a):
+    fw = _framework_with_requirements()
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        older = _audit(fw, status=Audit.Status.SUBMITTED)
+        newer = _audit(fw, status=Audit.Status.SUBMITTED)
+        uow.flush()
+        older.created_at -= timedelta(days=7)
+        older.save(update_fields=["created_at"])
+        result = reporting_services.audit_bottlenecks()
+    assert result["count"] == 2
+    assert [row["id"] for row in result["audits"]] == [older.id, newer.id]
+    assert result["audits"][0]["age_days"] == 7
+    assert result["oldest_age_days"] == 7
+    assert result["audits"][0]["framework_urn"] == fw.urn
+
+
+def test_audit_bottlenecks_tenant_isolation(tenant_a, tenant_b):
+    fw = _framework_with_requirements()
+    _activate(tenant_a, fw)
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        _audit(fw, status=Audit.Status.SUBMITTED)
+        uow.flush()
+    with tenant_context(tenant_b.id):
+        result = reporting_services.audit_bottlenecks()
     assert result["count"] == 0

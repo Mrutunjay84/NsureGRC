@@ -1,14 +1,15 @@
-"""Posture, control health, framework coverage, evidence coverage, high-finding ageing and overdue-task
-metrics (D-P5-001..005).
+"""Posture, control health, framework coverage, evidence coverage, high-finding ageing, overdue-task and
+audit-bottleneck metrics (D-P5-001..006).
 
-Pure read-model computation over ngrc.controls/ngrc.framework data - no models, no migrations, nothing
-stored here. Callers must already be inside the target tenant's `tenant_context()`, same convention as
-every other domain's service module; these functions are read-only (no audit events - nothing is being
-decided or changed, only measured, same reasoning as ngrc.risk.services.risk_level and
+Pure read-model computation over ngrc.controls/ngrc.framework/ngrc.compliance_audit data - no models, no
+migrations, nothing stored here. Callers must already be inside the target tenant's `tenant_context()`,
+same convention as every other domain's service module; these functions are read-only (no audit events -
+nothing is being decided or changed, only measured, same reasoning as ngrc.risk.services.risk_level and
 ngrc.controls.services._fresh_accepted_links).
 """
 from __future__ import annotations
 
+from ngrc.compliance_audit.models import Audit
 from ngrc.controls import services as control_services
 from ngrc.controls.models import (
     ControlAssertion,
@@ -208,4 +209,41 @@ def overdue_tasks() -> dict:
         "count": len(rows),
         "most_overdue_days": rows[0]["days_overdue"] if rows else None,
         "tasks": rows,
+    }
+
+
+# Every non-terminal Audit.Status except the two where the *current owner* is the one making forward
+# progress (D-P5-006's judgment call, drawn from ngrc.compliance_audit.services._ALLOWED_AUDIT_TRANSITIONS'
+# own graph, not invented): draft (being set up) and in_progress (being actively worked by the assignee).
+_AUDIT_NOT_A_BOTTLENECK = (Audit.Status.DRAFT, Audit.Status.IN_PROGRESS, Audit.Status.LOCKED)
+
+
+def audit_bottlenecks() -> dict:
+    """The tenant's compliance Audits currently waiting on someone other than their current owner
+    (D-P5-006) - the review-workflow half of `02_PRD.md`'s "remediation and review bottlenecks" metric
+    (D-P5-005 is the task/owner half). Age is `now() - created_at`, same data limitation as
+    `high_finding_ageing`/`overdue_tasks`: `Audit` has no per-status timestamp, so this necessarily includes
+    time spent in `draft`/`in_progress` before the audit became a bottleneck - the only honest measurement
+    this data supports."""
+    now = clock.now()
+    audits = (
+        Audit.objects.exclude(status__in=_AUDIT_NOT_A_BOTTLENECK)
+        .values_list("id", "status", "created_at", "assigned_to", "reviewer", "framework_urn")
+    )
+    rows = [
+        {
+            "id": audit_id,
+            "status": status,
+            "age_days": (now - created_at).days,
+            "assigned_to": assigned_to,
+            "reviewer": reviewer,
+            "framework_urn": framework_urn,
+        }
+        for audit_id, status, created_at, assigned_to, reviewer, framework_urn in audits
+    ]
+    rows.sort(key=lambda row: row["age_days"], reverse=True)
+    return {
+        "count": len(rows),
+        "oldest_age_days": rows[0]["age_days"] if rows else None,
+        "audits": rows,
     }
