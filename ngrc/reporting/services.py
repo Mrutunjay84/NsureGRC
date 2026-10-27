@@ -1,5 +1,5 @@
-"""Posture, control health, framework coverage, evidence coverage and high-finding ageing metrics
-(D-P5-001..004).
+"""Posture, control health, framework coverage, evidence coverage, high-finding ageing and overdue-task
+metrics (D-P5-001..005).
 
 Pure read-model computation over ngrc.controls/ngrc.framework data - no models, no migrations, nothing
 stored here. Callers must already be inside the target tenant's `tenant_context()`, same convention as
@@ -17,6 +17,7 @@ from ngrc.controls.models import (
     Finding,
     ImplementationControl,
     SatisfactionState,
+    Task,
 )
 from ngrc.core import clock
 from ngrc.framework import services as framework_services
@@ -175,4 +176,36 @@ def high_finding_ageing() -> dict:
         "count": len(rows),
         "oldest_age_days": rows[0]["age_days"] if rows else None,
         "findings": rows,
+    }
+
+
+def overdue_tasks() -> dict:
+    """The tenant's currently-open Tasks whose due_date has passed (D-P5-005) - the owner-bottleneck half of
+    `02_PRD.md`'s "remediation and review bottlenecks" metric. Exactly what `Task`'s own docstring (D-P3-005)
+    already specifies: "No stored overdue status - derivable from status != done and due_date < today,
+    computed on read." A Task with no due_date is never overdue - nothing to measure it against. The
+    review-workflow half of this metric (Audit/AuditItem, EvidenceLink's in_review state) is a separate,
+    not-yet-made judgment call and is NOT built here - see the ADR's scope note."""
+    today = clock.now().date()
+    tasks = (
+        Task.objects.exclude(status=Task.Status.DONE)
+        .filter(due_date__lt=today)
+        .values_list("id", "title", "assigned_to", "due_date", "implementation_control_id")
+    )
+    rows = [
+        {
+            "id": task_id,
+            "title": title,
+            "assigned_to": assigned_to,
+            "due_date": due_date,
+            "days_overdue": (today - due_date).days,
+            "implementation_control_id": implementation_control_id,
+        }
+        for task_id, title, assigned_to, due_date, implementation_control_id in tasks
+    ]
+    rows.sort(key=lambda row: row["days_overdue"], reverse=True)
+    return {
+        "count": len(rows),
+        "most_overdue_days": rows[0]["days_overdue"] if rows else None,
+        "tasks": rows,
     }

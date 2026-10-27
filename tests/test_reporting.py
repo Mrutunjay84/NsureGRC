@@ -1,17 +1,20 @@
-"""D-P5-001/D-P5-002/D-P5-003/D-P5-004: posture, control health, framework coverage, evidence coverage and
-high-finding-ageing metrics - unknown/not_assessed excluded from the posture ratio, weighting by coverage,
-control_health's worst-assertion rollup, framework_coverage's mapped-not-effective definition,
-evidence_coverage's freshness-reuse and no-lifecycle-gate, high_finding_ageing's severity/status filtering
-and oldest-first ordering, tenant isolation."""
+"""D-P5-001/D-P5-002/D-P5-003/D-P5-004/D-P5-005: posture, control health, framework coverage, evidence
+coverage, high-finding-ageing and overdue-tasks metrics - unknown/not_assessed excluded from the posture
+ratio, weighting by coverage, control_health's worst-assertion rollup, framework_coverage's
+mapped-not-effective definition, evidence_coverage's freshness-reuse and no-lifecycle-gate,
+high_finding_ageing's severity/status filtering and oldest-first ordering, overdue_tasks' done/no-due-date
+exclusions, tenant isolation."""
 from __future__ import annotations
 
 import uuid
+from datetime import timedelta
 
 import pytest
 
 from ngrc.audit import service as audit_service
 from ngrc.controls import services as control_services
-from ngrc.controls.models import EvidenceLink, Finding, SatisfactionState
+from ngrc.controls.models import EvidenceLink, Finding, SatisfactionState, Task
+from ngrc.core import clock
 from ngrc.core.context import tenant_context
 from ngrc.evidence.models import Evidence, EvidenceRevision
 from ngrc.framework import services as framework_services
@@ -378,4 +381,71 @@ def test_high_finding_ageing_tenant_isolation(tenant_a, tenant_b):
         uow.flush()
     with tenant_context(tenant_b.id):
         result = reporting_services.high_finding_ageing()
+    assert result["count"] == 0
+
+
+def test_overdue_tasks_is_empty_with_no_tasks(tenant_a):
+    with tenant_context(tenant_a.id):
+        result = reporting_services.overdue_tasks()
+    assert result == {"count": 0, "most_overdue_days": None, "tasks": []}
+
+
+def test_overdue_tasks_excludes_tasks_with_no_due_date(tenant_a):
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        control_services.create_task(impl, "Rotate keys", created_by=uuid.uuid4())
+        uow.flush()
+        result = reporting_services.overdue_tasks()
+    assert result["count"] == 0
+
+
+def test_overdue_tasks_excludes_future_due_dates(tenant_a):
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        control_services.create_task(impl, "Rotate keys", created_by=uuid.uuid4(),
+                                      due_date=clock.now().date() + timedelta(days=5))
+        uow.flush()
+        result = reporting_services.overdue_tasks()
+    assert result["count"] == 0
+
+
+def test_overdue_tasks_excludes_done_tasks(tenant_a):
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        task = control_services.create_task(impl, "Rotate keys", created_by=uuid.uuid4(),
+                                             due_date=clock.now().date() - timedelta(days=3))
+        uow.flush()
+        control_services.transition_task(task, Task.Status.DONE, actor_id=uuid.uuid4())
+        result = reporting_services.overdue_tasks()
+    assert result["count"] == 0
+
+
+def test_overdue_tasks_sorts_most_overdue_first(tenant_a):
+    assigned_to = uuid.uuid4()
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        less_overdue = control_services.create_task(impl, "Rotate keys", created_by=uuid.uuid4(),
+                                                      assigned_to=assigned_to,
+                                                      due_date=clock.now().date() - timedelta(days=2))
+        more_overdue = control_services.create_task(impl, "Patch servers", created_by=uuid.uuid4(),
+                                                      due_date=clock.now().date() - timedelta(days=20))
+        uow.flush()
+        result = reporting_services.overdue_tasks()
+    assert result["count"] == 2
+    assert [row["id"] for row in result["tasks"]] == [more_overdue.id, less_overdue.id]
+    assert result["tasks"][0]["days_overdue"] == 20
+    assert result["tasks"][1]["days_overdue"] == 2
+    assert result["most_overdue_days"] == 20
+    assert result["tasks"][1]["assigned_to"] == assigned_to
+    assert result["tasks"][1]["implementation_control_id"] == impl.id
+
+
+def test_overdue_tasks_tenant_isolation(tenant_a, tenant_b):
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        control_services.create_task(impl, "Rotate keys", created_by=uuid.uuid4(),
+                                      due_date=clock.now().date() - timedelta(days=3))
+        uow.flush()
+    with tenant_context(tenant_b.id):
+        result = reporting_services.overdue_tasks()
     assert result["count"] == 0
