@@ -67,7 +67,9 @@ EXPECTED = {
                  "ten_third_party_entity": {"SELECT", "INSERT", "UPDATE"},
                  "ten_third_party_representative": {"SELECT", "INSERT", "UPDATE"},
                  "ten_third_party_solution": {"SELECT", "INSERT", "UPDATE"},
-                 "ten_third_party_assessment": {"SELECT", "INSERT", "UPDATE"}},
+                 "ten_third_party_assessment": {"SELECT", "INSERT", "UPDATE"},
+                 "ten_asset": {"SELECT", "INSERT", "UPDATE"},
+                 "ten_asset_bia": {"SELECT", "INSERT", "UPDATE"}},
     "ngrc_auth": {**{t: CRUD for t in IDN_TABLES}, "plt_tenant": {"SELECT"}, "ten_membership": {"SELECT"},
                   "ten_role": {"SELECT"}, "idn_recovery_request": {"SELECT"}},  # recovery: read-only, every write via SECURITY DEFINER fns
     "ngrc_ops": {**{t: CRUD for t in OPERATOR_TABLES}, "plt_tenant": {"SELECT", "INSERT", "UPDATE"},

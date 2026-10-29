@@ -94,7 +94,11 @@ tables:
   - {table: ten_risk_acceptance, class: TEN, data_class: C, domain: risk, owner_module: ngrc.risk, rls: required, tenant_column: tenant_id,
      notes: "D-P4-002: append-only governed acceptance of residual risk, same pattern as ten_security_exception. No UPDATE grant to ngrc_app; DB trigger rejects UPDATE/DELETE/TRUNCATE outright."}
   - {table: ten_incident, class: TEN, data_class: C, domain: risk, owner_module: ngrc.risk, rls: required, tenant_column: tenant_id,
-     notes: "D-P4-003: detect-through-close lifecycle (NIST SP 800-61 stages). Optional links to a RiskScenario and/or ImplementationControl, neither required at creation."}
+     notes: "D-P4-003: detect-through-close lifecycle (NIST SP 800-61 stages). Optional links to a RiskScenario, ImplementationControl and/or Asset (D-P7-002), none required at creation."}
+  - {table: ten_asset, class: TEN, data_class: C, domain: risk, owner_module: ngrc.risk, rls: required, tenant_column: tenant_id,
+     notes: "D-P7-002: hardware/software/data/facility/personnel/service/other, same criticality scale as Finding/Incident/Issue/ThirdPartyEntity."}
+  - {table: ten_asset_bia, class: TEN, data_class: C, domain: risk, owner_module: ngrc.risk, rls: required, tenant_column: tenant_id,
+     notes: "D-P7-002: a point-in-time business impact analysis - its own row per assessment, never edited in place, same pattern as ThirdPartyAssessment."}
 
   - {table: ten_policy, class: TEN, data_class: C, domain: governance, owner_module: ngrc.governance, rls: required, tenant_column: tenant_id,
      notes: "D-P4-004: draft/active/retired governance document record."}

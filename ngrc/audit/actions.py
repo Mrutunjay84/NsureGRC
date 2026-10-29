@@ -275,11 +275,18 @@ ACTIONS_THIRD_PARTY: tuple[Action, ...] = (
     _a("third_party.assessment.transitioned", "third_party", "notice", "tenant", [APP], ["from_status", "to_status"]),
 )
 
+# D-P7-002: Assets + BIA. Incident's audit actions already exist under ACTIONS_INCIDENTS (D-P4-003); this is
+# a new action for the asset catalogue itself.
+ACTIONS_ASSETS: tuple[Action, ...] = (
+    _a("asset.created", "risk", "info", "tenant", [APP]),
+    _a("asset.bia.recorded", "risk", "notice", "tenant", [APP], ["impact_rating"]),
+)
+
 ACTIONS: tuple[Action, ...] = (
     ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
     + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS + ACTIONS_SATISFACTION + ACTIONS_ASSERTION_REVIEW + ACTIONS_TASKS
     + ACTIONS_FINDINGS + ACTIONS_RISK + ACTIONS_INCIDENTS + ACTIONS_GOVERNANCE + ACTIONS_COMPLIANCE_AUDIT
-    + ACTIONS_PRIVACY + ACTIONS_NOTIFICATIONS + ACTIONS_MFA_DEV_BYPASS + ACTIONS_THIRD_PARTY
+    + ACTIONS_PRIVACY + ACTIONS_NOTIFICATIONS + ACTIONS_MFA_DEV_BYPASS + ACTIONS_THIRD_PARTY + ACTIONS_ASSETS
 )
 
 BY_NAME = {a.name: a for a in ACTIONS}

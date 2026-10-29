@@ -13,6 +13,7 @@ import { AuditsPage } from "@/pages/AuditsPage";
 import { AuditDetailPage } from "@/pages/AuditDetailPage";
 import { PrivacyPage } from "@/pages/PrivacyPage";
 import { ThirdPartiesPage } from "@/pages/ThirdPartiesPage";
+import { AssetsPage } from "@/pages/AssetsPage";
 import { AppShell } from "@/components/layout/AppShell";
 import { api } from "@/lib/api";
 import type { SessionResponse } from "@/lib/api";
@@ -55,6 +56,7 @@ function App() {
           <Route path="/audits/:id" element={<AuditDetailPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/third-parties" element={<ThirdPartiesPage />} />
+          <Route path="/assets" element={<AssetsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
