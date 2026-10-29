@@ -147,6 +147,33 @@ def test_wrong_totp_never_promotes_the_session(tenant_a, make_user):
     assert audit_events(platform=True, action="auth.mfa.failed", actor_id=u.account.id)
 
 
+# ------------------------------------------------------------------------------- NGRC_MFA_REQUIRED (dev-only, D-P0-008)
+def test_mfa_required_false_promotes_straight_to_active_and_is_audited_honestly(tenant_a, make_member):
+    """Owner request 2026-10-29: MFA skippable for dev convenience, never silently. base.py/prod.py hard-code
+    NGRC_MFA_REQUIRED=True; validators.py refuses production with anything else (tests/test_config_security.py)."""
+    acct = make_account()
+    make_member(tenant_a, acct, "owner")
+    settings.NGRC_MFA_REQUIRED = False
+    try:
+        api, r = _login(acct.email, TEST_PASSWORD)
+        assert r.json()["stage"] == "active"
+        assert api.post("/auth/tenants/select/", {"tenant_id": str(tenant_a.id)}).status_code == 200
+        assert api.get("/tenant/me/").status_code == 200  # genuinely active, not just claiming to be
+        assert audit_events(platform=True, action="auth.login.success", actor_id=acct.id)
+        skip_events = audit_events(platform=True, action="auth.mfa.skipped_dev_only", actor_id=acct.id)
+        assert skip_events and "NGRC_MFA_REQUIRED" in str(skip_events[-1]["details"])
+    finally:
+        settings.NGRC_MFA_REQUIRED = True
+
+
+def test_mfa_required_true_is_unaffected_even_with_an_enrolled_factor(tenant_a, make_user):
+    """The default (True) must not change existing enrolled-factor behaviour - this is a dev-only opt-OUT, not a
+    change to the normal path."""
+    u = make_user(tenant_a, "owner")
+    api, r = _login(u.email, u.password)
+    assert r.json()["stage"] == "password_ok"  # still requires a real TOTP/WebAuthn verify, unchanged
+
+
 def test_totp_code_format_is_enforced(tenant_a, make_user):
     u = make_user(tenant_a, "owner")
     api = Api()

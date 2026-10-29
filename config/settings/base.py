@@ -37,6 +37,7 @@ if NGRC_PLANE not in {"customer", "operator", "migrate", "audit_verify", "audit_
     raise ImproperlyConfigured("NGRC_PLANE must be customer, operator, migrate, audit_verify, audit_seal or all")
 
 DEBUG = False  # never read from the environment in base; dev may opt in explicitly in dev.py
+NGRC_MFA_REQUIRED = True  # never read from the environment in base (D-P0-008); dev may opt out explicitly in dev.py; validators.py refuses prod otherwise
 SECRET_KEY = env("NGRC_SECRET_KEY", required=True)
 if len(SECRET_KEY) < 50:
     raise ImproperlyConfigured("NGRC_SECRET_KEY must be at least 50 characters of random data")
