@@ -60,6 +60,8 @@ def validate_settings(cfg: Mapping) -> list[str]:
             v.append(f"database '{alias}' must not use a superuser role")
         if not db.get("PASSWORD"):
             v.append(f"database '{alias}' has no password")
+    if cfg.get("NGRC_MFA_REQUIRED") is not True:
+        v.append("NGRC_MFA_REQUIRED must be True (MFA cannot be disabled in production, D-P0-008)")
     if cfg.get("AUDIT_SIGNER_BACKEND") == "dev_file":
         v.append("AUDIT_SIGNER_BACKEND 'dev_file' is DEV-ONLY (production KMS signer is open item O-4)")
     if cfg.get("KEY_PROVIDER") == "local":

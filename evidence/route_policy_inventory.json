@@ -1,8 +1,8 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-27T04:39:17+00:00",
+  "generated_at": "2026-10-29T04:55:44+00:00",
   "generator": "tests/test_evidence_artifacts.py::route_policy_inventory.json",
-  "route_count": 76,
+  "route_count": 100,
   "routes": [
     {
       "methods": [
@@ -453,6 +453,121 @@
         "GET",
         "POST"
       ],
+      "permission": "compliance_audit.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/audits/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.compliance_audit.views.AuditListView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "compliance_audit.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/audits/<uuid:pk>/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.compliance_audit.views.AuditDetailView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "compliance_audit.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/audits/<uuid:pk>/items/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.compliance_audit.views.AuditItemListView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "compliance_audit.manage",
+      "public_reason": null,
+      "route": "/api/v1/tenant/audits/<uuid:pk>/transition/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.compliance_audit.views.AuditTransitionView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "control.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/controls/common/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.controls.views.CommonControlListView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "control.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/controls/implementation/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.controls.views.ImplementationControlListView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "control.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/controls/implementation/<uuid:pk>/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.controls.views.ImplementationControlDetailView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "control.manage",
+      "public_reason": null,
+      "route": "/api/v1/tenant/controls/implementation/<uuid:pk>/assert/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.controls.views.ImplementationControlAssertView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
       "permission": "evidence.read",
       "public_reason": null,
       "route": "/api/v1/tenant/evidence/",
@@ -504,6 +619,94 @@
       ],
       "step_up": null,
       "view": "ngrc.evidence.views.RevisionDownloadView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "control.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/findings/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.controls.views.FindingListView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "control.manage",
+      "public_reason": null,
+      "route": "/api/v1/tenant/findings/<uuid:pk>/transition/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.controls.views.FindingTransitionView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "governance.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/governance/issues/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.governance.views.IssueListView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "governance.manage",
+      "public_reason": null,
+      "route": "/api/v1/tenant/governance/issues/<uuid:pk>/transition/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.governance.views.IssueTransitionView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "governance.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/governance/objectives/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.governance.views.ObjectiveListView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "governance.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/governance/policies/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.governance.views.PolicyListView"
     },
     {
       "methods": [
@@ -579,6 +782,79 @@
     },
     {
       "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "privacy.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/privacy/breaches/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.privacy.views.BreachListView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "privacy.manage",
+      "public_reason": null,
+      "route": "/api/v1/tenant/privacy/breaches/<uuid:pk>/transition/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.privacy.views.BreachTransitionView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "privacy.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/privacy/processing-activities/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.privacy.views.ProcessingActivityListView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "privacy.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/privacy/rights-requests/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.privacy.views.RightsRequestListView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "privacy.manage",
+      "public_reason": null,
+      "route": "/api/v1/tenant/privacy/rights-requests/<uuid:pk>/transition/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.privacy.views.RightsRequestTransitionView"
+    },
+    {
+      "methods": [
         "GET"
       ],
       "permission": "tenant.recovery.approve",
@@ -632,6 +908,50 @@
       ],
       "step_up": null,
       "view": "ngrc.reporting.views.DashboardView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "risk.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/risk/assessments/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.risk.views.RiskAssessmentListView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "risk.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/risk/scenarios/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.risk.views.RiskScenarioListView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "risk.manage",
+      "public_reason": null,
+      "route": "/api/v1/tenant/risk/scenarios/<uuid:pk>/transition/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.risk.views.RiskScenarioTransitionView"
     },
     {
       "methods": [
@@ -733,6 +1053,35 @@
       ],
       "step_up": null,
       "view": "ngrc.tenancy.views.SupportRevokeView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "control.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/tasks/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.controls.views.TaskListView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "control.manage",
+      "public_reason": null,
+      "route": "/api/v1/tenant/tasks/<uuid:pk>/transition/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.controls.views.TaskTransitionView"
     },
     {
       "methods": [

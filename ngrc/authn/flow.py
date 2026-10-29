@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from django.conf import settings
 from django.db import transaction
 
 from ngrc.audit import alerts
@@ -88,6 +89,25 @@ def password_login(realm: Realm, email: str, password: str, *, ip: str | None, u
         _suspicious(realm, account, done.suspicious, failures=done.prior_failures, sources=1, stage="login")
     if passwords.needs_rehash(account.password_hash):
         realm.Account.objects.using(realm.db).filter(pk=account.pk).update(password_hash=passwords.hash_password(password))
+    if not getattr(settings, "NGRC_MFA_REQUIRED", True):
+        # DEV-ONLY (D-P0-008): NGRC_MFA_REQUIRED=False skips enrolment/verification entirely, whether or not a
+        # factor is already enrolled, and promotes straight to an active session. base.py/prod.py hard-code this
+        # True; config/settings/validators.py refuses production startup with anything else. Audited honestly as
+        # a skip, never blended into a real "mfa.verified" event, so this is never invisible in the audit trail
+        # even though it is disabled.
+        with transaction.atomic(using=realm.db):
+            raw, s = sessions.create(realm, account, stage="password_ok", ip=ip, user_agent=user_agent,
+                                     policy_key="pending_mfa", methods=["password"])
+            policy_key = "operator" if realm is OPERATOR else "privileged"
+            raw = sessions.promote_active(realm, s, methods=["password"], policy_key=policy_key)
+            realm.Account.objects.using(realm.db).filter(pk=account.pk).update(last_login_at=clock.now())
+        audit.emit_platform(realm.db, ev(realm, "login.success"), actor_id=account.id,
+                            actor_type="operator" if realm is OPERATOR else "user", details={"stage": "active"})
+        audit.emit_platform(realm.db, ev(realm, "mfa.skipped_dev_only"), actor_id=account.id,
+                            actor_type="operator" if realm is OPERATOR else "user",
+                            details={"reason": "NGRC_MFA_REQUIRED=False (dev-only)"})
+        return LoginResult("ok", raw_token=raw, stage="active", account=account)
+
     stage = "password_ok" if _has_factor(realm, account) else "enroll_mfa"
     raw, _s = sessions.create(realm, account, stage=stage, ip=ip, user_agent=user_agent, policy_key="pending_mfa",
                               methods=["password"])

@@ -258,11 +258,19 @@ ACTIONS_NOTIFICATIONS: tuple[Action, ...] = (
     _a("notification.created", "notifications", "info", "tenant", [APP], ["category"]),
 )
 
+# Owner request 2026-10-29: NGRC_MFA_REQUIRED=False (dev-only, never True-only in production - validators.py)
+# skips MFA enrolment/verification. A distinct action, not extra keys crammed into auth.login.success's frozen
+# ["stage"] allow-list, so the skip is always visible in the audit trail on its own line, never blended in.
+ACTIONS_MFA_DEV_BYPASS: tuple[Action, ...] = (
+    _a("auth.mfa.skipped_dev_only", "auth", "warning", "platform", [AUTH], ["reason"]),
+    _a("platform.operator.mfa.skipped_dev_only", "platform_auth", "warning", "platform", [OPS], ["reason"]),
+)
+
 ACTIONS: tuple[Action, ...] = (
     ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
     + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS + ACTIONS_SATISFACTION + ACTIONS_ASSERTION_REVIEW + ACTIONS_TASKS
     + ACTIONS_FINDINGS + ACTIONS_RISK + ACTIONS_INCIDENTS + ACTIONS_GOVERNANCE + ACTIONS_COMPLIANCE_AUDIT
-    + ACTIONS_PRIVACY + ACTIONS_NOTIFICATIONS
+    + ACTIONS_PRIVACY + ACTIONS_NOTIFICATIONS + ACTIONS_MFA_DEV_BYPASS
 )
 
 BY_NAME = {a.name: a for a in ACTIONS}

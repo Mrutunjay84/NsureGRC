@@ -93,3 +93,232 @@ export interface DashboardResponse {
   evidence_coverage: Record<string, MetricRow>;
   framework_coverage: Record<string, MetricRow>;
 }
+
+// ---- ngrc.controls (CommonControl/ImplementationControl/ControlAssertion/Finding/Task)
+export interface CommonControl {
+  id: string;
+  key: string;
+  name: string;
+  objective: string;
+  category: string;
+  lifecycle: string;
+  owner: string | null;
+  created_at: string;
+}
+
+export interface ImplementationControl {
+  id: string;
+  common_control_id: string;
+  common_control_name: string;
+  name: string;
+  description: string;
+  owner: string | null;
+  reviewer: string | null;
+  due_date: string | null;
+  lifecycle: string;
+  created_at: string;
+}
+
+export interface ControlAssertion {
+  id: string;
+  framework_urn: string;
+  requirement_urn: string;
+  coverage: number | null;
+  satisfaction_state: string;
+  review_state: string;
+}
+
+export interface Finding {
+  id: string;
+  implementation_control_id: string;
+  title: string;
+  description: string;
+  source: string;
+  severity: "low" | "medium" | "high" | "critical";
+  status: "open" | "in_remediation" | "pending_verification" | "closed";
+  remediation_notes: string;
+  owner: string | null;
+  created_at: string;
+}
+
+export interface Task {
+  id: string;
+  implementation_control_id: string;
+  title: string;
+  description: string;
+  assigned_to: string | null;
+  due_date: string | null;
+  status: "open" | "in_progress" | "done";
+  created_at: string;
+}
+
+export interface ImplementationControlDetail extends ImplementationControl {
+  assertions: ControlAssertion[];
+  findings: Finding[];
+  tasks: Task[];
+}
+
+// ---- ngrc.evidence
+export interface EvidenceItem {
+  id: string;
+  title: string;
+  description: string;
+  data_class: "C" | "R";
+  created_at: string;
+}
+
+export interface EvidenceRevisionItem {
+  id: string;
+  revision_no: number;
+  filename: string;
+  detected_type: string;
+  size_bytes: number;
+  sha256: string;
+  state: "scan_pending" | "collected" | "quarantined";
+  created_at: string;
+}
+
+export interface EvidenceDetail extends EvidenceItem {
+  revisions: EvidenceRevisionItem[];
+}
+
+export async function uploadEvidenceRevision(evidenceId: string, file: File): Promise<EvidenceRevisionItem> {
+  const token = await (async () => {
+    const res = await fetch(`${BASE}/auth/csrf/`, { credentials: "same-origin" });
+    return (await res.json()).csrfToken as string;
+  })();
+  const res = await fetch(`${BASE}/tenant/evidence/${evidenceId}/revisions/`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "X-CSRFToken": token,
+      "Content-Type": file.type || "application/octet-stream",
+      "X-Filename": encodeURIComponent(file.name),
+    },
+    body: file,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new ApiError(res.status, data);
+  return data as EvidenceRevisionItem;
+}
+
+// ---- ngrc.risk
+export interface RiskAssessment {
+  id: string;
+  name: string;
+  description: string;
+  status: "draft" | "in_progress" | "completed";
+  owner: string | null;
+  created_at: string;
+}
+
+export interface RiskScenario {
+  id: string;
+  risk_assessment_id: string;
+  name: string;
+  description: string;
+  threat: string;
+  vulnerability: string;
+  likelihood: number;
+  impact: number;
+  risk_level: string;
+  treatment: "mitigate" | "avoid" | "transfer" | "accept" | null;
+  status: "open" | "treating" | "accepted" | "closed";
+  owner: string | null;
+  created_at: string;
+}
+
+// ---- ngrc.governance
+export interface Policy {
+  id: string;
+  title: string;
+  description: string;
+  status: "draft" | "active" | "retired";
+  owner: string | null;
+  effective_date: string | null;
+  next_review_date: string | null;
+  created_at: string;
+}
+
+export interface Objective {
+  id: string;
+  title: string;
+  description: string;
+  status: "open" | "achieved" | "missed";
+  owner: string | null;
+  target_date: string | null;
+  created_at: string;
+}
+
+export interface Issue {
+  id: string;
+  title: string;
+  description: string;
+  severity: "low" | "medium" | "high" | "critical";
+  status: "open" | "in_progress" | "resolved" | "closed";
+  owner: string | null;
+  due_date: string | null;
+  created_at: string;
+}
+
+// ---- ngrc.compliance_audit
+export interface Audit {
+  id: string;
+  framework_urn: string;
+  name: string;
+  description: string;
+  status: "draft" | "assigned" | "in_progress" | "submitted" | "review" | "changes_requested" | "accepted" | "signoff" | "locked";
+  assigned_to: string | null;
+  reviewer: string | null;
+  locked_at: string | null;
+  created_at: string;
+}
+
+export interface AuditItem {
+  id: string;
+  audit_id: string;
+  requirement_urn: string;
+  control_assertion_id: string | null;
+  result: "not_assessed" | "compliant" | "partially_compliant" | "non_compliant" | "not_applicable";
+  observation: string;
+  created_at: string;
+}
+
+export interface AuditDetail extends Audit {
+  items: AuditItem[];
+}
+
+// ---- ngrc.privacy
+export interface ProcessingActivity {
+  id: string;
+  name: string;
+  description: string;
+  role: "controller" | "processor";
+  status: "draft" | "active" | "retired";
+  owner: string | null;
+  created_at: string;
+}
+
+export interface RightsRequest {
+  id: string;
+  requester_reference: string;
+  request_type: "access" | "rectification" | "erasure" | "restriction" | "portability" | "objection";
+  status: "received" | "in_progress" | "fulfilled" | "rejected" | "closed";
+  due_date: string | null;
+  owner: string | null;
+  created_at: string;
+}
+
+export interface Breach {
+  id: string;
+  title: string;
+  description: string;
+  severity: "low" | "medium" | "high" | "critical";
+  status: "open" | "investigating" | "contained" | "notified" | "closed";
+  discovered_at: string;
+  notified_authority_at: string | null;
+  notified_subjects_at: string | null;
+  affected_data_subjects_estimate: number | null;
+  owner: string | null;
+  created_at: string;
+}

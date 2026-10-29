@@ -23,7 +23,7 @@ SECURE = {
     "WEBAUTHN_ALLOWED_ORIGINS": ["https://app.example.test"], "PUBLIC_BASE_URL": "https://app.example.test",
     "PASSWORD_HASHING": {"time_cost": 3, "memory_cost_kib": 65536, "parallelism": 4},
     "DATABASES": {"default": {"USER": "ngrc_app", "PASSWORD": "x", "OPTIONS": {"sslmode": "verify-full"}}},
-    "AUDIT_SIGNER_BACKEND": "kms", "KEY_PROVIDER": "kms", "INSTALLED_APPS": ["rest_framework", "ngrc.core"],
+    "AUDIT_SIGNER_BACKEND": "kms", "KEY_PROVIDER": "kms", "INSTALLED_APPS": ["rest_framework", "ngrc.core"], "NGRC_MFA_REQUIRED": True,
     "AUDIT_REQUIRE_EXTERNAL_COPY": True, "AUDIT_REQUIRE_COMPLETENESS": True, "AUDIT_SINK_IMMUTABLE": True,
     "EVIDENCE_STORE_BACKEND": "object_store", "EVIDENCE_SCANNER_BACKEND": "engine",
 }
@@ -44,6 +44,7 @@ def test_a_fully_secure_configuration_passes():
     ("PUBLIC_BASE_URL", "http://app.example.test", "PUBLIC_BASE_URL"),
     ("PASSWORD_HASHING", {"time_cost": 1, "memory_cost_kib": 1024, "parallelism": 1}, "Argon2id"),
     ("AUDIT_SIGNER_BACKEND", "dev_file", "dev_file"), ("KEY_PROVIDER", "local", "local"),
+    ("NGRC_MFA_REQUIRED", False, "NGRC_MFA_REQUIRED"),
     ("INSTALLED_APPS", ["django.contrib.admin"], "admin"),
     ("AUDIT_REQUIRE_EXTERNAL_COPY", False, "AUDIT_REQUIRE_EXTERNAL_COPY"), ("AUDIT_REQUIRE_COMPLETENESS", False, "AUDIT_REQUIRE_COMPLETENESS"),
     ("AUDIT_SINK_IMMUTABLE", False, "AUDIT_SINK_IMMUTABLE"), ("EVIDENCE_STORE_BACKEND", "local_dev", "EVIDENCE_STORE_BACKEND"),
