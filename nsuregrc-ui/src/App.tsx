@@ -7,9 +7,11 @@ import { ControlDetailPage } from "@/pages/ControlDetailPage";
 import { EvidencePage } from "@/pages/EvidencePage";
 import { FindingsPage } from "@/pages/FindingsPage";
 import { TasksPage } from "@/pages/TasksPage";
-// Risk/Governance/Audits/Privacy pages: their REST APIs are already built (ngrc.risk/governance/
-// compliance_audit/privacy), but the pages themselves are each a separate, independent increment -
-// added back here one at a time as each lands, not stubbed in ahead of the page that uses them.
+import { RiskPage } from "@/pages/RiskPage";
+import { GovernancePage } from "@/pages/GovernancePage";
+import { AuditsPage } from "@/pages/AuditsPage";
+import { AuditDetailPage } from "@/pages/AuditDetailPage";
+import { PrivacyPage } from "@/pages/PrivacyPage";
 import { AppShell } from "@/components/layout/AppShell";
 import { api } from "@/lib/api";
 import type { SessionResponse } from "@/lib/api";
@@ -46,6 +48,11 @@ function App() {
           <Route path="/evidence" element={<EvidencePage />} />
           <Route path="/findings" element={<FindingsPage />} />
           <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/risk" element={<RiskPage />} />
+          <Route path="/governance" element={<GovernancePage />} />
+          <Route path="/audits" element={<AuditsPage />} />
+          <Route path="/audits/:id" element={<AuditDetailPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

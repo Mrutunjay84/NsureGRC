@@ -4,6 +4,10 @@ import {
   FileStack,
   FileWarning,
   CheckSquare,
+  ShieldAlert,
+  Scale,
+  ClipboardCheck,
+  Lock,
   type LucideIcon,
 } from "lucide-react";
 
@@ -34,8 +38,21 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     label: "Governance",
-    items: [{ label: "Findings", path: "/findings", icon: FileWarning }],
+    items: [
+      { label: "Findings", path: "/findings", icon: FileWarning },
+      { label: "Policies & Objectives", path: "/governance", icon: Scale },
+    ],
   },
-  // Risk, Policies & Objectives (governance), Audits, Privacy sections come back here as each page lands
-  // (see App.tsx's own note) - their REST APIs already exist, the nav entry follows the page, not ahead of it.
+  {
+    label: "Risk",
+    items: [{ label: "Risk Register", path: "/risk", icon: ShieldAlert }],
+  },
+  {
+    label: "Compliance",
+    items: [{ label: "Audits", path: "/audits", icon: ClipboardCheck }],
+  },
+  {
+    label: "Privacy",
+    items: [{ label: "Privacy", path: "/privacy", icon: Lock }],
+  },
 ];
