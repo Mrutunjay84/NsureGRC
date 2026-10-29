@@ -1,8 +1,8 @@
 {
   "database": "ngrc_test",
-  "generated_at": "2026-10-29T04:55:44+00:00",
+  "generated_at": "2026-10-25T04:54:14+00:00",
   "generator": "tests/test_evidence_artifacts.py::route_policy_inventory.json",
-  "route_count": 100,
+  "route_count": 106,
   "routes": [
     {
       "methods": [
@@ -1082,6 +1082,94 @@
       ],
       "step_up": null,
       "view": "ngrc.controls.views.TaskTransitionView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "third_party.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/third-parties/assessments/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.thirdparty.views.AssessmentListView"
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "permission": "third_party.manage",
+      "public_reason": null,
+      "route": "/api/v1/tenant/third-parties/assessments/<uuid:pk>/transition/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.thirdparty.views.AssessmentTransitionView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "third_party.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/third-parties/entities/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.thirdparty.views.EntityListView"
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "permission": "third_party.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/third-parties/entities/<uuid:pk>/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.thirdparty.views.EntityDetailView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "third_party.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/third-parties/representatives/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.thirdparty.views.RepresentativeListView"
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "permission": "third_party.read",
+      "public_reason": null,
+      "route": "/api/v1/tenant/third-parties/solutions/",
+      "scope": "tenant",
+      "stages": [
+        "active"
+      ],
+      "step_up": null,
+      "view": "ngrc.thirdparty.views.SolutionListView"
     },
     {
       "methods": [

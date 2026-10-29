@@ -122,6 +122,15 @@ tables:
   - {table: ten_notification, class: TEN, data_class: C, domain: notifications, owner_module: ngrc.notifications, rls: required, tenant_column: tenant_id,
      notes: "D-P5-007: an in-app, event-triggered notice for one recipient. recipient is a plain UUID (IAM is IDN, not TEN). Event-triggered only - no condition/scheduled notifications, no email/webhook delivery, no preferences (see the ADR)."}
 
+  - {table: ten_third_party_entity, class: TEN, data_class: C, domain: third_party, owner_module: ngrc.thirdparty, rls: required, tenant_column: tenant_id,
+     notes: "D-P7-001: a vendor/processor/partner organisation."}
+  - {table: ten_third_party_representative, class: TEN, data_class: C, domain: third_party, owner_module: ngrc.thirdparty, rls: required, tenant_column: tenant_id,
+     notes: "D-P7-001: a named contact at a third-party entity."}
+  - {table: ten_third_party_solution, class: TEN, data_class: C, domain: third_party, owner_module: ngrc.thirdparty, rls: required, tenant_column: tenant_id,
+     notes: "D-P7-001: a product/service a third-party entity provides."}
+  - {table: ten_third_party_assessment, class: TEN, data_class: C, domain: third_party, owner_module: ngrc.thirdparty, rls: required, tenant_column: tenant_id,
+     notes: "D-P7-001: draft/in_progress/completed (reopenable) assessment of an entity, optionally scoped to one solution. No EvidenceLink/Finding integration yet - see the ADR's honest-gap section."}
+
   # ------------------------------------------------------------------ CAT (global catalogue; ngrc_catalog_publisher writes, ngrc_app reads)
   - {table: cat_framework, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none}
   - {table: cat_framework_version, class: CAT, data_class: I, domain: framework, owner_module: ngrc.framework, rls: none,

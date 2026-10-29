@@ -266,11 +266,20 @@ ACTIONS_MFA_DEV_BYPASS: tuple[Action, ...] = (
     _a("platform.operator.mfa.skipped_dev_only", "platform_auth", "warning", "platform", [OPS], ["reason"]),
 )
 
+# D-P7-001: Third Parties (Entity/Representative/Solution/Assessment).
+ACTIONS_THIRD_PARTY: tuple[Action, ...] = (
+    _a("third_party.entity.created", "third_party", "info", "tenant", [APP]),
+    _a("third_party.representative.created", "third_party", "info", "tenant", [APP]),
+    _a("third_party.solution.created", "third_party", "info", "tenant", [APP]),
+    _a("third_party.assessment.created", "third_party", "info", "tenant", [APP]),
+    _a("third_party.assessment.transitioned", "third_party", "notice", "tenant", [APP], ["from_status", "to_status"]),
+)
+
 ACTIONS: tuple[Action, ...] = (
     ACTIONS_P1 + ACTIONS_P2 + ACTIONS_FRAMEWORK + ACTIONS_CUSTOM_FRAMEWORK + ACTIONS_CONTROLS
     + ACTIONS_EVIDENCE_LINKS + ACTIONS_TESTS + ACTIONS_SATISFACTION + ACTIONS_ASSERTION_REVIEW + ACTIONS_TASKS
     + ACTIONS_FINDINGS + ACTIONS_RISK + ACTIONS_INCIDENTS + ACTIONS_GOVERNANCE + ACTIONS_COMPLIANCE_AUDIT
-    + ACTIONS_PRIVACY + ACTIONS_NOTIFICATIONS + ACTIONS_MFA_DEV_BYPASS
+    + ACTIONS_PRIVACY + ACTIONS_NOTIFICATIONS + ACTIONS_MFA_DEV_BYPASS + ACTIONS_THIRD_PARTY
 )
 
 BY_NAME = {a.name: a for a in ACTIONS}

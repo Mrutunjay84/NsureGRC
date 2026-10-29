@@ -8,6 +8,7 @@ import {
   Scale,
   ClipboardCheck,
   Lock,
+  Building2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -54,5 +55,9 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Privacy",
     items: [{ label: "Privacy", path: "/privacy", icon: Lock }],
+  },
+  {
+    label: "Third Parties",
+    items: [{ label: "Third Parties", path: "/third-parties", icon: Building2 }],
   },
 ];

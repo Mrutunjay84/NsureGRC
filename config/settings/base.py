@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     "ngrc.privacy",
     "ngrc.reporting",
     "ngrc.notifications",
+    "ngrc.thirdparty",
 ]
 
 MIDDLEWARE = [

@@ -58,7 +58,8 @@
     "ngrc.compliance_audit",
     "ngrc.privacy",
     "ngrc.reporting",
-    "ngrc.notifications"
+    "ngrc.notifications",
+    "ngrc.thirdparty"
   ],
   "KEY_PROVIDER": "local",
   "MIDDLEWARE": [
@@ -123,6 +124,6 @@
   "SUPPORT_GRANT_MAX_MINUTES": 480,
   "X_FRAME_OPTIONS": "DENY",
   "database": "ngrc_test",
-  "generated_at": "2026-10-29T04:55:45+00:00",
+  "generated_at": "2026-10-25T04:54:15+00:00",
   "generator": "tests/test_evidence_artifacts.py::config_snapshot.json"
 }
