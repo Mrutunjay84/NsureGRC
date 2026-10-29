@@ -8,8 +8,50 @@ accepted:
     justification: >
       Not part of the production dependency export (verified: `uv export --no-dev` contains no `mcp`) and not installed in the
       runtime image. The advisory concerns a Streamable-HTTP MCP *server* in stateful mode; neither semgrep's use of the client
-      library nor this project starts such a server. semgrep 1.181.0 pins mcp==1.29.0, so the fixed version (1.30.0 / 2.2.0) cannot
-      be selected without changing/removing semgrep.
+      library nor this project starts such a server. semgrep 1.182.1 (the current latest) still pins mcp==1.29.0, so the fixed
+      version (1.30.0 / 2.2.0) cannot be selected without changing/removing semgrep.
+    review_by: "at the next semgrep upgrade and before the Phase 2 security gate"
+    residual_risk: low
+
+  - id: CVE-2026-116685
+    package: mcp 1.29.0
+    scope: dev-tooling only (transitive dependency of semgrep, dependency group `dev`)
+    justification: >
+      Not part of the production dependency export (verified: `uv export --no-hashes --no-dev` contains no `mcp`) and not
+      installed in the runtime image. The advisory is a cross-origin credential leak in the SDK's HTTP *client* transports
+      (`streamable_http_client`/`sse_client`/`ClientSessionGroup`): on an endpoint redirect to a different origin, custom
+      headers (and, on 307/308, the request body) were resent there. This project never uses the mcp SDK as an HTTP client
+      at all - semgrep's own CI usage here is `semgrep scan --config ... ngrc config` (the plain CLI scanner), which never
+      opens an MCP client or server connection, let alone one that follows a redirect to another origin. Confirmed semgrep
+      1.182.1 (the current latest, upgraded in this same change) still pins mcp==1.29.0 exactly - the fixed version
+      (1.30.0 / 2.2.0) cannot be selected without changing/removing semgrep.
+    review_by: "at the next semgrep upgrade and before the Phase 2 security gate"
+    residual_risk: low
+
+  - id: CVE-2026-116684
+    package: mcp 1.29.0
+    scope: dev-tooling only (transitive dependency of semgrep, dependency group `dev`)
+    justification: >
+      Not part of the production dependency export (verified: `uv export --no-hashes --no-dev` contains no `mcp`) and not
+      installed in the runtime image. The advisory is a missing token-audience check in the SDK's *server-side* bearer
+      authentication (`AuthSettings(token_verifier=...)`), relevant only to a process that runs an MCP server accepting
+      bearer tokens from a shared authorization server. This project never runs an MCP server of any kind - semgrep's CI
+      usage here is the plain `semgrep scan` CLI command. Confirmed semgrep 1.182.1 (the current latest) still pins
+      mcp==1.29.0 exactly - the fixed version (1.30.0 / 2.2.0) cannot be selected without changing/removing semgrep.
+    review_by: "at the next semgrep upgrade and before the Phase 2 security gate"
+    residual_risk: low
+
+  - id: CVE-2026-116686
+    package: mcp 1.29.0
+    scope: dev-tooling only (transitive dependency of semgrep, dependency group `dev`)
+    justification: >
+      Not part of the production dependency export (verified: `uv export --no-hashes --no-dev` contains no `mcp`) and not
+      installed in the runtime image. The advisory is an SSRF/DoS in the SDK's *client-side* `call_tool` result validation
+      (`ClientSession`/`ClientSessionGroup`/2.x `Client`): a malicious server's declared `outputSchema` could make the
+      client fetch an attacker-chosen URL or local file via an unresolved `$ref`. This project never uses the mcp SDK as a
+      client calling tools on a remote MCP server - semgrep's CI usage here is the plain `semgrep scan` CLI command, never
+      `ClientSession`. Confirmed semgrep 1.182.1 (the current latest) still pins mcp==1.29.0 exactly - the fixed version
+      (1.30.0 / 2.2.0) cannot be selected without changing/removing semgrep.
     review_by: "at the next semgrep upgrade and before the Phase 2 security gate"
     residual_risk: low
 
