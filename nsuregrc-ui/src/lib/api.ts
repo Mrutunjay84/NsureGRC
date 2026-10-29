@@ -94,6 +94,20 @@ export interface DashboardResponse {
   framework_coverage: Record<string, MetricRow>;
 }
 
+// ---- ngrc.reporting (D-P7-003 Calendar - read-only aggregation, no new model)
+export interface Deadline {
+  date: string;
+  domain: "controls" | "risk" | "governance" | "privacy";
+  object_type: string;
+  object_id: string;
+  title: string;
+  overdue: boolean;
+}
+
+export interface CalendarResponse {
+  deadlines: Deadline[];
+}
+
 // ---- ngrc.controls (CommonControl/ImplementationControl/ControlAssertion/Finding/Task)
 export interface CommonControl {
   id: string;

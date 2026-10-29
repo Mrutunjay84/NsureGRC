@@ -10,6 +10,7 @@ import {
   Lock,
   Building2,
   Server,
+  CalendarClock,
   type LucideIcon,
 } from "lucide-react";
 
@@ -28,7 +29,10 @@ export interface NavSection {
 export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Overview",
-    items: [{ label: "Dashboard", path: "/", icon: LayoutDashboard }],
+    items: [
+      { label: "Dashboard", path: "/", icon: LayoutDashboard },
+      { label: "Calendar", path: "/calendar", icon: CalendarClock },
+    ],
   },
   {
     label: "Operations",

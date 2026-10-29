@@ -14,6 +14,7 @@ import { AuditDetailPage } from "@/pages/AuditDetailPage";
 import { PrivacyPage } from "@/pages/PrivacyPage";
 import { ThirdPartiesPage } from "@/pages/ThirdPartiesPage";
 import { AssetsPage } from "@/pages/AssetsPage";
+import { CalendarPage } from "@/pages/CalendarPage";
 import { AppShell } from "@/components/layout/AppShell";
 import { api } from "@/lib/api";
 import type { SessionResponse } from "@/lib/api";
@@ -45,6 +46,7 @@ function App() {
       <Routes>
         <Route element={<AppShell onLoggedOut={() => setAuth({ status: "signed_out" })} accountEmail={auth.email} />}>
           <Route path="/" element={<DashboardPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/controls" element={<ControlsPage />} />
           <Route path="/controls/:id" element={<ControlDetailPage />} />
           <Route path="/evidence" element={<EvidencePage />} />

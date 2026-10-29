@@ -9,20 +9,27 @@ ngrc.controls.services._fresh_accepted_links).
 """
 from __future__ import annotations
 
+from datetime import timedelta
+
 from ngrc.compliance_audit.models import Audit
 from ngrc.controls import services as control_services
 from ngrc.controls.models import (
     ControlAssertion,
+    ControlPlan,
     EvidenceLink,
     EvidenceRequirement,
     Finding,
     ImplementationControl,
     SatisfactionState,
+    SecurityException,
     Task,
 )
 from ngrc.core import clock
 from ngrc.framework import services as framework_services
 from ngrc.framework.models import FrameworkActivation
+from ngrc.governance.models import Issue, Objective, Policy
+from ngrc.privacy.models import RightsRequest
+from ngrc.risk.models import RiskAcceptance
 
 # Excluded entirely from both sides of the posture ratio - per the Status Rule ("never infer compliance
 # from missing values"), an assertion nobody has evaluated yet cannot honestly score as a measured 0% or
@@ -268,3 +275,45 @@ def tenant_report() -> dict:
         "evidence_coverage": {str(c.id): evidence_coverage(c) for c in controls},
         "framework_coverage": {urn: framework_coverage(urn) for urn in framework_urns},
     }
+
+
+def calendar_deadlines(window_days: int = 90) -> list[dict]:
+    """D-P7-003: Calendar, built as a read-only aggregation over every due-date-bearing field this
+    codebase already has - no new model, no migration (07_CONTROL_EVIDENCE.md: "Tasks, control plans,
+    calendar and control-health/X-ray views are operational surfaces over the same core objects; they must
+    not create duplicate control/evidence state"). `overdue` is computed on read, never stored - same
+    reasoning as Task's own existing "no stored overdue status". `window_days` only bounds how far into the
+    future a date may be to be included; anything already overdue is always included regardless of how long
+    ago, matching overdue_tasks()'s own unbounded look-back."""
+    today = clock.now().date()
+    horizon = today + timedelta(days=window_days)
+
+    def _entry(date, domain, object_type, object_id, title):
+        return {"date": date, "domain": domain, "object_type": object_type, "object_id": str(object_id),
+                "title": title, "overdue": date < today}
+
+    rows: list[dict] = []
+    for t in Task.objects.exclude(status=Task.Status.DONE).exclude(due_date=None):
+        rows.append(_entry(t.due_date, "controls", "task", t.id, t.title))
+    for p in ControlPlan.objects.exclude(target_date=None):
+        rows.append(_entry(p.target_date, "controls", "control_plan", p.id, p.name))
+    for c in ImplementationControl.objects.exclude(due_date=None):
+        rows.append(_entry(c.due_date, "controls", "implementation_control", c.id, c.name))
+    for e in SecurityException.objects.all():
+        rows.append(_entry(e.expiry_date, "controls", "security_exception", e.id, e.scope[:200]))
+    for a in RiskAcceptance.objects.all():
+        rows.append(_entry(a.expiry_date, "risk", "risk_acceptance", a.id, a.justification[:200]))
+    for p in Policy.objects.filter(status=Policy.Status.ACTIVE).exclude(next_review_date=None):
+        rows.append(_entry(p.next_review_date, "governance", "policy", p.id, p.title))
+    for o in Objective.objects.filter(status=Objective.Status.OPEN).exclude(target_date=None):
+        rows.append(_entry(o.target_date, "governance", "objective", o.id, o.title))
+    for i in Issue.objects.exclude(status__in=[Issue.Status.RESOLVED, Issue.Status.CLOSED]).exclude(due_date=None):
+        rows.append(_entry(i.due_date, "governance", "issue", i.id, i.title))
+    for r in (RightsRequest.objects
+              .exclude(status__in=[RightsRequest.Status.FULFILLED, RightsRequest.Status.REJECTED, RightsRequest.Status.CLOSED])
+              .exclude(due_date=None)):
+        rows.append(_entry(r.due_date, "privacy", "rights_request", r.id, r.requester_reference))
+
+    rows = [r for r in rows if r["overdue"] or r["date"] <= horizon]
+    rows.sort(key=lambda r: r["date"])
+    return rows

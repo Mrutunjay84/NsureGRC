@@ -21,7 +21,12 @@ from ngrc.core import clock
 from ngrc.core.context import tenant_context
 from ngrc.evidence.models import Evidence, EvidenceRevision
 from ngrc.framework import services as framework_services
+from ngrc.governance import services as governance_services
+from ngrc.governance.models import Issue, Policy
+from ngrc.privacy import services as privacy_services
+from ngrc.privacy.models import RightsRequest
 from ngrc.reporting import services as reporting_services
+from ngrc.risk import services as risk_services
 
 pytestmark = pytest.mark.security
 
@@ -579,3 +584,111 @@ def test_tenant_report_tenant_isolation(tenant_a, tenant_b):
         result = reporting_services.tenant_report()
     assert result["control_health"] == {}
     assert result["framework_coverage"] == {}
+
+
+# --------------------------------------------------------------------------------------------- D-P7-003 calendar
+def test_calendar_deadlines_is_empty_with_nothing_built(tenant_a):
+    with tenant_context(tenant_a.id):
+        assert reporting_services.calendar_deadlines() == []
+
+
+def test_calendar_deadlines_includes_one_row_per_source(tenant_a):
+    today = clock.now().date()
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        control_services.create_task(impl, "Rotate keys", created_by=uuid.uuid4(),
+                                      due_date=today + timedelta(days=5))
+        control_services.create_control_plan("Q4 plan", created_by=uuid.uuid4(), target_date=today + timedelta(days=6))
+        impl.due_date = today + timedelta(days=7)
+        impl.save(update_fields=["due_date"])
+        control_services.record_exception(impl, "Firewall rule X", "compensating control in place",
+                                           approver=uuid.uuid4(), expiry_date=today + timedelta(days=8),
+                                           created_by=uuid.uuid4())
+        assessment = risk_services.create_risk_assessment("Q4 assessment", created_by=uuid.uuid4())
+        scenario = risk_services.create_risk_scenario(assessment, "Vendor outage", likelihood=2, impact=3,
+                                                       created_by=uuid.uuid4())
+        risk_services.accept_risk_scenario(scenario, "accepted for now", approver=uuid.uuid4(),
+                                            expiry_date=today + timedelta(days=9), created_by=uuid.uuid4())
+        policy = governance_services.create_policy("Access Control Policy", created_by=uuid.uuid4(),
+                                                     next_review_date=today + timedelta(days=10))
+        governance_services.transition_policy(policy, Policy.Status.ACTIVE, actor_id=uuid.uuid4())
+        governance_services.create_objective("Reduce high findings", created_by=uuid.uuid4(),
+                                              target_date=today + timedelta(days=11))
+        governance_services.raise_issue("Untracked admin accounts", severity=Issue.Severity.HIGH,
+                                         created_by=uuid.uuid4(), due_date=today + timedelta(days=12))
+        privacy_services.create_rights_request("case-001", request_type=RightsRequest.RequestType.ACCESS,
+                                                created_by=uuid.uuid4(), due_date=today + timedelta(days=13))
+        uow.flush()
+        result = reporting_services.calendar_deadlines()
+    assert [(r["domain"], r["object_type"]) for r in result] == [
+        ("controls", "task"), ("controls", "control_plan"), ("controls", "implementation_control"),
+        ("controls", "security_exception"), ("risk", "risk_acceptance"), ("governance", "policy"),
+        ("governance", "objective"), ("governance", "issue"), ("privacy", "rights_request"),
+    ]
+    assert all(r["overdue"] is False for r in result)
+
+
+def test_calendar_deadlines_marks_past_dates_overdue_regardless_of_window(tenant_a):
+    today = clock.now().date()
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        task = control_services.create_task(impl, "Rotate keys", created_by=uuid.uuid4(),
+                                             due_date=today - timedelta(days=400))
+        uow.flush()
+        result = reporting_services.calendar_deadlines(window_days=1)
+    assert [r["object_id"] for r in result] == [str(task.id)]
+    assert result[0]["overdue"] is True
+
+
+def test_calendar_deadlines_excludes_future_dates_beyond_the_window(tenant_a):
+    today = clock.now().date()
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        control_services.create_task(impl, "Far future", created_by=uuid.uuid4(),
+                                      due_date=today + timedelta(days=200))
+        uow.flush()
+        result = reporting_services.calendar_deadlines(window_days=90)
+    assert result == []
+
+
+def test_calendar_deadlines_excludes_done_tasks_and_closed_issues_and_draft_policies(tenant_a):
+    today = clock.now().date()
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        task = control_services.create_task(impl, "Rotate keys", created_by=uuid.uuid4(),
+                                             due_date=today + timedelta(days=5))
+        control_services.transition_task(task, Task.Status.DONE, actor_id=uuid.uuid4())
+        issue = governance_services.raise_issue("Stale accounts", severity=Issue.Severity.LOW,
+                                                  created_by=uuid.uuid4(), due_date=today + timedelta(days=5))
+        issue = governance_services.transition_issue(issue, Issue.Status.IN_PROGRESS, actor_id=uuid.uuid4())
+        governance_services.transition_issue(issue, Issue.Status.RESOLVED, actor_id=uuid.uuid4())
+        governance_services.create_policy("Draft policy", created_by=uuid.uuid4(),
+                                           next_review_date=today + timedelta(days=5))
+        uow.flush()
+        result = reporting_services.calendar_deadlines()
+    assert result == []
+
+
+def test_calendar_deadlines_sorts_chronologically(tenant_a):
+    today = clock.now().date()
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        later = control_services.create_task(impl, "Later", created_by=uuid.uuid4(),
+                                              due_date=today + timedelta(days=20))
+        sooner = control_services.create_task(impl, "Sooner", created_by=uuid.uuid4(),
+                                               due_date=today + timedelta(days=2))
+        uow.flush()
+        result = reporting_services.calendar_deadlines()
+    assert [r["object_id"] for r in result] == [str(sooner.id), str(later.id)]
+
+
+def test_calendar_deadlines_tenant_isolation(tenant_a, tenant_b):
+    today = clock.now().date()
+    with tenant_context(tenant_a.id), audit_service.unit_of_work(tenant_a.id) as uow:
+        impl = _impl()
+        control_services.create_task(impl, "Rotate keys", created_by=uuid.uuid4(),
+                                      due_date=today + timedelta(days=5))
+        uow.flush()
+    with tenant_context(tenant_b.id):
+        result = reporting_services.calendar_deadlines()
+    assert result == []
