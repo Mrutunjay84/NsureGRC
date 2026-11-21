@@ -314,7 +314,7 @@ urllib3==2.8.0
     #   semgrep
 uvicorn==0.54.0 ; sys_platform != 'emscripten'
     # via mcp
-wcmatch==8.5.2
+wcmatch==11.2
     # via semgrep
 webauthn==2.8.0
     # via nsuregrc
